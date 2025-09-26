@@ -1,0 +1,253 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+
+@layer base {
+  :root {
+    /* Nature-Inspired Color Palette */
+    --background: 220 15% 97%;
+    --foreground: 210 25% 12%;
+
+    /* Primary Nature Blue-Green */
+    --primary: 195 85% 45%;
+    --primary-light: 195 80% 65%;
+    --primary-dark: 195 90% 35%;
+    --primary-foreground: 0 0% 100%;
+
+    /* Secondary Ocean Blue */
+    --secondary: 210 75% 55%;
+    --secondary-light: 210 70% 75%;
+    --secondary-foreground: 0 0% 100%;
+
+    /* Accent Forest Green */
+    --accent: 145 65% 45%;
+    --accent-light: 145 60% 65%;
+    --accent-foreground: 0 0% 100%;
+
+    /* Modern Glass Surfaces */
+    --card: 0 0% 100%;
+    --card-foreground: 210 25% 12%;
+    --card-glass: 220 25% 98%;
+
+    /* Popover & Dialog */
+    --popover: 0 0% 100%;
+    --popover-foreground: 210 25% 12%;
+
+    /* Muted Nature Tones */
+    --muted: 160 10% 95%;
+    --muted-foreground: 210 15% 45%;
+
+    /* Success Nature Green */
+    --success: 120 70% 50%;
+    --success-foreground: 0 0% 100%;
+
+    /* Warning Sunset Orange */
+    --warning: 35 90% 55%;
+    --warning-foreground: 0 0% 100%;
+
+    /* Destructive */
+    --destructive: 0 85% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    /* Borders & Inputs */
+    --border: 220 20% 88%;
+    --input: 220 20% 92%;
+    --ring: 195 85% 45%;
+
+    /* Nature Gradients */
+    --gradient-primary: linear-gradient(135deg, hsl(195 85% 45%), hsl(145 65% 45%));
+    --gradient-secondary: linear-gradient(135deg, hsl(210 75% 55%), hsl(195 80% 65%));
+    --gradient-hero: linear-gradient(135deg, hsl(195 85% 45%) 0%, hsl(145 65% 45%) 50%, hsl(120 70% 50%) 100%);
+    --gradient-glass: linear-gradient(135deg, rgba(255,255,255,0.25), rgba(255,255,255,0.1));
+
+    /* Shadows */
+    --shadow-soft: 0 4px 20px -2px rgba(34, 197, 94, 0.1);
+    --shadow-medium: 0 8px 30px -4px rgba(34, 197, 94, 0.15);
+    --shadow-strong: 0 20px 40px -8px rgba(34, 197, 94, 0.2);
+    --shadow-glow: 0 0 40px rgba(34, 197, 94, 0.3);
+
+    --radius: 1rem;
+
+    --sidebar-background: 0 0% 98%;
+
+    --sidebar-foreground: 240 5.3% 26.1%;
+
+    --sidebar-primary: 240 5.9% 10%;
+
+    --sidebar-primary-foreground: 0 0% 98%;
+
+    --sidebar-accent: 240 4.8% 95.9%;
+
+    --sidebar-accent-foreground: 240 5.9% 10%;
+
+    --sidebar-border: 220 13% 91%;
+
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+
+  .dark {
+    /* Dark Nature Theme */
+    --background: 210 30% 8%;
+    --foreground: 220 15% 95%;
+
+    --primary: 195 85% 55%;
+    --primary-light: 195 80% 70%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 210 75% 60%;
+    --secondary-foreground: 0 0% 100%;
+
+    --accent: 145 65% 55%;
+    --accent-foreground: 0 0% 100%;
+
+    --card: 210 25% 12%;
+    --card-foreground: 220 15% 95%;
+    --card-glass: 210 25% 15%;
+
+    --muted: 210 20% 18%;
+    --muted-foreground: 220 10% 60%;
+
+    --border: 210 20% 20%;
+    --input: 210 20% 18%;
+    --ring: 195 85% 55%;
+
+    --gradient-primary: linear-gradient(135deg, hsl(195 85% 55%), hsl(145 65% 55%));
+    --gradient-secondary: linear-gradient(135deg, hsl(210 75% 60%), hsl(195 80% 70%));
+    --gradient-hero: linear-gradient(135deg, hsl(195 85% 55%) 0%, hsl(145 65% 55%) 50%, hsl(120 70% 60%) 100%);
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground font-inter;
+    font-family: 'Inter', 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-poppins;
+  }
+}
+
+@layer components {
+  /* iOS Style Glass Morphism Enhanced */
+  .glass-card {
+    @apply bg-white/80 backdrop-blur-xl border border-gray-200/30 shadow-xl rounded-3xl;
+  }
+
+  .dark .glass-card {
+    @apply bg-white/10 border-white/10;
+  }
+
+  .glass-premium {
+    @apply bg-white/90 backdrop-blur-2xl border border-white/40 shadow-2xl rounded-3xl;
+  }
+
+  .glass-subtle {
+    @apply bg-white/60 backdrop-blur-lg border border-white/20 shadow-lg rounded-xl;
+  }
+
+  /* Modern iOS-Style Button Variants */
+  .btn-hero {
+    @apply px-8 py-4 bg-gradient-to-r from-primary via-primary-light to-secondary text-white font-semibold rounded-2xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300;
+  }
+
+  .btn-glass {
+    @apply px-6 py-3 bg-white/15 backdrop-blur-xl border border-white/20 text-white font-medium rounded-2xl hover:bg-white/25 transition-all duration-300 shadow-lg;
+  }
+
+  .btn-floating {
+    @apply w-14 h-14 bg-gradient-to-br from-primary to-secondary text-white rounded-full shadow-lg hover:shadow-xl transform hover:scale-110 transition-all duration-300 flex items-center justify-center backdrop-blur-sm;
+  }
+
+  .btn-ios {
+    @apply px-6 py-3 bg-gradient-to-r from-primary to-secondary text-white font-medium rounded-2xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 backdrop-blur-sm border border-white/20;
+  }
+
+  /* Modern Input Styles */
+  .input-modern {
+    @apply px-4 py-3 bg-white/80 backdrop-blur-sm border border-white/30 rounded-xl placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all duration-300;
+  }
+
+  /* Card Animations */
+  .card-hover {
+    @apply transform hover:scale-105 hover:shadow-xl transition-all duration-300;
+  }
+
+  .bg-gradient-primary{
+    @apply bg-gradient-to-r from-[#2DCEFE] to-[#67dafd]  shadow-lg shadow-sky-500/20
+  }
+  /* Parallax Effect */
+  .parallax {
+    transform: translate3d(0, 0, 0);
+    will-change: transform;
+  }
+
+  /* Bottom Navigation */
+  .bottom-nav {
+    @apply fixed bottom-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-lg border-t border-white/20 px-4 py-2 safe-bottom;
+  }
+
+  /* header mobile */
+  .mobile-header {
+    @apply  z-50 bg-white/70 backdrop-blur-lg;
+  }
+
+  .dark .bottom-nav {
+    @apply bg-card/80 border-white/10;
+  }
+
+  /* Modern Scrollbar */
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: hsl(var(--muted));
+    border-radius: 3px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: hsl(var(--primary));
+    border-radius: 3px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: hsl(var(--primary-dark));
+  }
+
+  /* Utility Classes */
+  .safe-bottom {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  .font-inter {
+    font-family: 'Inter', sans-serif;
+  }
+
+   .parallax-hero {
+    @apply bg-gradient-to-br from-primary via-primary-light to-accent bg-fixed;
+    background-attachment: fixed;
+    background-size: 400% 400%;
+    animation: gradientShift 12s ease infinite;
+  }
+
+  .font-poppins {
+    font-family: 'Poppins', sans-serif;
+  }
+
+  /* Nature Sound Button */
+  .sound-btn {
+    @apply fixed top-4 right-4 z-50 w-12 h-12 bg-accent/80 backdrop-blur-sm rounded-full flex items-center justify-center text-white shadow-lg hover:bg-accent transition-all duration-300;
+  }
+
+  /* Keyframe Animations */
+@keyframes gradientShift {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+}
