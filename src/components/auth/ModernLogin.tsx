@@ -88,7 +88,7 @@ const Login = ({ onLogin, onClose }) => {
           >
             <div className="space-y-4">
               <div className="relative">
-                <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-5 h-5" />
+                <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-neutral-600 w-5 h-5 z-20" />
                 <Input
                   type="text"
                   placeholder="Username"
@@ -105,7 +105,7 @@ const Login = ({ onLogin, onClose }) => {
               </div>
 
               <div className="relative">
-                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-5 h-5" />
+                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-neutral-600 w-5 h-5 z-20" />
                 <Input
                   type={showPassword ? "text" : "password"}
                   placeholder="Password"
@@ -156,10 +156,7 @@ const Login = ({ onLogin, onClose }) => {
             transition={{ delay: 0.7 }}
             className="text-center"
           >
-            <Link
-              to="/"
-              className="text-muted-foreground hover:text-primary"
-            >
+            <Link to="/" className="text-muted-foreground hover:text-primary">
               ← Back to Home
             </Link>
           </motion.div>

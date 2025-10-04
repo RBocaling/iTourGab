@@ -60,13 +60,10 @@ const LandingPage = ({ onEnterApp }) => {
             <motion.div
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
-              className="space-x-4"
+              className="space-x-4 flex items-center"
             >
-              <Button variant="ghost" onClick={onEnterApp}>
-                Sign In
-              </Button>
               <Button className="btn-hero" onClick={onEnterApp}>
-                Explore Now
+                Sign In
               </Button>
             </motion.div>
           </div>

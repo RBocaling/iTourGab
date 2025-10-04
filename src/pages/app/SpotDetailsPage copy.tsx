@@ -1,39 +1,16 @@
-import React, { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { useParams, useNavigate } from "react-router-dom";
-import {
-  ArrowLeft,
-  Star,
-  MapPin,
-  Calendar,
-  Clock,
-  DollarSign,
-  Camera,
-  Heart,
-  Share2,
-  Navigation,
-  Users,
-  Info,
-  ChevronLeft,
-  ChevronRight,
-  Plus,
-  Phone,
-  Grid,
-  X,
-  Bed,
-  Utensils,
-  ChevronUp,
-  ChevronDown,
-  ArrowRight,
-} from "lucide-react";
-import { touristSpots } from "@/data/touristSpots";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
-import { Input } from "@/components/ui/input";
-import RouteMap from "@/components/map/RouteMap";
-import WalkModeMap from "@/components/map/WalkModelMap";
+import React, { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { useParams, useNavigate } from 'react-router-dom';
+import { 
+  ArrowLeft, Star, MapPin, Calendar, Clock, DollarSign, 
+  Camera, Heart, Share2, Navigation, Users, Info,
+  ChevronLeft, ChevronRight, Plus, Phone, Grid, X, Bed, Utensils
+} from 'lucide-react';
+import { touristSpots } from '@/data/touristSpots';
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Separator } from '@/components/ui/separator';
 
 const SpotDetailsPage: React.FC = () => {
   const { spotId } = useParams();
@@ -42,42 +19,40 @@ const SpotDetailsPage: React.FC = () => {
   const [isFavorite, setIsFavorite] = useState(false);
   const [showGallery, setShowGallery] = useState(false);
   const [galleryIndex, setGalleryIndex] = useState(0);
-  const [showWalkMode, setShowWalkMode] = useState(false);
-  const [walkDirection, setWalkDirection] = useState(0);
-  const [showRangeModal, setShowRangeModal] = useState(false);
-  const [fromLocation, setFromLocation] = useState("");
-  const [routeDistance, setRouteDistance] = useState<string>("");
-  const [routeDuration, setRouteDuration] = useState<string>("");
 
-  const spot = touristSpots.find((s) => s.id === spotId);
+  const spot = touristSpots.find(s => s.id === spotId);
 
   if (!spot) {
     return (
       <div className="min-h-screen bg-background pt-20 md:pt-24 pb-20 md:pb-8 flex items-center justify-center">
         <div className="text-center">
           <h2 className="text-2xl font-bold mb-4">Spot not found</h2>
-          <Button onClick={() => navigate("/app")}>Go back to home</Button>
+          <Button onClick={() => navigate('/app')}>
+            Go back to home
+          </Button>
         </div>
       </div>
     );
   }
 
-  const nearbySpots = touristSpots.filter((s) => spot.nearby.includes(s.id));
+  const nearbySpots = touristSpots.filter(s => 
+    spot.nearby.includes(s.id)
+  );
 
   const nextImage = () => {
-    setCurrentImageIndex((prev) =>
+    setCurrentImageIndex((prev) => 
       prev === spot.images.length - 1 ? 0 : prev + 1
     );
   };
 
   const prevImage = () => {
-    setCurrentImageIndex((prev) =>
+    setCurrentImageIndex((prev) => 
       prev === 0 ? spot.images.length - 1 : prev - 1
     );
   };
 
   return (
-    <div className="min-h-screen bg-background pt-5 md:pt-24 pb-20 md:pb-8">
+    <div className="min-h-screen bg-background pt-5  md:pt-24 pb-20 md:pb-8">
       <div className="max-w-4xl mx-auto px-4">
         {/* Header */}
         <motion.div
@@ -88,13 +63,13 @@ const SpotDetailsPage: React.FC = () => {
           <Button
             variant="ghost"
             size="icon"
-            onClick={() => navigate("/")}
+            onClick={() => navigate(-1)}
             className="rounded-full bg-white/80 backdrop-blur-sm border border-white/30"
           >
             <ArrowLeft className="w-5 h-5" />
           </Button>
           <div className="flex-1">
-            <h1 className="text-2xl md:text-3xl font-bold">{spot.name}</h1>
+            <h1 className="text-lg md:text-3xl font-bold">{spot.name}</h1>
             <div className="flex items-center gap-2 mt-1">
               <button
                 onClick={() => navigate(`/app/ratings/${spot.id}`)}
@@ -107,7 +82,9 @@ const SpotDetailsPage: React.FC = () => {
                 </span>
               </button>
               <Separator orientation="vertical" className="h-4" />
-              <Badge className="capitalize">{spot.category}</Badge>
+              <Badge className="capitalize bg-gradient-primary">
+                {spot.category}
+              </Badge>
             </div>
           </div>
           <div className="flex gap-2">
@@ -134,7 +111,7 @@ const SpotDetailsPage: React.FC = () => {
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ delay: 0.1 }}
-          className="relative h-64 md:h-96 rounded-2xl overflow-hidden mb-6 group"
+          className="relative h-64 md:h-96 rounded-3xl overflow-hidden mb-6 group"
         >
           <img
             src={spot.images[currentImageIndex]}
@@ -251,7 +228,7 @@ const SpotDetailsPage: React.FC = () => {
                   {spot.features.map((feature, index) => (
                     <div
                       key={index}
-                      className="flex items-start gap-2 p-2 bg-primary/5 rounded-lg"
+                      className="flex items-center gap-2 p-2 bg-primary/5 rounded-lg"
                     >
                       <div className="w-2 h-2 bg-primary rounded-full" />
                       <span className="text-sm">{feature}</span>
@@ -430,7 +407,7 @@ const SpotDetailsPage: React.FC = () => {
               <Card className="p-6 sticky top-24">
                 <h3 className="text-lg font-bold mb-4">Plan Your Visit</h3>
                 <div className="space-y-3">
-                  <Button className="w-full btn-primary shadow-xl shadow-primary/10 h-12 rounded-2xl">
+                  <Button className="w-full btn-ios h-12">
                     <Plus className="w-4 h-4 mr-2" />
                     Add to Itinerary
                   </Button>
@@ -446,16 +423,16 @@ const SpotDetailsPage: React.FC = () => {
                     <Button
                       variant="outline"
                       className="border h-12 border-primary/40"
-                      onClick={() => setShowWalkMode(true)}
+                      onClick={() => {}}
                     >
-                      Explore
+                     Walk
                     </Button>
                     <Button
                       variant="outline"
                       className="border h-12 border-primary/40"
-                      onClick={() => setShowRangeModal(true)}
+                      onClick={() => {}}
                     >
-                      Route
+                      Direction Range
                     </Button>
                   </div>
                   <Button
@@ -557,256 +534,6 @@ const SpotDetailsPage: React.FC = () => {
                   </div>
                 </div>
               </div>
-            </motion.div>
-          )}
-
-          {/* Walk Mode Modal */}
-          {showWalkMode && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="fixed inset-0 z-50 bg-black/95 backdrop-blur-sm flex items-center justify-center p-4"
-              onClick={() => setShowWalkMode(false)}
-            >
-              <motion.div
-                initial={{ scale: 0.9, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                className="relative w-full max-w-6xl h-[90vh] glass-card overflow-hidden"
-                onClick={(e) => e.stopPropagation()}
-              >
-                <button
-                  onClick={() => setShowWalkMode(false)}
-                  className="absolute top-4 right-4 z-10 glass-card p-3 hover:bg-white/20 transition-all rounded-full"
-                >
-                  <X className="w-6 h-6" />
-                </button>
-
-                {fromLocation ? (
-                  <WalkModeMap
-                    fromLocation={fromLocation}
-                    toLocation={spot.name}
-                    toCoordinates={spot.coordinates}
-                  />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center">
-                    <div className="text-center max-w-md glass-card p-8">
-                      <MapPin className="w-16 h-16 text-primary mx-auto mb-4" />
-                      <h3 className="text-xl font-bold mb-2">
-                        Set Starting Location
-                      </h3>
-                      <p className="text-muted-foreground mb-6">
-                        Please set a "From Location" in the Range feature first
-                        to view the walking route.
-                      </p>
-                      <Button
-                        onClick={() => {
-                          setShowWalkMode(false);
-                          setShowRangeModal(true);
-                        }}
-                        className="bg-gradient-primary text-white"
-                      >
-                        <MapPin className="w-5 h-5 mr-2" />
-                        Set Location
-                      </Button>
-                    </div>
-                  </div>
-                )}
-              </motion.div>
-            </motion.div>
-          )}
-
-          {/* Range/Distance Modal */}
-          {showRangeModal && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4"
-              onClick={() => setShowRangeModal(false)}
-            >
-              <motion.div
-                initial={{ scale: 0.9, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                className="glass-card p-6 max-w-4xl w-full max-h-[90vh] overflow-y-auto"
-                onClick={(e) => e.stopPropagation()}
-              >
-                <div className="flex items-center justify-between mb-6">
-                  <h2 className="text-2xl font-bold">Distance & Route</h2>
-                  <button
-                    onClick={() => setShowRangeModal(false)}
-                    className="p-2 hover:bg-white/10 rounded-full transition-colors"
-                  >
-                    <X className="w-6 h-6" />
-                  </button>
-                </div>
-
-                <div className="mb-6">
-                  <label className="block text-sm font-medium mb-2">
-                    From Location
-                  </label>
-                  <div className="relative">
-                    <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                    <input
-                      type="text"
-                      placeholder="Search location (e.g., Cabanatuan City)"
-                      value={fromLocation}
-                      onChange={(e) => setFromLocation(e.target.value)}
-                      className="w-full pl-10 pr-4 py-3 glass-card border border-white/10 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary bg-background"
-                    />
-                  </div>
-                  <div className="mt-3 flex flex-wrap gap-2">
-                    {[
-                      "Cabanatuan City",
-                      "Manila",
-                      "San Jose City",
-                      "Baler",
-                    ].map((location) => (
-                      <button
-                        key={location}
-                        onClick={() => setFromLocation(location)}
-                        className="px-3 py-1.5 glass-card rounded-full text-sm hover:bg-white/10 transition-all"
-                      >
-                        {location}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                {fromLocation && (
-                  <div className="space-y-4">
-                    {/* Route Map on Top */}
-                    <div className="relative h-[500px] rounded-xl overflow-hidden glass-card border border-white/10">
-                      <RouteMap
-                        fromLocation={fromLocation}
-                        toLocation={spot.name}
-                        toCoordinates={spot.coordinates}
-                        onRouteCalculated={(distance, duration) => {
-                          setRouteDistance(distance);
-                          setRouteDuration(duration);
-                        }}
-                      />
-                    </div>
-
-                    {/* Travel Mode Comparison Card - Bottom */}
-                    {routeDistance && routeDuration && (
-                      <div className="glass-card p-6 rounded-xl bg-gradient-to-br from-primary/10 via-primary/5 to-transparent border border-primary/20">
-                        <div className="flex items-center justify-between mb-4">
-                          <h3 className="font-semibold text-lg">
-                            Route Overview
-                          </h3>
-                          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                            <MapPin className="w-4 h-4" />
-                            <span>{routeDistance} km</span>
-                          </div>
-                        </div>
-
-                        <div className="grid gap-3">
-                          {/* Walking */}
-                          <div className="flex items-center justify-between p-3 rounded-lg bg-background/50 border border-border/50">
-                            <div className="flex items-center gap-3">
-                              <div className="w-10 h-10 rounded-full bg-blue-500/20 flex items-center justify-center">
-                                <span className="text-xl">🚶</span>
-                              </div>
-                              <div>
-                                <p className="font-semibold text-sm">Walking</p>
-                                <p className="text-xs text-muted-foreground">
-                                  Slowest, scenic route
-                                </p>
-                              </div>
-                            </div>
-                            <div className="text-right">
-                              <p className="font-bold text-lg">
-                                {routeDuration} min
-                              </p>
-                              <p className="text-xs text-muted-foreground">
-                                Est. time
-                              </p>
-                            </div>
-                          </div>
-
-                          {/* Motorcycle */}
-                          <div className="flex items-center justify-between p-3 rounded-lg bg-background/50 border border-border/50">
-                            <div className="flex items-center gap-3">
-                              <div className="w-10 h-10 rounded-full bg-orange-500/20 flex items-center justify-center">
-                                <span className="text-xl">🏍️</span>
-                              </div>
-                              <div>
-                                <p className="font-semibold text-sm">
-                                  Motorcycle
-                                </p>
-                                <p className="text-xs text-muted-foreground">
-                                  Moderate, flexible
-                                </p>
-                              </div>
-                            </div>
-                            <div className="text-right">
-                              <p className="font-bold text-lg">
-                                {Math.round(parseInt(routeDuration) * 0.15)} min
-                              </p>
-                              <p className="text-xs text-muted-foreground">
-                                Est. time
-                              </p>
-                            </div>
-                          </div>
-
-                          {/* Car */}
-                          <div className="flex items-center justify-between p-3 rounded-lg bg-background/50 border border-border/50">
-                            <div className="flex items-center gap-3">
-                              <div className="w-10 h-10 rounded-full bg-green-500/20 flex items-center justify-center">
-                                <span className="text-xl">🚗</span>
-                              </div>
-                              <div>
-                                <p className="font-semibold text-sm">Car</p>
-                                <p className="text-xs text-muted-foreground">
-                                  Fastest, comfortable
-                                </p>
-                              </div>
-                            </div>
-                            <div className="text-right">
-                              <p className="font-bold text-lg text-green-500">
-                                {Math.round(parseInt(routeDuration) * 0.12)} min
-                              </p>
-                              <p className="text-xs text-muted-foreground">
-                                Est. time
-                              </p>
-                            </div>
-                          </div>
-                        </div>
-
-                        <div className="mt-4 p-3 rounded-lg bg-primary/10 border border-primary/30">
-                          <div className="flex items-start gap-2">
-                            <Navigation className="w-4 h-4 text-primary mt-0.5" />
-                            <div className="text-sm">
-                              <p className="font-semibold text-primary">
-                                From: {fromLocation}
-                              </p>
-                              <p className="text-muted-foreground">
-                                To: {spot.name}
-                              </p>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    )}
-
-                    <Button
-                      className="w-full bg-gradient-primary text-white"
-                      onClick={() => {
-                        setShowRangeModal(false);
-                        navigate(
-                          `/app/map?focus=${spotId}&from=${encodeURIComponent(
-                            fromLocation
-                          )}`
-                        );
-                      }}
-                    >
-                      View Full Route on Map
-                      <ArrowRight className="w-5 h-5 ml-2" />
-                    </Button>
-                  </div>
-                )}
-              </motion.div>
             </motion.div>
           )}
         </AnimatePresence>

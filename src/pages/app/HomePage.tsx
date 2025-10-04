@@ -63,7 +63,7 @@ const HomePage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background pt-2 md:pt-32 pb-20 md:pb-8">
+    <div className="min-h-screen bg-background pt-2 md:pt-32 pb-20 md:pb-8 p-3">
       <div className="max-w-7xl mx-auto px-4">
         {/* Header */}
         <motion.div
@@ -141,7 +141,6 @@ const HomePage: React.FC = () => {
         </motion.div>
 
         {/* Weather & Quick Stats */}
-       
 
         {/* Quick Actions */}
         <motion.div
