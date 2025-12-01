@@ -3,9 +3,9 @@ import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
 import { motion } from "framer-motion";
 import { MapPin, Navigation, Layers, Search, Store } from "lucide-react";
-import { touristSpots } from "@/data/touristSpots";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { useGetPlaces } from "@/hooks/useGetPlace";
+import { Place } from "@/types/place";
 
 // Mapbox token provided by user
 mapboxgl.accessToken =
@@ -15,12 +15,14 @@ interface MapboxMapProps {
   onSpotSelect?: (spotId: string) => void;
   selectedSpotId?: string;
   className?: string;
+  touristSpots:Place[];
 }
 
 const MapboxMap: React.FC<MapboxMapProps> = ({
   onSpotSelect,
   selectedSpotId,
   className = "",
+  touristSpots,
 }) => {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);

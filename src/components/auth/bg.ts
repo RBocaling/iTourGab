@@ -1,49 +1,62 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { Eye, EyeOff, Lock, User, ArrowRight } from "lucide-react";
+import { Eye, EyeOff, Lock, User as UserIcon, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { users } from "@/data/authData";
 import heroLandscape from "@/assets/hero-landscape.jpg";
 import { Link } from "react-router-dom";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { login as loginApi } from "@/api/authApi";
+import { fetchCurrentUser, User } from "@/api/userApi";
+import { useAuthStore } from "@/store/authStore";
 
-const Login = ({ onLogin, onClose }) => {
-  const [formData, setFormData] = useState({
-    username: "",
-    password: "",
-  });
+type Props = {
+  onLogin: (user: User) => void;
+  onClose: () => void;
+};
+
+export default function Login({ onLogin, onClose }: Props) {
+  const [formData, setFormData] = useState({ identifier: "", password: "" });
   const [showPassword, setShowPassword] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
+  const setAuth = useAuthStore((s) => s.setAuth);
+  const qc = useQueryClient();
+
+  const mutation = useMutation({
+    mutationFn: (payload: { identifier: string; password: string }) =>
+      loginApi(payload),
+    onSuccess: async (data) => {
+      setAuth(data.accessToken, data.refreshToken);
+      await qc.invalidateQueries(["auth", "me"]);
+      try {
+        const user = await fetchCurrentUser();
+        onLogin(user);
+        onClose();
+      } catch {
+        onClose();
+      }
+    },
+    onError: (e: any) => {
+      setError(e?.response?.data?.message ?? e?.message ?? "Login failed");
+    },
+  });
+
+  useEffect(() => {
+    if (mutation.error)
+      setError((mutation.error as any)?.message ?? "Login failed");
+  }, [mutation.error]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
     setError("");
-
-    // Simulate loading
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-
-    const user = users.find(
-      (u) =>
-        u.username === formData.username && u.password === formData.password
-    );
-
-    if (user) {
-      onLogin(user);
-      onClose();
-    } else {
-      setError("Invalid username or password");
-    }
-    setIsLoading(false);
+    mutation.mutate({
+      identifier: formData.identifier,
+      password: formData.password,
+    });
   };
 
-  const quickLogin = (username: string, password: string) => {
-    setFormData({ username, password });
-  };
   return (
     <div className="min-h-screen flex bg-background">
-      {/* Left Side - Login Form */}
       <div className="w-full lg:w-1/2 flex items-center justify-center p-8">
         <motion.div
           initial={{ opacity: 0, x: -50 }}
@@ -51,7 +64,6 @@ const Login = ({ onLogin, onClose }) => {
           transition={{ duration: 0.6 }}
           className="w-full md:max-w-md space-y-8 md:bg-white rounded-3xl md:p-5 md:shadow-2xl"
         >
-          {/* Header */}
           <div className="text-center">
             <motion.div
               initial={{ opacity: 0, y: -20 }}
@@ -78,7 +90,6 @@ const Login = ({ onLogin, onClose }) => {
             </motion.p>
           </div>
 
-          {/* Login Form */}
           <motion.form
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -88,15 +99,15 @@ const Login = ({ onLogin, onClose }) => {
           >
             <div className="space-y-4">
               <div className="relative">
-                <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-neutral-600 w-5 h-5 z-20" />
+                <UserIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 text-neutral-600 w-5 h-5 z-20" />
                 <Input
                   type="text"
                   placeholder="Username"
-                  value={formData.username}
+                  value={formData.identifier}
                   onChange={(e) =>
                     setFormData((prev) => ({
                       ...prev,
-                      username: e.target.value,
+                      identifier: e.target.value,
                     }))
                   }
                   className="pl-12 input-modern h-14 bg-white"
@@ -135,10 +146,10 @@ const Login = ({ onLogin, onClose }) => {
 
             <Button
               type="submit"
-              disabled={isLoading}
+              disabled={mutation.isLoading}
               className="w-full btn-hero h-14 rounded-2xl"
             >
-              {isLoading ? (
+              {mutation.isLoading ? (
                 <div className="loading-spinner" />
               ) : (
                 <>
@@ -147,9 +158,10 @@ const Login = ({ onLogin, onClose }) => {
                 </>
               )}
             </Button>
+
+            {error && <div className="text-red-400 text-sm">{error}</div>}
           </motion.form>
 
-          {/* Back to Landing */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -163,7 +175,6 @@ const Login = ({ onLogin, onClose }) => {
         </motion.div>
       </div>
 
-      {/* Right Side - Hero Image */}
       <motion.div
         initial={{ opacity: 0, scale: 1.1 }}
         animate={{ opacity: 1, scale: 1 }}
@@ -201,10 +212,9 @@ const Login = ({ onLogin, onClose }) => {
           </motion.div>
         </div>
 
-        {/* Floating Elements */}
         <div className="absolute top-20 right-20 floating-element">
           <div className="glass-morphism rounded-full p-3">
-            <User className="w-6 h-6 text-white" />
+            <UserIcon className="w-6 h-6 text-white" />
           </div>
         </div>
         <div
@@ -218,6 +228,4 @@ const Login = ({ onLogin, onClose }) => {
       </motion.div>
     </div>
   );
-};
-
-export default Login;
+}

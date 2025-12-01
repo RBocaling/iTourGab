@@ -10,7 +10,7 @@ const Index = () => {
         <h1 className="mb-4 text-4xl font-bold">iTourGab</h1>
         <p className="text-xl mb-6">Discover Gabaldon's Natural Wonders</p>
         <Button 
-          onClick={() => navigate('/app')}
+          onClick={() => navigate('/')}
           className="btn-hero"
         >
           Enter App

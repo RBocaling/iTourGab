@@ -2,18 +2,22 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import MapboxMap from '@/components/map/MapboxMap';
-import { touristSpots } from '@/data/touristSpots';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Star, MapPin, Calendar, ArrowRight, X } from 'lucide-react';
+import { useGetPlaces } from '@/hooks/useGetPlace';
+import Loader from '@/components/loader/Loader';
 
 const MapPage: React.FC = () => {
   const [selectedSpotId, setSelectedSpotId] = useState<string | null>(null);
   const [searchParams] = useSearchParams();
+  const { isLoading, formatData: touristSpots } = useGetPlaces();
+  console.log("touristSpots", touristSpots);
+  
+  
   const navigate = useNavigate();
 
-  // Handle URL parameters for search and focus
   useEffect(() => {
     const focusSpotId = searchParams.get('focus');
     const searchQuery = searchParams.get('search');
@@ -21,8 +25,7 @@ const MapPage: React.FC = () => {
     if (focusSpotId) {
       setSelectedSpotId(focusSpotId);
     } else if (searchQuery) {
-      // Find first spot matching search
-      const matchingSpot = touristSpots.find(spot => 
+      const matchingSpot = touristSpots?.find(spot => 
         spot.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         spot.features.some(feature => feature.toLowerCase().includes(searchQuery.toLowerCase()))
       );
@@ -33,7 +36,7 @@ const MapPage: React.FC = () => {
   }, [searchParams]);
 
   const selectedSpot = selectedSpotId 
-    ? touristSpots.find(spot => spot.id === selectedSpotId) 
+    ? touristSpots?.find(spot => spot.id === selectedSpotId) 
     : null;
 
   const handleSpotSelect = (spotId: string) => {
@@ -42,9 +45,13 @@ const MapPage: React.FC = () => {
 
   const handleViewDetails = () => {
     if (selectedSpotId) {
-      navigate(`/app/spot/${selectedSpotId}`);
+      navigate(`/spot/${selectedSpotId}`);
     }
   };
+
+   if (isLoading) {
+     return <Loader />;
+   }
 
   return (
     <div className="min-h-screen bg-background pt-4 md:pt-32 pb-20 md:pb-8">
@@ -67,6 +74,7 @@ const MapPage: React.FC = () => {
             onSpotSelect={handleSpotSelect}
             selectedSpotId={selectedSpotId}
             className="w-full h-full"
+            touristSpots={touristSpots}
           />
 
           {/* Selected Spot Card */}
@@ -166,7 +174,7 @@ const MapPage: React.FC = () => {
                       variant="outline"
                       size="sm"
                       className="px-3 h-9"
-                      onClick={() => navigate(`/app/booking/${selectedSpotId}`)}
+                      onClick={() => navigate(`/booking/${selectedSpotId}`)}
                     >
                       📅
                     </Button>
@@ -175,28 +183,6 @@ const MapPage: React.FC = () => {
               </Card>
             </motion.div>
           )}
-
-          {/* Map Instructions */}
-          {/* {!selectedSpot && (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="absolute bottom-4 left-4 z-20"
-            >
-              <Card className="glass-card p-4 max-w-sm">
-                <h3 className="font-semibold mb-2 flex items-center">
-                  <MapPin className="w-4 h-4 mr-2 text-primary" />
-                  How to Explore
-                </h3>
-                <ul className="text-sm text-muted-foreground space-y-1">
-                  <li>• Click map markers to view details</li>
-                  <li>• Use controls to change map style</li>
-                  <li>• Drag to explore, scroll to zoom</li>
-                  <li>• Press navigation button to center</li>
-                </ul>
-              </Card>
-            </motion.div>
-          )} */}
         </div>
       </div>
     </div>

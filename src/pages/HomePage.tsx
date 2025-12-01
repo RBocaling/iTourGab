@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MapPin, Star, Calendar, Camera, Filter, Search, Heart, ArrowRight, Users, Clock, Navigation } from 'lucide-react';
-import { touristSpots, categories } from '@/data/touristSpots';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useNavigate } from 'react-router-dom';
+import { useGetPlaces } from '@/hooks/useGetPlace';
+import Loader from '@/components/loader/Loader';
 
 const HomePage: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -15,8 +16,10 @@ const HomePage: React.FC = () => {
   const [searchSuggestions, setSearchSuggestions] = useState<typeof touristSpots>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const navigate = useNavigate();
-
-  const filteredSpots = touristSpots.filter(spot => {
+  const {isLoading, formatData: touristSpots } = useGetPlaces();
+  console.log("touristSpots", touristSpots);
+  
+  const filteredSpots = touristSpots?.filter(spot => {
     const matchesSearch = spot.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
                          spot.description.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesCategory = selectedCategory === 'all' || spot.category === selectedCategory;
@@ -26,7 +29,7 @@ const HomePage: React.FC = () => {
   // Search suggestions logic
   useEffect(() => {
     if (searchQuery.trim().length > 0) {
-      const suggestions = touristSpots.filter(spot => 
+      const suggestions = touristSpots?.filter(spot => 
         spot.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         spot.features.some(feature => feature.toLowerCase().includes(searchQuery.toLowerCase())) ||
         spot.activities.some(activity => activity.toLowerCase().includes(searchQuery.toLowerCase()))
@@ -47,23 +50,26 @@ const HomePage: React.FC = () => {
   };
 
   const handleSpotClick = (spotId: string) => {
-    navigate(`/app/spot/${spotId}`);
+    navigate(`/spot/${spotId}`);
   };
 
   const handleSearchSubmit = () => {
     if (searchQuery.trim()) {
-      navigate(`/app/map?search=${encodeURIComponent(searchQuery)}`);
+      navigate(`/map?search=${encodeURIComponent(searchQuery)}`);
     }
   };
 
   const handleSuggestionClick = (spot: typeof touristSpots[0]) => {
     setSearchQuery('');
     setShowSuggestions(false);
-    navigate(`/app/map?focus=${spot.id}`);
+    navigate(`/spot/${spot.id}`);
   };
 
+  if (isLoading) {
+     return <Loader />;
+  }
   return (
-    <div className="min-h-screen bg-background pt-2 md:pt-32 pb-20 md:pb-8 p-3">
+    <div className="min-h-screen bg-background pt-2 md:pt-32 pb-28 md:pb-8 p-3">
       <div className="max-w-7xl mx-auto px-4">
         {/* Header */}
         <motion.div
@@ -153,25 +159,25 @@ const HomePage: React.FC = () => {
             {
               icon: MapPin,
               label: "Explore Map",
-              action: () => navigate("/app/map"),
+              action: () => navigate("/map"),
               color: "from-primary to-secondary",
             },
             {
               icon: Calendar,
               label: "Plan Trip",
-              action: () => navigate("/app/itinerary"),
+              action: () => navigate("/itinerary"),
               color: "from-accent to-accent-light",
             },
             {
               icon: Camera,
               label: "Gallery",
-              action: () => navigate("/app/search"),
+              action: () => navigate("/search"),
               color: "from-purple-500 to-purple-600",
             },
             {
               icon: Heart,
               label: "Favorites",
-              action: () => navigate("/app/favorites"),
+              action: () => navigate("/favorites"),
               color: "from-pink-500 to-pink-600",
             },
           ].map((item, index) => (
@@ -195,7 +201,7 @@ const HomePage: React.FC = () => {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.3 }}
-          className="mb-6"
+          className="mb-9"
         >
           <p className="text-muted-foreground">
             {filteredSpots.length} destination
@@ -280,7 +286,7 @@ const HomePage: React.FC = () => {
                       </span>
                     </div>
                     <span className="text-sm text-primary font-medium">
-                      {spot.reviews} reviews
+                      {spot.reviews?.length} reviews
                     </span>
                   </div>
 
@@ -314,7 +320,7 @@ const HomePage: React.FC = () => {
                       className="px-3"
                       onClick={(e) => {
                         e.stopPropagation();
-                        navigate(`/app/map?focus=${spot.id}`);
+                        navigate(`/map?focus=${spot.id}`);
                       }}
                     >
                       🗺️

@@ -24,10 +24,10 @@ const MobileHeader = () => {
         <p className="text-xl font-bold -translate-x-3">iTourGab</p>
       </div>
       <div className="flex items-center gap-5 pr-5">
-        <Link to="/app/search">
+        <Link to="/search">
           <Search size={23} className="text-gray-400" />
         </Link>
-        <Link to="/app/gabaldon-public-socials">
+        <Link to="/gabaldon-public-socials">
           <MailSearch size={23} className="text-gray-400" />{" "}
         </Link>
       </div>

@@ -2,40 +2,46 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Search, ArrowLeft, MapPin, Star, Filter, X } from 'lucide-react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { touristSpots, categories } from '@/data/touristSpots';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import MapboxMap from '@/components/map/MapboxMap';
+import { Place } from '@/types/place';
 
-const SearchPage: React.FC = () => {
-  const [searchQuery, setSearchQuery] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState('all');
+const SearchPage: React.FC = ({ touristSpots }: { touristSpots:Place[] }) => {
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("all");
   const [showFilters, setShowFilters] = useState(false);
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
 
   useEffect(() => {
-    const query = searchParams.get('q');
+    const query = searchParams.get("q");
     if (query) {
       setSearchQuery(query);
     }
   }, [searchParams]);
 
-  const filteredSpots = touristSpots.filter(spot => {
-    const matchesSearch = searchQuery === '' || 
+  const filteredSpots = touristSpots.filter((spot) => {
+    const matchesSearch =
+      searchQuery === "" ||
       spot.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       spot.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      spot.features.some(feature => feature.toLowerCase().includes(searchQuery.toLowerCase())) ||
-      spot.activities.some(activity => activity.toLowerCase().includes(searchQuery.toLowerCase()));
-    
-    const matchesCategory = selectedCategory === 'all' || spot.category === selectedCategory;
+      spot.features.some((feature) =>
+        feature.toLowerCase().includes(searchQuery.toLowerCase())
+      ) ||
+      spot.activities.some((activity) =>
+        activity.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+
+    const matchesCategory =
+      selectedCategory === "all" || spot.category === selectedCategory;
     return matchesSearch && matchesCategory;
   });
 
   const handleSpotSelect = (spotId: string) => {
-    navigate(`/app/spot/${spotId}`);
+    navigate(`/spot/${spotId}`);
   };
 
   return (
@@ -52,7 +58,9 @@ const SearchPage: React.FC = () => {
             >
               <ArrowLeft className="w-5 h-5" />
             </Button>
-            <h1 className="text-xl font-bold text-white">Search Destinations</h1>
+            <h1 className="text-xl font-bold text-white">
+              Search Destinations
+            </h1>
           </div>
 
           {/* Search Bar */}
@@ -67,7 +75,7 @@ const SearchPage: React.FC = () => {
             />
             {searchQuery && (
               <button
-                onClick={() => setSearchQuery('')}
+                onClick={() => setSearchQuery("")}
                 className="absolute right-3 top-1/2 transform -translate-y-1/2 w-8 h-8 bg-white/20 rounded-full flex items-center justify-center text-white/70 hover:bg-white/30"
               >
                 <X className="w-4 h-4" />
@@ -78,7 +86,8 @@ const SearchPage: React.FC = () => {
           {/* Filter Toggle */}
           <div className="flex items-center justify-between">
             <p className="text-white/80 text-sm">
-              {filteredSpots.length} destination{filteredSpots.length !== 1 ? 's' : ''} found
+              {filteredSpots.length} destination
+              {filteredSpots.length !== 1 ? "s" : ""} found
             </p>
             <Button
               variant="ghost"
@@ -93,40 +102,6 @@ const SearchPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Categories Filter */}
-      <AnimatePresence>
-        {showFilters && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: 'auto' }}
-            exit={{ opacity: 0, height: 0 }}
-            className="bg-white/90 backdrop-blur-sm border-b border-white/20 px-4 py-4"
-          >
-            <div className="max-w-7xl mx-auto">
-              <h3 className="font-medium mb-3">Categories</h3>
-              <div className="flex gap-2 overflow-x-auto pb-2">
-                {categories.map((category) => (
-                  <Button
-                    key={category.id}
-                    variant={selectedCategory === category.id ? "default" : "outline"}
-                    size="sm"
-                    onClick={() => setSelectedCategory(category.id)}
-                    className={`flex-shrink-0 rounded-full px-4 py-2 ${
-                      selectedCategory === category.id 
-                        ? 'bg-gradient-primary text-white border-none' 
-                        : 'bg-white/80 backdrop-blur-sm border-white/30'
-                    }`}
-                  >
-                    {/* <span className="mr-1">{category.icon}</span> */}
-                    {category.name}
-                  </Button>
-                ))}
-              </div>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
       <div className="max-w-7xl mx-auto px-4 py-6">
         {/* Map View */}
         <motion.div
@@ -136,9 +111,10 @@ const SearchPage: React.FC = () => {
         >
           <Card className="glass-card overflow-hidden">
             <div className="h-64 relative">
-              <MapboxMap 
+              <MapboxMap
                 onSpotSelect={handleSpotSelect}
                 className="w-full h-full"
+                touristSpots={touristSpots}
               />
             </div>
           </Card>
@@ -153,7 +129,7 @@ const SearchPage: React.FC = () => {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.1 * index }}
             >
-              <Card 
+              <Card
                 className="glass-card p-4 cursor-pointer hover:shadow-xl transition-all duration-300"
                 onClick={() => handleSpotSelect(spot.id)}
               >
@@ -165,10 +141,14 @@ const SearchPage: React.FC = () => {
                   />
                   <div className="flex-1 min-w-0">
                     <div className="flex items-start justify-between mb-2">
-                      <h3 className="font-semibold text-lg truncate">{spot.name}</h3>
+                      <h3 className="font-semibold text-lg truncate">
+                        {spot.name}
+                      </h3>
                       <div className="flex items-center gap-1 ml-2">
                         <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                        <span className="text-sm font-medium">{spot.rating}</span>
+                        <span className="text-sm font-medium">
+                          {spot.rating}
+                        </span>
                       </div>
                     </div>
                     <p className="text-muted-foreground text-sm mb-2 line-clamp-2">
@@ -182,7 +162,13 @@ const SearchPage: React.FC = () => {
                         <span>{spot.duration}</span>
                       </div>
                       <Badge className="bg-primary/10 text-primary">
-                        {spot.reviews} reviews
+                        {(
+                          (spot.reviews?.reduce(
+                            (acc, r) => acc + Number(r.rating ?? 0),
+                            0
+                          ) || 0) / (spot.reviews?.length || 1)
+                        ).toFixed(1)}{" "}
+                        reviews
                       </Badge>
                     </div>
                   </div>
@@ -202,14 +188,18 @@ const SearchPage: React.FC = () => {
             <div className="w-24 h-24 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
               <Search className="w-12 h-12 text-muted-foreground" />
             </div>
-            <h3 className="text-xl font-semibold mb-2">No destinations found</h3>
+            <h3 className="text-xl font-semibold mb-2">
+              No destinations found
+            </h3>
             <p className="text-muted-foreground mb-4">
               Try adjusting your search or category filter
             </p>
-            <Button onClick={() => {
-              setSearchQuery('');
-              setSelectedCategory('all');
-            }}>
+            <Button
+              onClick={() => {
+                setSearchQuery("");
+                setSelectedCategory("all");
+              }}
+            >
               Clear Filters
             </Button>
           </motion.div>

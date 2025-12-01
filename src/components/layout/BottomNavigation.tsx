@@ -8,13 +8,13 @@ const BottomNavigation: React.FC = () => {
   const navigate = useNavigate();
 
   const navItems = [
-    { id: "home", label: "Home", icon: Home, path: "/app" },
+    { id: "home", label: "Home", icon: Home, path: "/" },
 
     {
       id: "bookings",
       label: "Bookings",
       icon: BookOpenCheck,
-      path: "/app/bookings",
+      path: "/bookings",
     },
 
     {
@@ -22,10 +22,10 @@ const BottomNavigation: React.FC = () => {
       label: "Map",
       box: "/map-box.png",
       img: "/locate.webp",
-      path: "/app/map",
+      path: "/map",
     },
-    { id: "favorites", label: "Saved", icon: Heart, path: "/app/favorites" },
-    { id: "profile", label: "Profile", icon: User, path: "/app/profile" },
+    { id: "favorites", label: "Saved", icon: Heart, path: "/favorites" },
+    { id: "profile", label: "Profile", icon: User, path: "/profile" },
   ];
 
   const handleNavigation = (path: string) => {

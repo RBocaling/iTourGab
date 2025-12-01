@@ -5,7 +5,6 @@ import {
   Edit3, Bell, Shield, HelpCircle, LogOut, Star,
   ChevronRight, Mail, Phone, Award
 } from 'lucide-react';
-import { useAuth } from '@/context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -13,9 +12,10 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Switch } from '@/components/ui/switch';
+import { useAuth2 } from '@/hooks/useAuth';
 
 const ProfilePage: React.FC = () => {
-  const { user, logout, updateUser } = useAuth();
+  const { user, logout } = useAuth2();
   const navigate = useNavigate();
   const [notifications, setNotifications] = useState(user?.preferences?.notifications ?? true);
 
@@ -24,15 +24,6 @@ const ProfilePage: React.FC = () => {
     navigate('/');
   };
 
-  const toggleNotifications = (enabled: boolean) => {
-    setNotifications(enabled);
-    updateUser({
-      preferences: {
-        ...user?.preferences,
-        notifications: enabled
-      }
-    });
-  };
 
   const stats = [
     { label: 'Places Visited', value: '12', icon: MapPin },
@@ -46,14 +37,14 @@ const ProfilePage: React.FC = () => {
       icon: Heart, 
       label: 'My Favorites', 
       description: 'Saved destinations',
-      action: () => navigate('/app/favorites'),
+      action: () => navigate('/favorites'),
       color: 'text-red-500'
     },
     { 
       icon: Calendar, 
       label: 'My Itineraries', 
       description: 'Planned trips',
-      action: () => navigate('/app/itinerary'),
+      action: () => navigate('/itinerary'),
       color: 'text-blue-500'
     },
     { 
@@ -80,7 +71,7 @@ const ProfilePage: React.FC = () => {
       action: () => {},
       hasToggle: true,
       toggleValue: notifications,
-      onToggle: toggleNotifications
+      // onToggle: toggleNotifications
     },
     { 
       icon: Shield, 
@@ -123,15 +114,15 @@ const ProfilePage: React.FC = () => {
             </button>
           </div>
           
-          <h1 className="text-2xl md:text-3xl font-bold mb-2">{user?.profile?.name}</h1>
+          <h1 className="text-2xl md:text-3xl font-bold mb-2 capitalize">{user?.name}</h1>
           <p className="text-muted-foreground mb-2">{user?.profile?.email}</p>
           <div className="flex items-center justify-center gap-2">
             <Badge className="capitalize bg-gradient-primary text-white">
-              {user?.role}
+              Client
             </Badge>
             <Badge variant="outline">
               <MapPin className="w-3 h-3 mr-1" />
-              {user?.profile?.location}
+              {user?.address}
             </Badge>
           </div>
           
@@ -253,14 +244,14 @@ const ProfilePage: React.FC = () => {
                       <h3 className="font-medium">{item.label}</h3>
                       <p className="text-sm text-muted-foreground">{item.description}</p>
                     </div>
-                    {item.hasToggle && item.onToggle ? (
+                    {/* {item.hasToggle && item.onToggle ? (
                       <Switch
                         checked={item.toggleValue}
                         onCheckedChange={item.onToggle}
                       />
                     ) : (
                       <ChevronRight className="w-5 h-5 text-muted-foreground group-hover:translate-x-1 transition-transform" />
-                    )}
+                    )} */}
                   </div>
                   {index < settingsItems.length - 1 && <Separator className="my-1" />}
                 </div>

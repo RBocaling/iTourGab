@@ -1,0 +1,52 @@
+import type { Place } from "@/types/place";
+
+export const formatPlace = (p: Place) => {
+  const formattedId =
+    p.name
+      ?.toLowerCase()
+      ?.replace(/\s+/g, "-")
+      ?.replace(/[^a-z0-9-]/g, "") || p.id;
+
+  const reviews = p.reviews ?? [];
+  const total = reviews.reduce((acc, r) => acc + Number(r?.rating ?? 0), 0);
+  const avg = (reviews.length ? total / reviews.length : 0)?.toFixed(1);
+
+  return {
+    placeId: p?.id,
+    id: formattedId,
+    name: p.name,
+    description: p.description,
+    category: p.category,
+    coordinates: p.coordinates,
+    images: p.images || [],
+    gallery: p.gallery || [],
+    features: p.features || [],
+    activities: p.activities || [],
+    difficulty: p.difficulty,
+    bestTime: p.best_time ?? p.bestTime,
+    duration: p.duration,
+    entrance: p.entrance,
+    accessibility: p.accessibility,
+    nearby: p.nearby || [],
+    rating: avg ?? 0,
+    reviews: Array.isArray(reviews)
+      ? reviews.map((r: any) => r.description ?? "")
+      : [],
+    reviewsCount: reviews.length,
+    ratings: reviews,
+    services: (p.services || []).map((s, index) => ({
+      id: s.id || `${formattedId}-service-${index}`,
+      name: s.name,
+      type: s.type,
+      description: s.description,
+      price: s.price,
+      images: s.images || [],
+      contact: s.contact,
+      amenities: s.amenities || [],
+    })),
+    accommodation: p.accommodation || [],
+    raw: p,
+  };
+};
+
+export const formatPlaces = (places: Place[]) => places.map(formatPlace);
