@@ -33,7 +33,7 @@ const BottomNavigation: React.FC = () => {
   };
 
   return (
-    <div className="bottom-nav md:hidden border-t border-primary/40">
+    <div className="bottom-nav lg:hidden border-t border-primary/40">
       <div className="flex items-center justify-around">
         {navItems.map((item) => {
           const isActive = location.pathname === item.path;

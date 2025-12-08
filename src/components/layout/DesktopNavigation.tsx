@@ -109,10 +109,7 @@ const DesktopNavigation = () => {
               className="flex items-center space-x-3 p-2 rounded-xl hover:bg-muted/50 transition-colors"
             >
               <Avatar className="w-8 h-8">
-                <AvatarImage
-                  src={user?.profile?.avatar}
-                  alt={user?.firstName}
-                />
+                <AvatarImage src={user?.profile_url} alt={user?.first_name} />
                 <AvatarFallback className="bg-gradient-primary text-white text-sm">
                   {user?.firstName?.charAt(0) || "U"}
                 </AvatarFallback>

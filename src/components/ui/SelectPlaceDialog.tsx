@@ -7,7 +7,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { Search } from "lucide-react";
+import { Search, Star } from "lucide-react";
 import { useGetPlaces } from "@/hooks/useGetPlace";
 import { Button } from "@/components/ui/button";
 
@@ -39,6 +39,8 @@ export default function SelectPlaceDialog({
     return places.filter((p: any) => (p.name ?? "").toLowerCase().includes(q));
   }, [places, search]);
 
+  console.log("filtered", filtered);
+  
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogTrigger asChild>
@@ -99,6 +101,19 @@ export default function SelectPlaceDialog({
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="font-semibold truncate">{p.name}</div>
+                      <div className="flex items-center gap-1 py-1">
+                        {Array.from({ length: 5 }).map((_, i) => (
+                          <Star
+                            key={i}
+                            className={`w-4 h-4 ${
+                              i < Math.round(Number(p?.rating))
+                                ? "fill-yellow-400 text-yellow-400"
+                                : "text-gray-300"
+                            }`}
+                          />
+                        ))}
+                      </div>
+
                       <div className="text-sm text-muted-foreground line-clamp-2">
                         {p.description ?? ""}
                       </div>

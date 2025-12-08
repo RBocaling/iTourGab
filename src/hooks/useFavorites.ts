@@ -21,7 +21,7 @@ const formatFavorite = (f: FavoriteRaw): FormattedFavorite => {
 
   return {
     id: String(f.id),
-    placeId: formattedId,
+    placeId: place?.id,
     placeName,
     placeThumb: thumb,
     description: f.description ?? null,

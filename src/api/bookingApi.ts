@@ -62,3 +62,28 @@ export const createBookingApi = async (payload: any): Promise<BookingRaw> => {
     throw new Error(msg);
   }
 };
+
+
+export const updateStatus = async ({
+  id,
+  reason,
+}: {
+  id: number | string;
+  reason: string;
+}) => {
+  console.log("reason", reason);
+
+  try {
+    const response = await api.put(`/bookings/status/${id}`, {
+      cancel_reason: reason,
+      status: "CANCELLED",
+    });
+    return response?.data;
+  } catch (err: any) {
+    const msg =
+      err?.response?.data?.message ??
+      err?.message ??
+      `Failed to update booking with id ${id}`;
+    throw new Error(msg);
+  }
+};

@@ -1,7 +1,15 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { useLocation, useNavigate } from "react-router-dom";
-import { ArrowLeft, MapPin, Calendar, Check, Star } from "lucide-react";
+import {
+  ArrowLeft,
+  MapPin,
+  Calendar,
+  Check,
+  Star,
+  X,
+  AlertTriangle,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -20,6 +28,7 @@ import { useGetPlace } from "@/hooks/useGetPlace";
 import { createBookingApi } from "@/api/bookingApi";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import SelectPlaceDialog from "@/components/ui/SelectPlaceDialog";
+import { createServiceRatingApi } from "@/api/serviceRatingApi";
 
 function parsePrice(price: string | number | undefined): number {
   if (price == null) return 0;
@@ -30,7 +39,7 @@ function parsePrice(price: string | number | undefined): number {
 }
 
 const steps = [
-  { number: 1, title: "Select Accommodation/Service", icon: MapPin },
+  { number: 1, title: "Select Service", icon: MapPin },
   { number: 2, title: "Trip Details", icon: Calendar },
   { number: 3, title: "Review & Confirm", icon: Check },
 ];
@@ -68,8 +77,28 @@ export default function BookingPage() {
   const [rooms, setRooms] = useState<number>(1);
   const [specialRequests, setSpecialRequests] = useState<string>("");
 
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [showRatingModal, setShowRatingModal] = useState(false);
+  const [ratingValue, setRatingValue] = useState(0);
+  const [hoverRating, setHoverRating] = useState(0);
+  const [ratingText, setRatingText] = useState("");
+  const [postWithName, setPostWithName] = useState(false);
+  const [showRateSuccessModal, setShowRateSuccessModal] = useState(false);
+
+  const [showServiceRatingsModal, setShowServiceRatingsModal] = useState(false);
+  const [viewRatingsService, setViewRatingsService] = useState<any | null>(
+    null
+  );
+
   const accommodations = useMemo(() => place?.accommodation ?? [], [place]);
   const services = useMemo(() => place?.services ?? [], [place]);
+
+  const { mutate: rate } = useMutation({
+    mutationFn: createServiceRatingApi,
+    onSuccess: () => {
+      setShowRateSuccessModal(true);
+    },
+  });
 
   useEffect(() => {
     if (!serviceParam) return;
@@ -133,9 +162,14 @@ export default function BookingPage() {
       toast({
         title: "Booking submitted",
         description:
-          "Your booking request was submitted. We'll notify you when confirmed.",
+          "Your booking request was submitted. Tell us about your experience.",
       });
-      navigate("/bookings");
+      setShowConfirmModal(false);
+      setShowRatingModal(true);
+      setRatingValue(0);
+      setHoverRating(0);
+      setRatingText("");
+      setPostWithName(false);
     },
     onError: (err: any) => {
       toast({
@@ -171,16 +205,39 @@ export default function BookingPage() {
     const payload = {
       service_id: selectedServiceId ?? null,
       start_date: dates.checkIn,
-      end_date:dates.checkOut,
+      end_date: dates.checkOut,
       guests,
       rooms,
-      special_requests:specialRequests,
-      total_amount:totalAmount,
+      special_requests: specialRequests,
+      total_amount: totalAmount,
     };
 
     mutation.mutate(payload);
   }
-console.log("place", place);
+
+  const ratingTargetName =
+    selectedService?.name ?? place?.name ?? "this experience";
+
+  const handleSubmitRating = () => {
+    if (!ratingValue) return;
+    const payload = {
+      rating: ratingValue,
+      description: ratingText,
+      postWithName,
+      service_id: selectedService?.id ?? selectedServiceId ?? null,
+    };
+    rate(payload as any);
+  };
+
+  const getServiceRatingSummary = (svc: any) => {
+    const reviews = svc?.service_reviews ?? [];
+    if (!reviews.length) return { avg: null, count: 0 };
+    const sum = reviews.reduce(
+      (acc: number, r: any) => acc + Number(r?.rating ?? 0),
+      0
+    );
+    return { avg: sum / reviews.length, count: reviews.length };
+  };
 
   return (
     <div className="min-h-screen bg-background pt-3 md:pt-24 pb-20 md:pb-8">
@@ -304,7 +361,7 @@ console.log("place", place);
                     </h3>
                     {serviceParam && !selectedPlaceId ? (
                       selectedService ? (
-                        <Card className="p-3 ring-2 ring-primary bg-primary/5">
+                        <Card className="p-3 ring-2 ring-primary bg-primary/5 m-2">
                           <div className="flex items-start gap-3">
                             <div className="w-24 h-16 rounded-md overflow-hidden bg-slate-50 flex items-center justify-center">
                               <img
@@ -325,6 +382,42 @@ console.log("place", place);
                                   <p className="text-sm text-muted-foreground line-clamp-2">
                                     {selectedService.description}
                                   </p>
+                                  <button
+                                    type="button"
+                                    className="mt-2 inline-flex items-center gap-1 text-xs text-yellow-500 hover:text-yellow-600"
+                                    onClick={() => {
+                                      setViewRatingsService(selectedService);
+                                      setShowServiceRatingsModal(true);
+                                    }}
+                                  >
+                                    {(() => {
+                                      const { avg, count } =
+                                        getServiceRatingSummary(
+                                          selectedService
+                                        );
+                                      if (!avg || !count) {
+                                        return (
+                                          <>
+                                            <Star className="w-3 h-3 text-gray-300" />
+                                            <span className="text-[11px] text-muted-foreground">
+                                              No ratings yet
+                                            </span>
+                                          </>
+                                        );
+                                      }
+                                      return (
+                                        <>
+                                          <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
+                                          <span className="font-semibold text-[11px]">
+                                            {avg.toFixed(1)}
+                                          </span>
+                                          <span className="text-[11px] text-muted-foreground">
+                                            ({count})
+                                          </span>
+                                        </>
+                                      );
+                                    })()}
+                                  </button>
                                 </div>
                                 <div className="text-right">
                                   <div className="text-base font-semibold">
@@ -355,6 +448,7 @@ console.log("place", place);
                         {services.map((s: any) => {
                           const selected =
                             String(s.id) === String(selectedServiceId);
+                          const { avg, count } = getServiceRatingSummary(s);
                           return (
                             <Card
                               key={s.id}
@@ -385,6 +479,34 @@ console.log("place", place);
                                       <p className="text-sm text-muted-foreground line-clamp-2">
                                         {s.description}
                                       </p>
+                                      <button
+                                        type="button"
+                                        className="mt-2 inline-flex items-center gap-1 text-xs text-yellow-500 hover:text-yellow-600"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          setViewRatingsService(s);
+                                          setShowServiceRatingsModal(true);
+                                        }}
+                                      >
+                                        {avg && count ? (
+                                          <>
+                                            <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
+                                            <span className="font-semibold text-[11px]">
+                                              {avg.toFixed(1)}
+                                            </span>
+                                            <span className="text-[11px] text-muted-foreground">
+                                              ({count})
+                                            </span>
+                                          </>
+                                        ) : (
+                                          <>
+                                            <Star className="w-3 h-3 text-gray-300" />
+                                            <span className="text-[11px] text-muted-foreground">
+                                              No ratings yet
+                                            </span>
+                                          </>
+                                        )}
+                                      </button>
                                     </div>
                                     <div className="text-right">
                                       <div className="text-base font-semibold">
@@ -575,27 +697,6 @@ console.log("place", place);
                     </div>
                   </div>
                 </Card>
-
-                <Card className="p-6 bg-gradient-primary text-white">
-                  <div className="flex items-center gap-2 mb-4">
-                    <h3 className="text-lg font-semibold">Payment</h3>
-                  </div>
-
-                  <p className="text-white/80 mb-4">
-                    This is a booking request. Payment will be processed after
-                    confirmation. We'll email you payment instructions.
-                  </p>
-
-                  <div className="bg-white/10 rounded-lg p-4">
-                    <p className="text-sm text-white/80">Total Amount</p>
-                    <p className="text-2xl font-bold">
-                      ₱{totalAmount.toLocaleString()}
-                    </p>
-                    <p className="text-sm text-white/80">
-                      Includes estimated taxes
-                    </p>
-                  </div>
-                </Card>
               </motion.div>
             )}
 
@@ -620,7 +721,7 @@ console.log("place", place);
                 </Button>
               ) : (
                 <Button
-                  onClick={handleSubmit}
+                  onClick={() => setShowConfirmModal(true)}
                   className="bg-gradient-primary text-white"
                   disabled={mutation.isPending}
                 >
@@ -676,12 +777,18 @@ console.log("place", place);
                     <p className="text-muted-foreground">+63 912 345 6789</p>
                   </div>
                 </div>
-                <div className="flex gap-2">
-                  <span>✉️</span>
-                  <div>
-                    <p className="font-medium">Email</p>
-                    <p className="text-muted-foreground">help@itourgab.com</p>
-                  </div>
+                <div className="h-16 w-full flex items-center justify-center px-4">
+                  <motion.button
+                    whileHover={{ scale: 1.03 }}
+                    whileTap={{ scale: 0.97 }}
+                    animate={{ y: [0, -4, 0] }}
+                    transition={{ repeat: Infinity, duration: 2 }}
+                    onClick={() => navigate("/emergency-safe-hotlines")}
+                    className="w-full px-2 flex items-center justify-center gap-2 rounded-2xl bg-red-500 text-white text-xs font-semibold py-3 shadow-lg shadow-red-300/40"
+                  >
+                    <AlertTriangle className="w-4 h-4" />
+                    Emergency Safe Hotlines
+                  </motion.button>
                 </div>
               </div>
             </Card>
@@ -699,6 +806,350 @@ console.log("place", place);
           setPlaceDialogOpen(false);
         }}
       />
+
+      <AnimatePresence>
+        {showConfirmModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm flex items-center justify-center px-4"
+            onClick={() => setShowConfirmModal(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="w-full max-w-md rounded-2xl bg-background shadow-xl p-6 space-y-4"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-2">
+                  <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-primary/10">
+                    <Check className="w-4 h-4 text-primary" />
+                  </span>
+                  <div>
+                    <h2 className="text-lg font-semibold">
+                      Confirm your booking
+                    </h2>
+                    <p className="text-xs text-muted-foreground">
+                      Please review the details before submitting.
+                    </p>
+                  </div>
+                </div>
+                <button
+                  className="p-1 rounded-full hover:bg-muted"
+                  onClick={() => setShowConfirmModal(false)}
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+
+              <div className="space-y-2 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Service</span>
+                  <span className="font-medium">
+                    {selectedService ? selectedService.name : "—"}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Dates</span>
+                  <span className="font-medium">
+                    {dates.checkIn} → {dates.checkOut}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Guests / Rooms</span>
+                  <span className="font-medium">
+                    {guests} guest{guests > 1 ? "s" : ""} · {rooms} room
+                    {rooms > 1 ? "s" : ""}
+                  </span>
+                </div>
+                <Separator className="my-2" />
+                <div className="flex justify-between text-base font-semibold">
+                  <span>Total</span>
+                  <span>₱{totalAmount.toLocaleString()}</span>
+                </div>
+              </div>
+
+              <div className="flex justify-end gap-2 pt-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowConfirmModal(false)}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  size="sm"
+                  className="bg-gradient-primary text-white"
+                  onClick={handleSubmit}
+                  disabled={mutation.isPending}
+                >
+                  {mutation.isPending ? "Submitting..." : "Confirm"}
+                </Button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+
+        {showRatingModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center px-4"
+          >
+            <motion.div
+              initial={{ y: 40, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              exit={{ y: 40, opacity: 0 }}
+              className="w-full h-[50vh] max-w-lg rounded-3xl bg-white shadow-2xl flex flex-col overflow-hidden"
+            >
+              <div className="h-full overflow-y-auto p-6 flex flex-col">
+                <div className="flex items-center justify-between mb-4">
+                  <div>
+                    <p className="text-xs uppercase tracking-wide text-sky-500">
+                      Thank you for booking
+                    </p>
+                    <h2 className="text-xl font-bold mt-1">
+                      Rate your recent experience
+                    </h2>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      You booked {ratingTargetName}. How was it?
+                    </p>
+                  </div>
+                  <button
+                    className="p-1.5 rounded-full hover:bg-slate-100"
+                    onClick={() => setShowRatingModal(false)}
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+
+                <div className="mt-4 mb-6">
+                  <p className="text-xs text-muted-foreground mb-2">
+                    Overall rating
+                  </p>
+                  <div className="flex items-center gap-2">
+                    {Array.from({ length: 5 }).map((_, i) => {
+                      const v = i + 1;
+                      const active = v <= (hoverRating || ratingValue);
+                      return (
+                        <button
+                          key={v}
+                          type="button"
+                          onMouseEnter={() => setHoverRating(v)}
+                          onMouseLeave={() => setHoverRating(0)}
+                          onClick={() => setRatingValue(v)}
+                          className="p-1"
+                        >
+                          <Star
+                            className={`w-7 h-7 ${
+                              active
+                                ? "fill-yellow-400 text-yellow-400"
+                                : "text-gray-300"
+                            }`}
+                          />
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between mb-3">
+                  <span className="text-xs text-muted-foreground">
+                    Post with name
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setPostWithName((v) => !v)}
+                    className={`w-11 h-6 rounded-full flex items-center px-1 transition-colors ${
+                      postWithName ? "bg-sky-500" : "bg-gray-300"
+                    }`}
+                  >
+                    <div
+                      className={`w-4 h-4 rounded-full bg-white transform transition-transform ${
+                        postWithName ? "translate-x-4" : ""
+                      }`}
+                    />
+                  </button>
+                </div>
+
+                <Textarea
+                  value={ratingText}
+                  onChange={(e) => setRatingText(e.target.value)}
+                  placeholder="Share a few details about your stay..."
+                  rows={5}
+                  className="text-sm"
+                />
+
+                <div className="mt-5 flex gap-2">
+                  <Button
+                    className="flex-1 bg-gradient-primary text-white rounded-xl"
+                    onClick={handleSubmitRating}
+                    disabled={!ratingValue}
+                  >
+                    Submit Rating
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    className="rounded-xl"
+                    onClick={() => navigate("/bookings")}
+                  >
+                    Skip
+                  </Button>
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+
+        {showRateSuccessModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[60] bg-black/70 backdrop-blur-sm flex items-center justify-center px-4"
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="w-full max-w-sm rounded-3xl bg-white p-6 space-y-4 text-center shadow-2xl"
+            >
+              <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-emerald-100">
+                <Check className="w-6 h-6 text-emerald-600" />
+              </div>
+              <h2 className="text-lg font-semibold">Thank you for rating</h2>
+              <p className="text-sm text-muted-foreground">
+                Your feedback helps us keep experiences safe and enjoyable.
+              </p>
+              <Button
+                className="w-full bg-gradient-primary text-white rounded-xl mt-2"
+                onClick={() => {
+                  setShowRateSuccessModal(false);
+                  setShowRatingModal(false);
+                  navigate("/bookings");
+                }}
+              >
+                OK
+              </Button>
+            </motion.div>
+          </motion.div>
+        )}
+
+        {showServiceRatingsModal && viewRatingsService && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[55] bg-black/70 backdrop-blur-sm flex items-center justify-center px-4"
+          >
+            <motion.div
+              initial={{ y: 30, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              exit={{ y: 30, opacity: 0 }}
+              className="w-full max-w-lg max-h-[80vh] rounded-3xl bg-white shadow-2xl flex flex-col overflow-hidden"
+            >
+              <div className="flex items-center justify-between px-5 pt-4 pb-2 border-b">
+                <div>
+                  <p className="text-xs uppercase tracking-wide text-sky-500">
+                    Service ratings
+                  </p>
+                  <h2 className="text-lg font-semibold">
+                    {viewRatingsService.name}
+                  </h2>
+                </div>
+                <button
+                  className="p-1.5 rounded-full hover:bg-slate-100"
+                  onClick={() => {
+                    setShowServiceRatingsModal(false);
+                    setViewRatingsService(null);
+                  }}
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+
+              <div className="px-5 pt-3">
+                {(() => {
+                  const { avg, count } =
+                    getServiceRatingSummary(viewRatingsService);
+                  return (
+                    <div className="flex items-center gap-3 mb-3">
+                      <div className="flex items-center gap-1">
+                        <Star className="w-6 h-6 fill-yellow-400 text-yellow-400" />
+                        <span className="text-xl font-semibold">
+                          {avg ? avg.toFixed(1) : "—"}
+                        </span>
+                      </div>
+                      <span className="text-xs text-muted-foreground">
+                        {count} rating{count === 1 ? "" : "s"}
+                      </span>
+                    </div>
+                  );
+                })()}
+              </div>
+
+              <div className="flex-1 overflow-y-auto px-5 pb-4 space-y-3">
+                {viewRatingsService.service_reviews &&
+                viewRatingsService.service_reviews.length ? (
+                  viewRatingsService.service_reviews.map((r: any) => {
+                    const userName = r.is_anonymous
+                      ? "Anonymous"
+                      : `${r.user?.first_name ?? ""} ${
+                          r.user?.last_name ?? ""
+                        }`.trim() || "Guest";
+                    const created = (r.created_at ?? r.createdAt ?? "")?.slice(
+                      0,
+                      10
+                    );
+                    return (
+                      <div
+                        key={r.id}
+                        className="rounded-xl border border-slate-100 bg-slate-50/60 px-3 py-2.5"
+                      >
+                        <div className="flex items-center justify-between mb-1">
+                          <div className="flex items-center gap-1">
+                            {Array.from({ length: 5 }).map((_, i) => (
+                              <Star
+                                key={i}
+                                className={`w-3 h-3 ${
+                                  i + 1 <= Number(r.rating ?? 0)
+                                    ? "fill-yellow-400 text-yellow-400"
+                                    : "text-gray-300"
+                                }`}
+                              />
+                            ))}
+                          </div>
+                          <span className="text-[11px] text-muted-foreground">
+                            {created}
+                          </span>
+                        </div>
+                        <p className="text-xs font-medium mb-1">{userName}</p>
+                        {r.description ? (
+                          <p className="text-xs text-muted-foreground">
+                            {r.description}
+                          </p>
+                        ) : (
+                          <p className="text-[11px] text-muted-foreground italic">
+                            No written review
+                          </p>
+                        )}
+                      </div>
+                    );
+                  })
+                ) : (
+                  <p className="text-xs text-muted-foreground py-4 text-center">
+                    No ratings yet for this service.
+                  </p>
+                )}
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
