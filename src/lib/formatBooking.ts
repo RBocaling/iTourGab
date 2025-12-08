@@ -79,6 +79,7 @@ export const formatBooking = (b: BookingRaw, index = 0): FormattedBooking => {
         createdAt: firstService.created_at ?? firstService.createdAt ?? null,
         updatedAt: firstService.updated_at ?? firstService.updatedAt ?? null,
         raw: firstService,
+        service_reviews: firstService?.service_reviews,
       }
     : null;
 
@@ -104,10 +105,12 @@ export const formatBooking = (b: BookingRaw, index = 0): FormattedBooking => {
         isDeleted: rawPlace.is_deleted ?? rawPlace.isDeleted ?? false,
         createdAt: rawPlace.created_at ?? rawPlace.createdAt ?? null,
         updatedAt: rawPlace.updated_at ?? rawPlace.updatedAt ?? null,
-        raw: rawPlace,
+      raw: rawPlace,
+
+
       }
     : null;
-
+  
   return {
     id: bookingId,
     spotId: spotSlug,
@@ -125,6 +128,10 @@ export const formatBooking = (b: BookingRaw, index = 0): FormattedBooking => {
     place: formattedPlace,
     service: formattedService,
     raw: b,
+    status: b?.status,
+    service_reviews: b?.service?.service_reviews,
+    cancelReason: b?.cancel_reason,
+    rejectReason: b?.reject_reason,
   };
 };
 

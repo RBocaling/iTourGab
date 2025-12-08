@@ -245,7 +245,7 @@ export default function Register() {
                 />
               </div>
 
-              <div className="relative">
+              {/* <div className="relative">
                 <Input
                   type="text"
                   placeholder="Profile URL (optional)"
@@ -255,7 +255,7 @@ export default function Register() {
                   }
                   className="pl-4 input-modern h-12 bg-white"
                 />
-              </div>
+              </div> */}
 
               {/* FIXED GENDER ENUM VALUES */}
               <div className="relative">

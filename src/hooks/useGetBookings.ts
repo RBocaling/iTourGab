@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { getAllBookingsApi, getBookingByIdApi, getMyBookingsApi } from "@/api/bookingApi";
+import { getAllBookingsApi,  getBookingByIdApi,  getMyBookingsApi } from "@/api/bookingApi";
 import { formatBookings, formatBooking } from "@/lib/formatBooking";
 import type { BookingRaw, FormattedBooking } from "@/types/booking";
 
@@ -10,6 +10,7 @@ export const useGetMyBookings = () => {
   });
 
   return {
+    refetch: q.refetch,
     ...q,
     normalData: q.data ?? ([] as BookingRaw[]),
     formatData: q.data ? formatBookings(q.data) : ([] as FormattedBooking[]),
@@ -32,7 +33,7 @@ export const useGetBookings = () => {
 export const useGetBookingById = (id?: string | number) => {
   const q = useQuery<BookingRaw, Error>({
     queryKey: ["bookings", "item", id],
-    queryFn: () => getBookingByIdApi(id as string | number),
+    queryFn: () => getBookingByIdApi(id),
     enabled: Boolean(id),
   });
 

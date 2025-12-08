@@ -223,7 +223,7 @@ const MapboxMap: React.FC<MapboxMapProps> = ({
       // Add click event
       markerElement.addEventListener("click", () => {
         if (onSpotSelect) {
-          onSpotSelect(spot.id);
+          onSpotSelect(spot.placeId);
         }
         // Fly to marker
         map.current?.flyTo({
@@ -234,31 +234,7 @@ const MapboxMap: React.FC<MapboxMapProps> = ({
         });
       });
 
-      // Add popup
-      const popup = new mapboxgl.Popup({
-        offset: 25,
-        closeButton: false,
-        className: "custom-popup",
-      }).setHTML(`
-        <div class="p-3 max-w-xs">
-          <img src="${spot.images[0]}" alt="${
-        spot.name
-      }" class="w-full h-24 object-cover rounded-lg mb-2" onerror="this.style.display='none'" />
-          <h3 class="font-semibold text-lg mb-1">${spot.name}</h3>
-          <p class="text-sm text-gray-600 mb-2">${spot.description.substring(
-            0,
-            100
-          )}...</p>
-          <div class="flex items-center justify-between text-xs">
-            <span class="bg-blue-100 text-blue-800 px-2 py-1 rounded">${
-              spot.category
-            }</span>
-            <span class="text-yellow-500">⭐ ${spot.rating}</span>
-          </div>
-        </div>
-      `);
-
-      marker.setPopup(popup);
+     
       markers.current.push(marker);
     });
   };

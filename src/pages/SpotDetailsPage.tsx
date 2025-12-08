@@ -22,19 +22,18 @@ import {
   X,
   Bed,
   Utensils,
-  ChevronUp,
-  ChevronDown,
   ArrowRight,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { Input } from "@/components/ui/input";
 import RouteMap from "@/components/map/RouteMap";
 import WalkModeMap from "@/components/map/WalkModelMap";
-import { useGetPlaces } from "@/hooks/useGetPlace";
+import { useGetPlace } from "@/hooks/useGetPlace";
 import Loader from "@/components/loader/Loader";
+import { useMutation } from "@tanstack/react-query";
+import { createServiceRatingApi } from "@/api/serviceRatingApi";
 
 const SpotDetailsPage: React.FC = () => {
   const { spotId } = useParams();
@@ -48,14 +47,21 @@ const SpotDetailsPage: React.FC = () => {
   const [fromLocation, setFromLocation] = useState("");
   const [routeDistance, setRouteDistance] = useState<string>("");
   const [routeDuration, setRouteDuration] = useState<string>("");
-  const { isLoading, formatData: touristSpots } = useGetPlaces();
-  console.log("tour", touristSpots);
-  
-
-  const spot = touristSpots?.find((s) => s.id === spotId);
-  console.log("sdsds", spot);
-  
-
+  const [showServiceRatingsModal, setShowServiceRatingsModal] = useState(false);
+  const [selectedService, setSelectedService] = useState<any | null>(null);
+  const [newRating, setNewRating] = useState(0);
+  const [hoverRating, setHoverRating] = useState(0);
+  const [reviewText, setReviewText] = useState("");
+  const [postWithName, setPostWithName] = useState(false);
+  const { isLoading, formatData: spot, refetch } = useGetPlace(spotId);
+  const {mutate} = useMutation({
+    mutationFn: createServiceRatingApi,
+    onSuccess: () => {
+      refetch();
+      setShowServiceRatingsModal(false);
+      setSelectedService(null);
+    }
+  });
   if (!spot) {
     return (
       <div className="min-h-screen bg-background pt-20 md:pt-24 pb-20 md:pb-8 flex items-center justify-center">
@@ -66,8 +72,6 @@ const SpotDetailsPage: React.FC = () => {
       </div>
     );
   }
-
-  const nearbySpots = touristSpots?.filter((s) => spot.nearby.includes(s.id));
 
   const nextImage = () => {
     setCurrentImageIndex((prev) =>
@@ -81,16 +85,46 @@ const SpotDetailsPage: React.FC = () => {
     );
   };
 
-   if (isLoading) {
-     return <Loader />;
+  if (isLoading) {
+    return <Loader />;
   }
-  
-  console.log("spot.rating", spot);
-  
+
+  const handleOpenServiceRatings = (service: any) => {
+    // if (!service.service_reviews || service.service_reviews.length === 0)
+    //   return;
+    setSelectedService(service);
+    setShowServiceRatingsModal(true);
+    setNewRating(0);
+    setHoverRating(0);
+    setReviewText("");
+    setPostWithName(false);
+  };
+
+  const getServiceAverageRating = (service: any) => {
+    if (!service.service_reviews || service.service_reviews.length === 0)
+      return "0.0";
+    const total = service.service_reviews.reduce(
+      (sum: number, r: any) => sum + (r.rating || 0),
+      0
+    );
+    return (total / service.service_reviews.length).toFixed(1);
+  };
+
+  const handleSubmitServiceReview = async () => {
+    if (!selectedService) return;
+    if (!newRating) return;
+    const payload = {
+      service_id: selectedService.id,
+      rating: newRating,
+      description: reviewText || "",
+      is_anonymous: !postWithName,
+    };
+    mutate(payload as any);
+  };
+
   return (
     <div className="min-h-screen bg-background pt-5 md:pt-24 pb-28 md:pb-8">
-      <div className="max-w-4xl mx-auto px-4">
-        {/* Header */}
+      <div className="max-w-5xl mx-auto px-4">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -140,7 +174,6 @@ const SpotDetailsPage: React.FC = () => {
           </div>
         </motion.div>
 
-        {/* Image Gallery */}
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -153,8 +186,6 @@ const SpotDetailsPage: React.FC = () => {
             className="w-full h-full object-cover"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent" />
-
-          {/* Image Navigation */}
           {spot.images.length > 1 && (
             <>
               <button
@@ -171,8 +202,6 @@ const SpotDetailsPage: React.FC = () => {
               </button>
             </>
           )}
-
-          {/* Image Indicators */}
           <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex gap-2">
             {spot.images.map((_, index) => (
               <button
@@ -186,8 +215,6 @@ const SpotDetailsPage: React.FC = () => {
               />
             ))}
           </div>
-
-          {/* Photo Count & Gallery Button */}
           <div className="absolute top-4 right-4 flex gap-2">
             <button
               onClick={() => setShowGallery(true)}
@@ -203,11 +230,8 @@ const SpotDetailsPage: React.FC = () => {
           </div>
         </motion.div>
 
-        {/* Main Content */}
         <div className="grid lg:grid-cols-3 gap-6">
-          {/* Left Content */}
           <div className="lg:col-span-2 space-y-6">
-            {/* Description */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -248,7 +272,6 @@ const SpotDetailsPage: React.FC = () => {
               </Card>
             </motion.div>
 
-            {/* Features */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -271,8 +294,33 @@ const SpotDetailsPage: React.FC = () => {
                 </div>
               </Card>
             </motion.div>
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3 }}
+            >
+              <Card className="p-6 md:flex md:justify-between">
+                <div className="mb-2">
+                  <p className="text-lg font-bold mb-2">Best Time to Visit</p>
+                  <p className="text-sm text-neutral-500">{spot.bestTime}</p>
+                </div>
+                <div className="mb-2">
+                  <p className="text-lg font-bold mb-2">Accessibility</p>
+                  <p className="text-sm text-neutral-500">
+                    {spot.accessibility}
+                  </p>
+                </div>
+                <div className="mb-2">
+                  <p className="text-lg font-bold mb-2">Location</p>
+                  <p className="flex items-center gap-1 text-sm text-neutral-500">
+                    <MapPin className="w-3 h-3" />
+                    {spot.coordinates.lat.toFixed(4)},{" "}
+                    {spot.coordinates.lng.toFixed(4)}
+                  </p>
+                </div>
+              </Card>
+            </motion.div>
 
-            {/* Activities */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -290,7 +338,6 @@ const SpotDetailsPage: React.FC = () => {
               </Card>
             </motion.div>
 
-            {/* Services */}
             {spot.services.length > 0 && (
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
@@ -303,136 +350,118 @@ const SpotDetailsPage: React.FC = () => {
                     Services & Accommodations
                   </h3>
                   <div className="space-y-4">
-                    {spot.services.map((service) => (
-                      <div
-                        key={service.id}
-                        className="border rounded-xl p-4 hover:shadow-md transition-shadow"
-                      >
-                        <div className="flex items-start gap-4">
-                          <img
-                            src={service.images[0]}
-                            alt={service.name}
-                            className="w-16 h-16 rounded-lg object-cover"
-                          />
-                          <div className="flex-1">
-                            <div className="flex items-start justify-between mb-2">
-                              <div>
-                                <h4 className="font-semibold text-sm flex items-center gap-2">
-                                  {service.type === "accommodation" && (
-                                    <Bed className="w-4 h-4" />
-                                  )}
-                                  {service.type === "restaurant" && (
-                                    <Utensils className="w-4 h-4" />
-                                  )}
-                                  {service.name}
-                                </h4>
-                                <p className="text-primary font-bold tracking-wide text-sm mt-2">
-                                  {service.price}
-                                </p>
-                              </div>
-                              <Badge
-                                variant="outline"
-                                className="capitalize text-xs"
-                              >
-                                {service.type}
-                              </Badge>
-                            </div>
-                          </div>
-                        </div>
-                        <div className="flex flex-col">
-                          <p className="text-xs text-muted-foreground mb-2 line-clamp-2">
-                            {service.description}
-                          </p>
-                          <div className="flex flex-wrap gap-1 mb-2">
-                            {service.amenities
-                              .slice(0, 3)
-                              .map((amenity, idx) => (
+                    {spot.services.map((service: any) => {
+                      const averageRating = getServiceAverageRating(service);
+                      const reviewsCount = service.service_reviews?.length || 0;
+                      const hasReviews = reviewsCount > 0;
+                      return (
+                        <div
+                          key={service.id}
+                          className="border rounded-xl p-4 hover:shadow-md transition-shadow"
+                        >
+                          <div className="flex items-start gap-4">
+                            <img
+                              src={service.images[0]}
+                              alt={service.name}
+                              className="w-16 h-16 rounded-lg object-cover"
+                            />
+                            <div className="flex-1">
+                              <div className="flex items-start justify-between mb-2">
+                                <div>
+                                  <h4 className="font-semibold text-sm flex items-center gap-2">
+                                    {service.type === "accommodation" && (
+                                      <Bed className="w-4 h-4" />
+                                    )}
+                                    {service.type === "restaurant" && (
+                                      <Utensils className="w-4 h-4" />
+                                    )}
+                                    {service.name}
+                                  </h4>
+                                  <p className="text-primary font-bold tracking-wide text-sm mt-2">
+                                    {service.price}
+                                  </p>
+                                  <button
+                                    onClick={() =>
+                                      handleOpenServiceRatings(service)
+                                    }
+                                    // disabled={!hasReviews}
+                                    className={`mt-1 flex items-center gap-1 text-xs rounded-md px-2 py-1 transition-colors ${
+                                      hasReviews
+                                        ? "hover:bg-muted/60"
+                                        : "text-muted-foreground "
+                                    }`}
+                                  >
+                                    <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
+                                    <span className="font-medium">
+                                      {averageRating}
+                                    </span>
+                                    <span className="text-muted-foreground">
+                                      ({reviewsCount})
+                                    </span>
+                                  </button>
+                                </div>
                                 <Badge
-                                  key={idx}
-                                  variant="secondary"
-                                  className="text-xs px-2 py-0.5 bg-primary/10 hover:bg-primary/20 text-primary"
+                                  variant="outline"
+                                  className="capitalize text-xs"
                                 >
-                                  {amenity}
+                                  {service.type}
                                 </Badge>
-                              ))}
-                            {service.amenities.length > 3 && (
-                              <Badge
-                                variant="secondary"
-                                className="text-xs px-2 py-0.5 bg-transparent text-primary bg-primary/10"
-                              >
-                                +{service.amenities.length - 3}
-                              </Badge>
-                            )}
-                          </div>
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                              <Phone className="w-3 h-3" />
-                              <span>{service.contact}</span>
+                              </div>
                             </div>
-                            <Button
-                              size="sm"
-                              className="h-10 px-9 text-xs bg-gradient-primary"
-                              onClick={() =>
-                                navigate(
-                                  `/booking?spot=${spot.placeId}&service=${service.id}`
-                                )
-                              }
-                            >
-                              Book Now
-                            </Button>
+                          </div>
+                          <div className="flex flex-col">
+                            <p className="text-xs text-muted-foreground mb-2 line-clamp-2">
+                              {service.description}
+                            </p>
+                            <div className="flex flex-wrap gap-1 mb-2">
+                              {service.amenities
+                                .slice(0, 3)
+                                .map((amenity: string, idx: number) => (
+                                  <Badge
+                                    key={idx}
+                                    variant="secondary"
+                                    className="text-xs px-2 py-0.5 bg-primary/10 hover:bg-primary/20 text-primary"
+                                  >
+                                    {amenity}
+                                  </Badge>
+                                ))}
+                              {service.amenities.length > 3 && (
+                                <Badge
+                                  variant="secondary"
+                                  className="text-xs px-2 py-0.5 bg-transparent text-primary bg-primary/10"
+                                >
+                                  +{service.amenities.length - 3}
+                                </Badge>
+                              )}
+                            </div>
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                                <Phone className="w-3 h-3" />
+                                <span>{service.contact}</span>
+                              </div>
+                              <Button
+                                size="sm"
+                                className="h-10 px-9 text-xs bg-gradient-primary"
+                                onClick={() =>
+                                  navigate(
+                                    `/booking?spot=${spot.placeId}&service=${service.id}`
+                                  )
+                                }
+                              >
+                                Book Now
+                              </Button>
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    ))}
-                  </div>
-                </Card>
-              </motion.div>
-            )}
-
-            {/* Nearby Spots */}
-            {nearbySpots.length > 0 && (
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.5 }}
-              >
-                <Card className="p-6">
-                  <h3 className="text-lg font-bold mb-4">Nearby Attractions</h3>
-                  <div className="grid md:grid-cols-2 gap-4">
-                    {nearbySpots.map((nearbySpot) => (
-                      <div
-                        key={nearbySpot.id}
-                        onClick={() => navigate(`/spot/${nearbySpot.id}`)}
-                        className="flex gap-3 p-3 rounded-lg border cursor-pointer hover:shadow-md transition-shadow"
-                      >
-                        <img
-                          src={nearbySpot.images[0]}
-                          alt={nearbySpot.name}
-                          className="w-16 h-16 object-cover rounded-lg"
-                        />
-                        <div className="flex-1 min-w-0">
-                          <h4 className="font-medium text-sm truncate">
-                            {nearbySpot.name}
-                          </h4>
-                          <p className="text-xs text-muted-foreground line-clamp-2">
-                            {nearbySpot.description}
-                          </p>
-                          <div className="flex items-center gap-1 mt-1">
-                            <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
-                            <span className="text-xs">{nearbySpot.rating}</span>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 </Card>
               </motion.div>
             )}
           </div>
 
-          {/* Right Sidebar */}
           <div className="space-y-6">
-            {/* Quick Actions */}
             <motion.div
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
@@ -479,38 +508,11 @@ const SpotDetailsPage: React.FC = () => {
                 </div>
 
                 <Separator className="my-4" />
-
-                {/* Quick Info */}
-                <div className="space-y-3 text-sm">
-                  <div>
-                    <p className="font-medium text-muted-foreground">
-                      Best Time to Visit
-                    </p>
-                    <p>{spot.bestTime}</p>
-                  </div>
-                  <div>
-                    <p className="font-medium text-muted-foreground">
-                      Accessibility
-                    </p>
-                    <p>{spot.accessibility}</p>
-                  </div>
-                  <div>
-                    <p className="font-medium text-muted-foreground">
-                      Location
-                    </p>
-                    <p className="flex items-center gap-1">
-                      <MapPin className="w-3 h-3" />
-                      {spot.coordinates.lat.toFixed(4)},{" "}
-                      {spot.coordinates.lng.toFixed(4)}
-                    </p>
-                  </div>
-                </div>
               </Card>
             </motion.div>
           </div>
         </div>
 
-        {/* Gallery Modal */}
         <AnimatePresence>
           {showGallery && (
             <motion.div
@@ -571,7 +573,6 @@ const SpotDetailsPage: React.FC = () => {
             </motion.div>
           )}
 
-          {/* Walk Mode Modal */}
           {showWalkMode && (
             <motion.div
               initial={{ opacity: 0 }}
@@ -627,7 +628,6 @@ const SpotDetailsPage: React.FC = () => {
             </motion.div>
           )}
 
-          {/* Range/Distance Modal */}
           {showRangeModal && (
             <motion.div
               initial={{ opacity: 0 }}
@@ -686,7 +686,6 @@ const SpotDetailsPage: React.FC = () => {
 
                 {fromLocation && (
                   <div className="space-y-4">
-                    {/* Route Map on Top */}
                     <div className="relative h-[500px] rounded-xl overflow-hidden glass-card border border-white/10">
                       <RouteMap
                         fromLocation={fromLocation}
@@ -699,7 +698,6 @@ const SpotDetailsPage: React.FC = () => {
                       />
                     </div>
 
-                    {/* Travel Mode Comparison Card - Bottom */}
                     {routeDistance && routeDuration && (
                       <div className="glass-card p-6 rounded-xl bg-gradient-to-br from-primary/10 via-primary/5 to-transparent border border-primary/20">
                         <div className="flex items-center justify-between mb-4">
@@ -713,7 +711,6 @@ const SpotDetailsPage: React.FC = () => {
                         </div>
 
                         <div className="grid gap-3">
-                          {/* Walking */}
                           <div className="flex items-center justify-between p-3 rounded-lg bg-background/50 border border-border/50">
                             <div className="flex items-center gap-3">
                               <div className="w-10 h-10 rounded-full bg-blue-500/20 flex items-center justify-center">
@@ -736,7 +733,6 @@ const SpotDetailsPage: React.FC = () => {
                             </div>
                           </div>
 
-                          {/* Motorcycle */}
                           <div className="flex items-center justify-between p-3 rounded-lg bg-background/50 border border-border/50">
                             <div className="flex items-center gap-3">
                               <div className="w-10 h-10 rounded-full bg-orange-500/20 flex items-center justify-center">
@@ -761,7 +757,6 @@ const SpotDetailsPage: React.FC = () => {
                             </div>
                           </div>
 
-                          {/* Car */}
                           <div className="flex items-center justify-between p-3 rounded-lg bg-background/50 border border-border/50">
                             <div className="flex items-center gap-3">
                               <div className="w-10 h-10 rounded-full bg-green-500/20 flex items-center justify-center">
@@ -817,6 +812,239 @@ const SpotDetailsPage: React.FC = () => {
                     </Button>
                   </div>
                 )}
+              </motion.div>
+            </motion.div>
+          )}
+
+          {showServiceRatingsModal && selectedService && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4"
+              onClick={() => {
+                setShowServiceRatingsModal(false);
+                setSelectedService(null);
+              }}
+            >
+              <motion.div
+                initial={{ scale: 0.9, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                className="glass-card p-6 max-w-xl w-full max-h-[90vh] overflow-y-auto rounded-2xl bg-background"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div className="flex items-center justify-between mb-4">
+                  <div>
+                    <h2 className="text-lg font-bold">
+                      {selectedService.name}
+                    </h2>
+                    <div className="flex items-center gap-2 mt-1">
+                      <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+                      <span className="font-semibold text-sm">
+                        {getServiceAverageRating(selectedService)}
+                      </span>
+                      <span className="text-xs text-muted-foreground">
+                        ({selectedService.service_reviews?.length || 0} total)
+                      </span>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => {
+                      setShowServiceRatingsModal(false);
+                      setSelectedService(null);
+                    }}
+                    className="p-2 rounded-full hover:bg-muted"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+
+                <div className="mb-4 rounded-2xl bg-sky-400/90 text-white p-4">
+                  <div className="flex gap-6 items-center">
+                    <div className="flex flex-col items-center min-w-[80px]">
+                      <div className="text-3xl font-bold">
+                        {getServiceAverageRating(selectedService)}
+                      </div>
+                      <div className="flex items-center mt-1">
+                        {Array.from({ length: 5 }).map((_, i) => {
+                          const avg = parseFloat(
+                            getServiceAverageRating(selectedService)
+                          );
+                          return (
+                            <Star
+                              key={i}
+                              className={`w-4 h-4 ${
+                                i + 1 <= Math.round(avg)
+                                  ? "fill-yellow-300 text-yellow-300"
+                                  : "text-white/60"
+                              }`}
+                            />
+                          );
+                        })}
+                      </div>
+                      <div className="text-xs mt-1">
+                        {selectedService.service_reviews?.length || 0} total
+                      </div>
+                    </div>
+                    <div className="flex-1 space-y-1">
+                      {[5, 4, 3, 2, 1].map((star) => {
+                        const list = selectedService.service_reviews || [];
+                        const count = list.filter(
+                          (r: any) => r.rating === star
+                        ).length;
+                        const total = list.length || 1;
+                        const pct = (count / total) * 100;
+                        return (
+                          <div
+                            key={star}
+                            className="flex items-center gap-2 text-xs"
+                          >
+                            <div className="w-4 text-right">{star}</div>
+                            <Star className="w-3 h-3 text-yellow-300 fill-yellow-300" />
+                            <div className="flex-1 h-2 rounded-full bg-white/40 overflow-hidden">
+                              <div
+                                className="h-full bg-yellow-300"
+                                style={{ width: `${pct}%` }}
+                              />
+                            </div>
+                            <div className="w-4 text-right">{count}</div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mb-4 rounded-2xl bg-white shadow-sm p-4">
+                  <h3 className="text-sm font-semibold mb-3">
+                    Share Your Experience
+                  </h3>
+                  <div className="mb-3">
+                    <p className="text-xs text-muted-foreground mb-1">
+                      Rate this service
+                    </p>
+                    <div className="flex items-center gap-1">
+                      {Array.from({ length: 5 }).map((_, i) => {
+                        const v = i + 1;
+                        const active = v <= (hoverRating || newRating);
+                        return (
+                          <button
+                            key={v}
+                            type="button"
+                            onMouseEnter={() => setHoverRating(v)}
+                            onMouseLeave={() => setHoverRating(0)}
+                            onClick={() => setNewRating(v)}
+                            className="p-0.5"
+                          >
+                            <Star
+                              className={`w-6 h-6 ${
+                                active
+                                  ? "fill-yellow-400 text-yellow-400"
+                                  : "text-gray-300"
+                              }`}
+                            />
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-xs text-muted-foreground">
+                      Post with name
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setPostWithName((v) => !v)}
+                      className={`w-10 h-5 rounded-full flex items-center px-1 transition-colors ${
+                        postWithName ? "bg-sky-500" : "bg-gray-300"
+                      }`}
+                    >
+                      <div
+                        className={`w-4 h-4 rounded-full bg-white transform transition-transform ${
+                          postWithName ? "translate-x-4" : ""
+                        }`}
+                      />
+                    </button>
+                  </div>
+                  <textarea
+                    value={reviewText}
+                    onChange={(e) => setReviewText(e.target.value)}
+                    placeholder="Share your experience about this service..."
+                    className="w-full mt-2 rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-xs outline-none focus:ring-2 focus:ring-sky-400"
+                    rows={3}
+                  />
+                  <div className="flex items-center gap-2 mt-3">
+                    <Button
+                      size="sm"
+                      className="bg-sky-500 hover:bg-sky-600 text-white rounded-xl px-4 text-xs"
+                      onClick={handleSubmitServiceReview}
+                    >
+                      Post Review
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="text-xs"
+                      onClick={() => {
+                        setNewRating(0);
+                        setHoverRating(0);
+                        setReviewText("");
+                        setPostWithName(false);
+                      }}
+                    >
+                      Cancel
+                    </Button>
+                  </div>
+                </div>
+
+                <Separator className="mb-4" />
+
+                <div className="space-y-3">
+                  {selectedService.service_reviews &&
+                  selectedService.service_reviews.length > 0 ? (
+                    selectedService.service_reviews
+                      ?.sort((a: any, b: any) => b?.id - a?.id)
+                      .map((r: any) => {
+                        const name =
+                          r.is_anonymous ||
+                          (!r.user?.first_name && !r.user?.last_name)
+                            ? "Anonymous"
+                            : `${r.user?.first_name || ""} ${
+                                r.user?.last_name || ""
+                              }`.trim();
+                        return (
+                          <div
+                            key={r.id ?? r.uuid}
+                            className="border border-border rounded-lg p-3 flex flex-col gap-1"
+                          >
+                            <div className="flex items-center justify-between">
+                              <span className="text-sm font-semibold">
+                                {name}
+                              </span>
+                              <div className="flex items-center gap-1 text-xs">
+                                <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
+                                <span className="font-semibold">
+                                  {r.rating}
+                                </span>
+                              </div>
+                            </div>
+                            {r.description && (
+                              <p className="text-xs text-muted-foreground mt-1">
+                                {r.description}
+                              </p>
+                            )}
+                            <p className="text-[10px] text-muted-foreground mt-1">
+                              {new Date(r.created_at).toLocaleString()}
+                            </p>
+                          </div>
+                        );
+                      })
+                  ) : (
+                    <p className="text-sm text-muted-foreground">
+                      No ratings yet for this service.
+                    </p>
+                  )}
+                </div>
               </motion.div>
             </motion.div>
           )}

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { MapPin, Star, Calendar, Camera, Filter, Search, Heart, ArrowRight, Users, Clock, Navigation } from 'lucide-react';
+import { MapPin, Star, Calendar, Camera, Filter, Search, Heart, ArrowRight, Users, Clock, Navigation, Bot, Nfc, Telescope } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
@@ -26,6 +26,8 @@ const HomePage: React.FC = () => {
     return matchesSearch && matchesCategory;
   });
 
+  console.log("filteredSpots", filteredSpots);
+  
   // Search suggestions logic
   useEffect(() => {
     if (searchQuery.trim().length > 0) {
@@ -157,26 +159,26 @@ const HomePage: React.FC = () => {
         >
           {[
             {
-              icon: MapPin,
-              label: "Explore Map",
+              icon: Telescope,
+              label: "Places Visited",
               action: () => navigate("/map"),
               color: "from-primary to-secondary",
             },
             {
               icon: Calendar,
-              label: "Plan Trip",
+              label: "My Iteneraries",
               action: () => navigate("/itinerary"),
               color: "from-accent to-accent-light",
             },
             {
-              icon: Camera,
-              label: "Gallery",
+              icon: Nfc,
+              label: "Emergency Hotlines",
               action: () => navigate("/search"),
               color: "from-purple-500 to-purple-600",
             },
             {
-              icon: Heart,
-              label: "Favorites",
+              icon: Bot,
+              label: "Chat AI Assistant",
               action: () => navigate("/favorites"),
               color: "from-pink-500 to-pink-600",
             },
@@ -225,7 +227,7 @@ const HomePage: React.FC = () => {
             >
               <Card
                 className="card-hover overflow-hidden cursor-pointer"
-                onClick={() => handleSpotClick(spot.id)}
+                // onClick={() => handleSpotClick(spot.id)}
               >
                 <div className="relative h-48 overflow-hidden">
                   <img
@@ -308,7 +310,7 @@ const HomePage: React.FC = () => {
                       className="flex-1 bg-gradient-primary text-white hover:shadow-lg transition-all group"
                       onClick={(e) => {
                         e.stopPropagation();
-                        handleSpotClick(spot.id);
+                        handleSpotClick(spot?.placeId);
                       }}
                     >
                       View Details

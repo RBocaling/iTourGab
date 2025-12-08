@@ -30,13 +30,13 @@ const MapPage: React.FC = () => {
         spot.features.some(feature => feature.toLowerCase().includes(searchQuery.toLowerCase()))
       );
       if (matchingSpot) {
-        setSelectedSpotId(matchingSpot.id);
+        setSelectedSpotId(matchingSpot.placeId);
       }
     }
   }, [searchParams]);
 
   const selectedSpot = selectedSpotId 
-    ? touristSpots?.find(spot => spot.id === selectedSpotId) 
+    ? touristSpots?.find(spot => spot.placeId === selectedSpotId) 
     : null;
 
   const handleSpotSelect = (spotId: string) => {
@@ -174,7 +174,7 @@ const MapPage: React.FC = () => {
                       variant="outline"
                       size="sm"
                       className="px-3 h-9"
-                      onClick={() => navigate(`/booking/${selectedSpotId}`)}
+                      onClick={() => navigate(`/booking?spot=${selectedSpotId}`)}
                     >
                       📅
                     </Button>

@@ -1,3 +1,4 @@
+// src/pages/FavoritesPage.tsx (or wherever this lives)
 import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { Heart, Star, Trash2 } from "lucide-react";
@@ -17,6 +18,7 @@ import { useGetPlaces } from "@/hooks/useGetPlace";
 import { createFavoriteApi, removeFavoriteApi } from "@/api/favoriteApi";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import SelectPlaceDialog from "@/components/ui/SelectPlaceDialog";
+import { SuccessDialog, ConfirmDialog } from "@/components/alert/FeedbackModals";
 
 const PLACEHOLDER = "/placeholder-400x250.png";
 
@@ -35,6 +37,16 @@ export default function FavoritesPage() {
   const [deleteTarget, setDeleteTarget] = useState<any | null>(null);
   const [confirmOpen, setConfirmOpen] = useState(false);
 
+  const [successModal, setSuccessModal] = useState<{
+    open: boolean;
+    title: string;
+    message: string;
+  }>({
+    open: false,
+    title: "",
+    message: "",
+  });
+
   const createMutation = useMutation({
     mutationFn: async (payload: any) => createFavoriteApi(payload),
     onSuccess: () => {
@@ -42,6 +54,11 @@ export default function FavoritesPage() {
       setOpenAdd(false);
       setSelectedPlace(null);
       setDescription("");
+      setSuccessModal({
+        open: true,
+        title: "Added to favorites",
+        message: "This destination was added to your favorites.",
+      });
     },
   });
 
@@ -51,6 +68,11 @@ export default function FavoritesPage() {
       qc.invalidateQueries(["favorites"] as any);
       setDeleteTarget(null);
       setConfirmOpen(false);
+      setSuccessModal({
+        open: true,
+        title: "Favorite removed",
+        message: "The destination has been removed from your favorites.",
+      });
     },
     onError: () => {
       setDeleteTarget(null);
@@ -83,24 +105,16 @@ export default function FavoritesPage() {
     deleteMutation.mutate(deleteTarget.raw?.id ?? deleteTarget.id);
   };
 
-  const renderStars = (avg: number) => {
-    const rounded = Math.round(avg);
-    return (
-      <div className="flex items-center gap-1">
-        {Array.from({ length: 5 }).map((_, i) => (
-          <Star
-            key={i}
-            className={`w-4 h-4 ${
-              i < rounded ? "fill-yellow-400 text-yellow-400" : "text-gray-300"
-            }`}
-          />
-        ))}
-      </div>
-    );
-  };
+  const deleteName =
+    deleteTarget?.raw?.tourist_spot?.name ??
+    deleteTarget?.placeName ??
+    deleteTarget?.name ??
+    "this place";
+
+  console.log("favorites", favorites);
 
   return (
-    <div className="min-h-screen bg-background md:pt-20 md:pt-24 pb-20 md:pb-8">
+    <div className="min-h-screen bg-background pt-5 md:pt-24 pb-20 md:pb-8">
       <div className="max-w-7xl mx-auto px-4 pb-20">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -125,7 +139,7 @@ export default function FavoritesPage() {
               </Button>
             </DialogTrigger>
 
-            <DialogContent className="max-w-2xl w-full">
+            <DialogContent className="max-w-2xl w-full rounded-3xl">
               <DialogHeader>
                 <DialogTitle className="text-lg">Add to Favorites</DialogTitle>
               </DialogHeader>
@@ -146,8 +160,8 @@ export default function FavoritesPage() {
                       </Button>
                       <div className="flex-1">
                         {selectedPlace ? (
-                          <div className="flex items-center gap-3 p-2 rounded-md border bg-white/5">
-                            <div className="w-20 h-12 rounded-md overflow-hidden bg-slate-50 flex items-center justify-center border flex-shrink-0">
+                          <div className="flex items-center gap-3 p-2 rounded-xl border bg-white/40">
+                            <div className="w-20 h-12 rounded-lg overflow-hidden bg-slate-50 flex items-center justify-center border flex-shrink-0">
                               <img
                                 src={
                                   selectedPlace.raw?.place?.images?.[0]
@@ -164,7 +178,7 @@ export default function FavoritesPage() {
                               <div className="font-semibold truncate">
                                 {selectedPlace.name}
                               </div>
-                              <div className="text-sm text-muted-foreground">
+                              <div className="text-sm text-muted-foreground line-clamp-2">
                                 {selectedPlace.description ??
                                   selectedPlace.raw?.place?.description ??
                                   ""}
@@ -189,10 +203,11 @@ export default function FavoritesPage() {
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
                     placeholder="Add a note for this favorite"
+                    className="rounded-2xl"
                   />
                 </div>
 
-                <div className="flex gap-2 justify-end">
+                <div className="flex gap-2 justify-end pt-2">
                   <Button
                     variant="outline"
                     onClick={() => {
@@ -200,11 +215,12 @@ export default function FavoritesPage() {
                       setSelectedPlace(null);
                       setDescription("");
                     }}
+                    className="rounded-2xl"
                   >
                     Cancel
                   </Button>
                   <Button
-                    className="bg-gradient-primary text-white"
+                    className="bg-gradient-primary text-white rounded-2xl"
                     onClick={handleCreate}
                     disabled={!selectedPlace || createMutation.isPending}
                   >
@@ -256,8 +272,11 @@ export default function FavoritesPage() {
                 "Saved destination — plan your next trip here.";
 
               return (
-                <Card key={f.id} className="flex flex-col overflow-hidden">
-                  <div className="relative h-40 w-full rounded-t-lg overflow-hidden bg-slate-50">
+                <Card
+                  key={f.id}
+                  className="flex flex-col overflow-hidden rounded-3xl border-slate-200/80 shadow-[0_14px_35px_rgba(15,23,42,0.12)]"
+                >
+                  <div className="relative h-40 w-full overflow-hidden bg-slate-50">
                     <img
                       src={img}
                       alt={title}
@@ -270,11 +289,11 @@ export default function FavoritesPage() {
                     <div>
                       <div className="flex items-start justify-between gap-3">
                         <div className="flex-1 pr-3">
-                          <h3 className="text-lg font-semibold leading-tight">
+                          <h3 className="text-base font-semibold leading-tight">
                             {title}
                           </h3>
                           <div className="flex items-center gap-3 mt-2">
-                            <div className="text-sm text-muted-foreground">
+                            <div className="text-xs text-muted-foreground">
                               {reviews.length} reviews
                             </div>
                             <div className="flex items-center gap-1">
@@ -289,7 +308,7 @@ export default function FavoritesPage() {
                                 />
                               ))}
                             </div>
-                            <div className="text-sm text-muted-foreground ml-2">
+                            <div className="text-xs text-muted-foreground ml-1">
                               {avg ? avg.toFixed(1) : "0.0"}
                             </div>
                           </div>
@@ -308,7 +327,7 @@ export default function FavoritesPage() {
                           >
                             <Trash2 className="w-5 h-5 text-red-500" />
                           </Button>
-                          <div className="text-sm text-muted-foreground">
+                          <div className="text-xs text-muted-foreground">
                             {f.createdAt
                               ? new Date(f.createdAt).toLocaleDateString()
                               : ""}
@@ -324,6 +343,7 @@ export default function FavoritesPage() {
                         </Button>
                         <Button
                           size="sm"
+                          className="rounded-full px-4"
                           onClick={() => navigate(`/spot/${f.placeId}`)}
                         >
                           View Spot
@@ -338,42 +358,29 @@ export default function FavoritesPage() {
         </div>
       </div>
 
-      <Dialog open={confirmOpen} onOpenChange={setConfirmOpen}>
-        <DialogContent className="max-w-md w-full">
-          <DialogHeader>
-            <DialogTitle className="text-lg">Remove Favorite</DialogTitle>
-          </DialogHeader>
-          <div className="p-4">
-            <p className="text-sm text-muted-foreground mb-4">
-              Are you sure you want to remove{" "}
-              <span className="font-semibold">
-                {deleteTarget?.raw?.tourist_spot?.name ??
-                  deleteTarget?.placeName ??
-                  deleteTarget?.name}
-              </span>{" "}
-              from your favorites? This action can be undone by adding it again.
-            </p>
-            <div className="flex justify-end gap-2">
-              <Button
-                variant="outline"
-                onClick={() => {
-                  setConfirmOpen(false);
-                  setDeleteTarget(null);
-                }}
-              >
-                Cancel
-              </Button>
-              <Button
-                className="bg-gradient-primary text-white"
-                onClick={confirmDelete}
-                disabled={deleteMutation.isPending}
-              >
-                {deleteMutation.isPending ? "Removing..." : "Remove"}
-              </Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
+      <ConfirmDialog
+        open={confirmOpen}
+        onOpenChange={(open) => {
+          setConfirmOpen(open);
+          if (!open) setDeleteTarget(null);
+        }}
+        title="Remove favorite?"
+        description={`Are you sure you want to remove "${deleteName}" from your favorites?`}
+        primaryLabel={deleteMutation.isPending ? "Removing..." : "Remove"}
+        secondaryLabel="Cancel"
+        onPrimary={confirmDelete}
+        onSecondary={() => {
+          setDeleteTarget(null);
+        }}
+      />
+
+      <SuccessDialog
+        open={successModal.open}
+        onOpenChange={(open) => setSuccessModal((prev) => ({ ...prev, open }))}
+        title={successModal.title}
+        description={successModal.message}
+        primaryLabel="OK"
+      />
     </div>
   );
 }

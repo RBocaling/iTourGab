@@ -34,7 +34,7 @@ export const formatPlace = (p: Place) => {
       : [],
     reviewsCount: reviews.length,
     ratings: reviews,
-    services: (p.services || []).map((s, index) => ({
+    services: (p.services || []).map((s:any, index:number) => ({
       id: s.id || `${formattedId}-service-${index}`,
       name: s.name,
       type: s.type,
@@ -43,6 +43,7 @@ export const formatPlace = (p: Place) => {
       images: s.images || [],
       contact: s.contact,
       amenities: s.amenities || [],
+      service_reviews: s?.service_reviews,
     })),
     accommodation: p.accommodation || [],
     raw: p,
