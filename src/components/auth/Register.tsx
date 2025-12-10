@@ -12,6 +12,7 @@ import {
   X as XIcon,
   Check,
   AlertCircle,
+  Calendar as CalendarIcon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -23,7 +24,6 @@ import { useAuthStore } from "@/store/authStore";
 import OtpInput from "../ui/otp-input";
 
 function isValidEmail(email: string) {
-  // reasonable email regex
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 }
 
@@ -49,11 +49,14 @@ export default function Register() {
     email_address: "",
     username: "",
     contact_number: "",
-    address: "",
+    province: "",
+    city: "",
+    barangay: "",
     profile_url: "",
     gender: "",
     password: "",
     confirmPassword: "",
+    birthday: "",
   });
 
   const [showPassword, setShowPassword] = useState(false);
@@ -75,10 +78,8 @@ export default function Register() {
   const registerMutation = useMutation({
     mutationFn: (payload: any) => registerApi(payload),
     onSuccess: async (res: any) => {
-      // standardize shape: backend might return { status, message, data }
       const response = res?.data ? res : { data: res?.data ?? res };
       const user = response?.data;
-      // if tokens returned immediately
       if (response?.accessToken && response?.refreshToken) {
         setAuth(response.accessToken, response.refreshToken);
         await qc.invalidateQueries(["auth", "me"] as any);
@@ -86,14 +87,12 @@ export default function Register() {
         setSuccessModalOpen(true);
         return;
       }
-      // if backend returned user details (needs OTP)
       if (user?.email_address) {
         setOtpUserEmail(user.email_address);
         setOtpOpen(true);
         setSuccessModalMessage(
           response?.message ?? "Registered. Please verify your account."
         );
-        // optionally show a small toast; we open OTP modal instead.
         return;
       }
       setSuccessModalMessage(
@@ -124,7 +123,7 @@ export default function Register() {
       setOtpValue("");
       setOtpUserEmail(null);
       setOtpError("");
-      setSuccessModalMessage(res?.message ?? "Account verified successfully");
+      setSuccessModalMessage(res?.Message ?? "Account verified successfully");
       setSuccessModalOpen(true);
       await qc.invalidateQueries(["auth", "me"] as any);
     },
@@ -188,7 +187,12 @@ export default function Register() {
       contact_number: formData.contact_number || null,
       profile_url: formData.profile_url || null,
       gender,
-      address: formData.address || null,
+      province: formData.province || null,
+      city: formData.city || null,
+      barangay: formData.barangay || null,
+      birthday: formData.birthday
+        ? new Date(formData.birthday).toISOString()
+        : null,
       role: "CLIENT",
     };
 
@@ -212,14 +216,12 @@ export default function Register() {
     verifyMutation.mutate({ email: otpUserEmail, otp: otpValue });
   };
 
-  // success modal "OK" click - redirect to /login
   const handleSuccessOk = () => {
     setSuccessModalOpen(false);
     setSuccessModalMessage(null);
     navigate("/login");
   };
 
-  // error modal ok
   const handleErrorOk = () => {
     setErrorModalOpen(false);
     setErrorModalMessage(null);
@@ -299,40 +301,42 @@ export default function Register() {
             </div>
 
             <div className="space-y-4">
-              <div className="relative">
-                <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-neutral-600 w-5 h-5 z-20" />
-                <Input
-                  type="email"
-                  placeholder="Email"
-                  value={formData.email_address}
-                  onChange={(e) =>
-                    setFormData((p) => ({
-                      ...p,
-                      email_address: e.target.value,
-                    }))
-                  }
-                  className="pl-12 input-modern h-12 bg-white"
-                  required
-                />
-                {!emailIsValid && formData.email_address.length > 0 && (
-                  <div className="mt-1 text-xs text-rose-600 flex items-center gap-1">
-                    <AlertCircle className="w-4 h-4" /> Invalid email address
-                  </div>
-                )}
-              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="relative">
+                  <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-neutral-600 w-5 h-5 z-20" />
+                  <Input
+                    type="email"
+                    placeholder="Email"
+                    value={formData.email_address}
+                    onChange={(e) =>
+                      setFormData((p) => ({
+                        ...p,
+                        email_address: e.target.value,
+                      }))
+                    }
+                    className="pl-12 input-modern h-12 bg-white"
+                    required
+                  />
+                  {!emailIsValid && formData.email_address.length > 0 && (
+                    <div className="mt-1 text-xs text-rose-600 flex items-center gap-1">
+                      <AlertCircle className="w-4 h-4" /> Invalid email address
+                    </div>
+                  )}
+                </div>
 
-              <div className="relative">
-                <UserIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 text-neutral-600 w-5 h-5 z-20" />
-                <Input
-                  type="text"
-                  placeholder="Username"
-                  value={formData.username}
-                  onChange={(e) =>
-                    setFormData((p) => ({ ...p, username: e.target.value }))
-                  }
-                  className="pl-12 input-modern h-12 bg-white"
-                  required
-                />
+                <div className="relative">
+                  <UserIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 text-neutral-600 w-5 h-5 z-20" />
+                  <Input
+                    type="text"
+                    placeholder="Username"
+                    value={formData.username}
+                    onChange={(e) =>
+                      setFormData((p) => ({ ...p, username: e.target.value }))
+                    }
+                    className="pl-12 input-modern h-12 bg-white"
+                    required
+                  />
+                </div>
               </div>
 
               <div className="relative">
@@ -351,17 +355,46 @@ export default function Register() {
                 />
               </div>
 
-              <div className="relative">
-                <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 text-neutral-600 w-5 h-5 z-20" />
-                <Input
-                  type="text"
-                  placeholder="Address"
-                  value={formData.address}
-                  onChange={(e) =>
-                    setFormData((p) => ({ ...p, address: e.target.value }))
-                  }
-                  className="pl-12 input-modern h-12 bg-white"
-                />
+              {/* Province / City / Barangay inputs (replaces single address field) */}
+              <div className="grid grid-cols-3 gap-4">
+                <div className="relative">
+                  <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 text-neutral-600 w-5 h-5 z-20" />
+                  <Input
+                    type="text"
+                    placeholder="Province"
+                    value={formData.province}
+                    onChange={(e) =>
+                      setFormData((p) => ({ ...p, province: e.target.value }))
+                    }
+                    className="pl-12 input-modern h-12 bg-white"
+                  />
+                </div>
+
+                <div className="relative">
+                  <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 text-neutral-600 w-5 h-5 z-20" />
+                  <Input
+                    type="text"
+                    placeholder="City / Municipality"
+                    value={formData.city}
+                    onChange={(e) =>
+                      setFormData((p) => ({ ...p, city: e.target.value }))
+                    }
+                    className="pl-12 input-modern h-12 bg-white"
+                  />
+                </div>
+
+                <div className="relative">
+                  <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 text-neutral-600 w-5 h-5 z-20" />
+                  <Input
+                    type="text"
+                    placeholder="Barangay"
+                    value={formData.barangay}
+                    onChange={(e) =>
+                      setFormData((p) => ({ ...p, barangay: e.target.value }))
+                    }
+                    className="pl-12 input-modern h-12 bg-white"
+                  />
+                </div>
               </div>
 
               <div className="relative">
@@ -372,12 +405,25 @@ export default function Register() {
                   }
                   className="w-full h-12 rounded-md border bg-white pl-3 pr-3"
                 >
-                  <option value="">Select gender (optional)</option>
+                  <option value="">Select gender</option>
                   <option value="MALE">Male</option>
                   <option value="FEMALE">Female</option>
-                  <option value="OTHER">Other</option>
-                  <option value="UNSPECIFIED">Prefer not to say</option>
                 </select>
+              </div>
+
+              <div className="relative">
+                <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-neutral-600 w-5 h-5 z-20">
+                  <CalendarIcon className="w-5 h-5" />
+                </div>
+                <Input
+                  type="date"
+                  placeholder="Birthday"
+                  value={formData.birthday}
+                  onChange={(e) =>
+                    setFormData((p) => ({ ...p, birthday: e.target.value }))
+                  }
+                  className="pl-12 input-modern h-12 bg-white"
+                />
               </div>
 
               <div className="relative">
@@ -578,6 +624,7 @@ export default function Register() {
         </div>
       </motion.div>
 
+      {/* OTP modal, success and error modals unchanged */}
       {otpOpen && (
         <div className="h-screen w-full flex items-center justify-center fixed top-0 left-0 bg-black/30 z-50">
           <div className="flex max-w-sm gap-3 flex-col justify-center h-auto bg-white rounded-3xl p-5 shadow-lg">
@@ -636,7 +683,6 @@ export default function Register() {
         </div>
       )}
 
-      {/* Success modal */}
       {successModalOpen && (
         <div className="fixed inset-0 z-60 flex items-center justify-center bg-black/30">
           <div className="bg-white rounded-2xl p-6 max-w-sm w-full shadow-lg">
@@ -660,7 +706,6 @@ export default function Register() {
         </div>
       )}
 
-      {/* Error modal */}
       {errorModalOpen && (
         <div className="fixed inset-0 z-60 flex items-center justify-center bg-black/30">
           <div className="bg-white rounded-2xl p-6 max-w-sm w-full shadow-lg">
