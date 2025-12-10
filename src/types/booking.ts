@@ -77,6 +77,7 @@ export type BookingRaw = {
   updated_at?: string | null;
   cancelReason?: string | null;
   rejectReason?: string | null;
+  availability?:any;
   service?: ServiceRaw | null;
   services?: ServiceRaw[] | null;
   accommodation?: AccommodationRaw | null;
@@ -111,4 +112,5 @@ export type FormattedBooking = {
   status: any;
   cancelReason?: string | null;
   rejectReason?: string | null;
+  availability:any;
 };

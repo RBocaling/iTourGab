@@ -112,7 +112,6 @@ export default function BookingsPage() {
     },
   });
 
-
   const openServiceRatingsModal = (booking: any) => {
     const service = booking.service;
     const reviews =
@@ -158,14 +157,13 @@ export default function BookingsPage() {
     setShowCancelModal(true);
   };
 
- const handleConfirmCancel = () => {
-   if (!cancelBooking) return;
-
-   cancelMutate({
-     id: cancelBooking.id,
-     reason: cancelReason,
-   });
- };
+  const handleConfirmCancel = () => {
+    if (!cancelBooking) return;
+    cancelMutate({
+      id: cancelBooking.id,
+      reason: cancelBooking.customCancelReason || cancelReason,
+    });
+  };
 
   const finalCancelReason = (customCancelReason || cancelReason).trim();
 
@@ -175,11 +173,8 @@ export default function BookingsPage() {
     setShowReasonModal(true);
   };
 
-
-  console.log("statusKey", bookings);
-
   return (
-    <div className="min-h-screen overflow-y-auto bg-background pt-5 md:pt-32 pb-20 md:pb-8">
+    <div className="min-h-screen overflow-y-auto bg-background pt-5 md:pt-32 pb-28 md:pb-8">
       <div className="max-w-4xl mx-auto px-4">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -243,6 +238,12 @@ export default function BookingsPage() {
               const canCancel =
                 statusKey === "PENDING" || statusKey === "CONFIRMED";
 
+              const availabilityName = b.availability?.name ?? null;
+              const availabilityDescription =
+                b.availability?.description ?? null;
+
+              console.log("hjhhj",b);
+              
               return (
                 <motion.div
                   key={b.id}
@@ -278,9 +279,23 @@ export default function BookingsPage() {
                                 </span>
                               </Badge>
                             </div>
-                            <p className="text-sm text-neutral-500 mb-1 truncate">
-                              {b.serviceName}
-                            </p>
+
+                            <div className="mt-1">
+                              <p className="text-sm text-neutral-700 mb-1 truncate">
+                                {b.serviceName}
+                                {availabilityName ? (
+                                  <span className="text-muted-foreground">
+                                    {" "}
+                                    · {availabilityName}
+                                  </span>
+                                ) : null}
+                              </p>
+                              {availabilityDescription ? (
+                                <p className="text-xs text-neutral-500 line-clamp-2">
+                                  {availabilityDescription}
+                                </p>
+                              ) : null}
+                            </div>
 
                             <button
                               type="button"
@@ -365,6 +380,7 @@ export default function BookingsPage() {
                               Cancel Booking
                             </Button>
                           )}
+
                           {statusKey === "CANCELLED" && b.cancelReason && (
                             <button
                               type="button"

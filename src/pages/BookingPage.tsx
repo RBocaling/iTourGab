@@ -30,7 +30,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import SelectPlaceDialog from "@/components/ui/SelectPlaceDialog";
 import { createServiceRatingApi } from "@/api/serviceRatingApi";
 
-function parsePrice(price: string | number | undefined): number {
+function parsePrice(price: string | number | undefined | null): number {
   if (price == null) return 0;
   if (typeof price === "number") return price;
   const digits = String(price).replace(/[^\d.-]/g, "");
@@ -40,8 +40,9 @@ function parsePrice(price: string | number | undefined): number {
 
 const steps = [
   { number: 1, title: "Select Service", icon: MapPin },
-  { number: 2, title: "Trip Details", icon: Calendar },
-  { number: 3, title: "Review & Confirm", icon: Check },
+  { number: 2, title: "Select Availability", icon: MapPin },
+  { number: 3, title: "Trip Details", icon: Calendar },
+  { number: 4, title: "Review & Confirm", icon: Check },
 ];
 
 export default function BookingPage() {
@@ -70,8 +71,12 @@ export default function BookingPage() {
     string | number | null
   >(null);
   const [selectedServiceId, setSelectedServiceId] = useState<
-    string | number | null
+   any
   >(serviceParam ?? null);
+  const [selectedAvailabilityId, setSelectedAvailabilityId] = useState<
+    string | number | null
+  >(null);
+
   const [dates, setDates] = useState({ checkIn: "", checkOut: "" });
   const [guests, setGuests] = useState<number>(1);
   const [rooms, setRooms] = useState<number>(1);
@@ -105,11 +110,16 @@ export default function BookingPage() {
     if (selectedPlaceId) return;
     if (!services || services.length === 0) return;
     if (selectedServiceId) return;
-    const svc = services.find(
+    const svc:any = services.find(
       (s: any) => String(s.id) === String(serviceParam)
     );
     if (svc) {
       setSelectedServiceId(svc.id);
+      const firstAvail =
+        Array.isArray(svc.availabilities) && svc.availabilities.length
+          ? svc.availabilities[0]
+          : null;
+      if (firstAvail) setSelectedAvailabilityId(firstAvail.id);
     }
   }, [serviceParam, services, selectedPlaceId, selectedServiceId]);
 
@@ -117,6 +127,7 @@ export default function BookingPage() {
     if (!selectedPlaceId) return;
     setSelectedAccommodationId(null);
     setSelectedServiceId(null);
+    setSelectedAvailabilityId(null);
   }, [selectedPlaceId]);
 
   const selectedAccommodation = useMemo(
@@ -127,12 +138,22 @@ export default function BookingPage() {
     [accommodations, selectedAccommodationId]
   );
 
-  const selectedService = useMemo(
+  const selectedService:any = useMemo(
     () =>
       services.find((s: any) => String(s.id) === String(selectedServiceId)) ??
       null,
     [services, selectedServiceId]
   );
+
+  const selectedAvailability = useMemo(() => {
+    if (!selectedService || !Array.isArray(selectedService.availabilities))
+      return null;
+    return (
+      selectedService.availabilities.find(
+        (a: any) => String(a.id) === String(selectedAvailabilityId)
+      ) ?? null
+    );
+  }, [selectedService, selectedAvailabilityId]);
 
   const nights = useMemo(() => {
     if (!dates.checkIn || !dates.checkOut) return 0;
@@ -142,18 +163,34 @@ export default function BookingPage() {
     return Math.max(0, Math.ceil(diff));
   }, [dates]);
 
+  const servicePriceRange = (s: any) => {
+    if (!s || !Array.isArray(s.availabilities) || s.availabilities.length === 0)
+      return { min: 0, max: 0 };
+    const prices = s.availabilities
+      .map((a: any) => parsePrice(a?.price))
+      .filter((p: number) => p > 0);
+    if (!prices.length) return { min: 0, max: 0 };
+    const min = Math.min(...prices);
+    const max = Math.max(...prices);
+    return { min, max };
+  };
+
   const unitPrice = useMemo(() => {
     if (selectedAccommodation)
       return parsePrice((selectedAccommodation as any).price);
-    if (selectedService) return parsePrice((selectedService as any).price);
+    if (selectedAvailability) return parsePrice(selectedAvailability.price);
+    if (selectedService) {
+      const { min } = servicePriceRange(selectedService);
+      return min;
+    }
     return 0;
-  }, [selectedAccommodation, selectedService]);
+  }, [selectedAccommodation, selectedService, selectedAvailability]);
 
-  const totalAmount = useMemo(() => {
-    const base = Number(unitPrice) * Math.max(1, nights) * Math.max(1, rooms);
-    const taxes = base * 0.12;
-    return Math.round(base + taxes);
-  }, [unitPrice, nights, rooms]);
+const totalAmount = useMemo(() => {
+  const base = Number(unitPrice) * Math.max(1, nights) * Math.max(1, rooms);
+  return Math.round(base);
+}, [unitPrice, nights, rooms]);
+
 
   const mutation = useMutation({
     mutationFn: (payload: any) => createBookingApi(payload),
@@ -183,6 +220,8 @@ export default function BookingPage() {
     step === 1
       ? selectedAccommodationId != null || selectedServiceId != null
       : step === 2
+      ? selectedServiceId != null && selectedAvailabilityId != null
+      : step === 3
       ? dates.checkIn && dates.checkOut
       : true;
 
@@ -202,8 +241,9 @@ export default function BookingPage() {
       return;
     }
 
-    const payload = {
+    const payload: any = {
       service_id: selectedServiceId ?? null,
+      availability_id: selectedAvailabilityId ?? null,
       start_date: dates.checkIn,
       end_date: dates.checkOut,
       guests,
@@ -357,7 +397,7 @@ export default function BookingPage() {
                 <div className="max-h-[60vh] overflow-auto pr-2 space-y-4">
                   <div className="mt-4">
                     <h3 className="text-lg font-semibold">
-                      Accomodations & Services
+                      Accommodations & Services
                     </h3>
                     {serviceParam && !selectedPlaceId ? (
                       selectedService ? (
@@ -421,13 +461,17 @@ export default function BookingPage() {
                                 </div>
                                 <div className="text-right">
                                   <div className="text-base font-semibold">
-                                    ₱
-                                    {parsePrice(
-                                      selectedService.price
-                                    ).toLocaleString()}
+                                    {(() => {
+                                      const { min, max } =
+                                        servicePriceRange(selectedService);
+                                      if (!min && !max) return "₱—";
+                                      if (min === max)
+                                        return `₱${min.toLocaleString()}`;
+                                      return `₱${min.toLocaleString()} - ₱${max.toLocaleString()}`;
+                                    })()}
                                   </div>
                                   <div className="text-sm text-muted-foreground">
-                                    price
+                                    price range
                                   </div>
                                 </div>
                               </div>
@@ -449,6 +493,7 @@ export default function BookingPage() {
                           const selected =
                             String(s.id) === String(selectedServiceId);
                           const { avg, count } = getServiceRatingSummary(s);
+                          const { min, max } = servicePriceRange(s);
                           return (
                             <Card
                               key={s.id}
@@ -457,7 +502,17 @@ export default function BookingPage() {
                                   ? "ring-2 ring-primary bg-primary/5"
                                   : ""
                               }`}
-                              onClick={() => setSelectedServiceId(s.id)}
+                              onClick={() => {
+                                setSelectedServiceId(s.id);
+                                const firstAvail =
+                                  Array.isArray(s.availabilities) &&
+                                  s.availabilities.length
+                                    ? s.availabilities[0]
+                                    : null;
+                                setSelectedAvailabilityId(
+                                  firstAvail ? firstAvail.id : null
+                                );
+                              }}
                             >
                               <div className="flex items-start gap-3">
                                 <div className="w-24 h-16 rounded-md overflow-hidden bg-slate-50 flex items-center justify-center">
@@ -510,10 +565,14 @@ export default function BookingPage() {
                                     </div>
                                     <div className="text-right">
                                       <div className="text-base font-semibold">
-                                        ₱{parsePrice(s.price).toLocaleString()}
+                                        {!min && !max
+                                          ? "₱—"
+                                          : min === max
+                                          ? `₱${min.toLocaleString()}`
+                                          : `₱${min.toLocaleString()} - ₱${max.toLocaleString()}`}
                                       </div>
                                       <div className="text-sm text-muted-foreground">
-                                        price
+                                        price range
                                       </div>
                                     </div>
                                   </div>
@@ -530,6 +589,73 @@ export default function BookingPage() {
             )}
 
             {step === 2 && (
+              <motion.div
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                className="space-y-6"
+              >
+                <Card className="p-6">
+                  <h2 className="text-xl font-bold mb-4">
+                    Choose Availability
+                  </h2>
+
+                  {!selectedService ? (
+                    <p className="text-sm text-muted-foreground">
+                      Select a service first.
+                    </p>
+                  ) : !Array.isArray(selectedService.availabilities) ||
+                    selectedService.availabilities.length === 0 ? (
+                    <p className="text-sm text-muted-foreground">
+                      This service has no availabilities.
+                    </p>
+                  ) : (
+                    <div className="space-y-3">
+                      {selectedService.availabilities.map((a: any) => {
+                        const isSelected =
+                          String(a.id) === String(selectedAvailabilityId);
+                        return (
+                          <div
+                            key={a.id}
+                            className={`p-3 rounded-lg border transition cursor-pointer ${
+                              isSelected
+                                ? "ring-2 ring-primary bg-primary/5"
+                                : "bg-white/3"
+                            }`}
+                            onClick={() => setSelectedAvailabilityId(a.id)}
+                          >
+                            <div className="flex items-start justify-between gap-4">
+                              <div className="min-w-0">
+                                <h4 className="font-semibold">{a.name}</h4>
+                                <p className="text-sm text-muted-foreground line-clamp-2">
+                                  {a.description ?? "—"}
+                                </p>
+                                <div className="text-xs text-muted-foreground mt-2">
+                                  {a.images && a.images.length
+                                    ? `${a.images.length} image(s)`
+                                    : "No images"}
+                                </div>
+                              </div>
+                              <div className="text-right">
+                                <div className="text-base font-semibold">
+                                  {a.price
+                                    ? `₱${parsePrice(a.price).toLocaleString()}`
+                                    : "₱—"}
+                                </div>
+                                <div className="text-sm text-muted-foreground">
+                                  per night
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </Card>
+              </motion.div>
+            )}
+
+            {step === 3 && (
               <motion.div
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
@@ -621,7 +747,7 @@ export default function BookingPage() {
               </motion.div>
             )}
 
-            {step === 3 && (
+            {step === 4 && (
               <motion.div
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
@@ -670,6 +796,15 @@ export default function BookingPage() {
                       </div>
 
                       <div>
+                        <p className="text-muted-foreground">Availability</p>
+                        <p className="font-medium">
+                          {selectedAvailability
+                            ? selectedAvailability.name
+                            : "—"}
+                        </p>
+                      </div>
+
+                      <div>
                         <p className="text-muted-foreground">Dates</p>
                         <p className="font-medium">
                           {dates.checkIn} to {dates.checkOut}
@@ -709,7 +844,7 @@ export default function BookingPage() {
                 Previous
               </Button>
 
-              {step < 3 ? (
+              {step < steps.length ? (
                 <Button
                   onClick={() => {
                     if (canProceedToNext) setStep(step + 1);
@@ -740,6 +875,13 @@ export default function BookingPage() {
                   <p className="text-muted-foreground">Service</p>
                   <p className="font-medium">
                     {selectedService ? selectedService.name : "—"}
+                  </p>
+                </div>
+
+                <div>
+                  <p className="text-muted-foreground">Availability</p>
+                  <p className="font-medium">
+                    {selectedAvailability ? selectedAvailability.name : "—"}
                   </p>
                 </div>
 
@@ -800,9 +942,7 @@ export default function BookingPage() {
         open={placeDialogOpen}
         onOpenChange={setPlaceDialogOpen}
         onSelect={(p: any) => {
-          setSelectedPlaceId(
-            String(p.placeId ?? p.placeId ?? p.placeId ?? p.id)
-          );
+          setSelectedPlaceId(String(p.placeId ?? p.id));
           setPlaceDialogOpen(false);
         }}
       />
@@ -850,6 +990,12 @@ export default function BookingPage() {
                   <span className="text-muted-foreground">Service</span>
                   <span className="font-medium">
                     {selectedService ? selectedService.name : "—"}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Availability</span>
+                  <span className="font-medium">
+                    {selectedAvailability ? selectedAvailability.name : "—"}
                   </span>
                 </div>
                 <div className="flex justify-between">

@@ -54,14 +54,16 @@ const SpotDetailsPage: React.FC = () => {
   const [reviewText, setReviewText] = useState("");
   const [postWithName, setPostWithName] = useState(false);
   const { isLoading, formatData: spot, refetch } = useGetPlace(spotId);
-  const {mutate} = useMutation({
+  const { mutate } = useMutation({
     mutationFn: createServiceRatingApi,
     onSuccess: () => {
       refetch();
       setShowServiceRatingsModal(false);
       setSelectedService(null);
-    }
+    },
   });
+  console.log("spot", spot);
+  
   if (!spot) {
     return (
       <div className="min-h-screen bg-background pt-20 md:pt-24 pb-20 md:pb-8 flex items-center justify-center">
@@ -90,8 +92,6 @@ const SpotDetailsPage: React.FC = () => {
   }
 
   const handleOpenServiceRatings = (service: any) => {
-    // if (!service.service_reviews || service.service_reviews.length === 0)
-    //   return;
     setSelectedService(service);
     setShowServiceRatingsModal(true);
     setNewRating(0);
@@ -121,6 +121,32 @@ const SpotDetailsPage: React.FC = () => {
     };
     mutate(payload as any);
   };
+
+  const priceRangeForService = (service: any) => {
+    const av = Array.isArray(
+      service.availability ?? service.availabilities ?? service.avail
+    )
+      ? service.availability ?? service.availabilities ?? service.avail
+      : [];
+    const prices = av
+      .map((a: any) => {
+        const p = a?.price ?? a?.amount ?? null;
+        const n = Number(p);
+        return Number.isFinite(n) ? n : null;
+      })
+      .filter((p: number | null) => p !== null) as number[];
+    if (prices.length === 0) {
+      const single = service.price ?? service.amount ?? null;
+      const n = Number(single);
+      if (Number.isFinite(n)) return { min: n, max: n };
+      return null;
+    }
+    const min = Math.min(...prices);
+    const max = Math.max(...prices);
+    return { min, max };
+  };
+
+  const fmt = (v: number) => `₱${v.toLocaleString()}`;
 
   return (
     <div className="min-h-screen bg-background pt-5 md:pt-24 pb-28 md:pb-8">
@@ -294,6 +320,7 @@ const SpotDetailsPage: React.FC = () => {
                 </div>
               </Card>
             </motion.div>
+
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -354,6 +381,14 @@ const SpotDetailsPage: React.FC = () => {
                       const averageRating = getServiceAverageRating(service);
                       const reviewsCount = service.service_reviews?.length || 0;
                       const hasReviews = reviewsCount > 0;
+                      const range = priceRangeForService(service);
+                      const priceDisplay = range
+                        ? range.min === range.max
+                          ? fmt(range.min)
+                          : `${fmt(range.min)} — ${fmt(range.max)}`
+                        : service.price || service.amount
+                        ? fmt(Number(service.price ?? service.amount))
+                        : "See availabilities";
                       return (
                         <div
                           key={service.id}
@@ -378,13 +413,12 @@ const SpotDetailsPage: React.FC = () => {
                                     {service.name}
                                   </h4>
                                   <p className="text-primary font-bold tracking-wide text-sm mt-2">
-                                    {service.price}
+                                    {priceDisplay}
                                   </p>
                                   <button
                                     onClick={() =>
                                       handleOpenServiceRatings(service)
                                     }
-                                    // disabled={!hasReviews}
                                     className={`mt-1 flex items-center gap-1 text-xs rounded-md px-2 py-1 transition-colors ${
                                       hasReviews
                                         ? "hover:bg-muted/60"

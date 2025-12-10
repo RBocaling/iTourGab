@@ -160,8 +160,8 @@ const HomePage: React.FC = () => {
           {[
             {
               icon: Telescope,
-              label: "Places Visited",
-              action: () => navigate("/map"),
+              label: "Top Tourist spot",
+              action: () => navigate("/ranking-spot"),
               color: "from-primary to-secondary",
             },
             {
@@ -173,13 +173,13 @@ const HomePage: React.FC = () => {
             {
               icon: Nfc,
               label: "Emergency Hotlines",
-              action: () => navigate("/search"),
+              action: () => navigate("/emergency-safe-hotlines"),
               color: "from-purple-500 to-purple-600",
             },
             {
               icon: Bot,
               label: "Chat AI Assistant",
-              action: () => navigate("/favorites"),
+              action: () => navigate("/ai-support"),
               color: "from-pink-500 to-pink-600",
             },
           ].map((item, index) => (

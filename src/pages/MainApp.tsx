@@ -18,6 +18,8 @@ import PublicChats from "./PublicChats";
 import MobileHeader from "@/components/layout/MobileHeader";
 import { useAuth2 } from "@/hooks/useAuth";
 import RankingPlace from "./RankingPlace";
+import Hotlines from "./Hotlines";
+import ChatAi from "./ChatAi";
 
 const MainApp: React.FC = () => {
   const { user, isAuthenticated } = useAuth2();
@@ -45,6 +47,8 @@ const MainApp: React.FC = () => {
           <Routes>
             <Route path="/" element={<HomePage />} />
             <Route path="/map" element={<MapPage />} />
+            <Route path="/emergency-safe-hotlines" element={<Hotlines />} />
+            <Route path="/ai-support" element={<ChatAi />} />
             <Route path="/ranking-spot" element={<RankingPlace />} />
             <Route path="/spot/:spotId" element={<SpotDetailsPage />} />
             <Route path="/booking" element={<BookingPage />} />
