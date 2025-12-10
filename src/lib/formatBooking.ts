@@ -132,6 +132,7 @@ export const formatBooking = (b: BookingRaw, index = 0): FormattedBooking => {
     service_reviews: b?.service?.service_reviews,
     cancelReason: b?.cancel_reason,
     rejectReason: b?.reject_reason,
+    availability: b?.availability,
   };
 };
 

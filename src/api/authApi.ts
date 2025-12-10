@@ -48,3 +48,8 @@ export const register = async (payload: RegisterPayload): Promise<Tokens> => {
   getAuthState().setAuth(data.accessToken, data.refreshToken);
   return data;
 };
+export const verifyAccountApi = async (payload: any) => {
+  const body = payload;
+  const { data } = await api.post<any>("/auth/verify-account", body);
+  return data;
+};

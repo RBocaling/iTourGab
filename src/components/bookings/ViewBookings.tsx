@@ -17,21 +17,52 @@ type Props = {
   onViewSpot?: (placeId?: string | number | null) => void;
 };
 
+function normalizeImagesField(val: any): string[] {
+  if (!val) return [];
+  if (Array.isArray(val)) return val.filter(Boolean);
+  if (typeof val === "string") {
+    try {
+      const parsed = JSON.parse(val);
+      if (Array.isArray(parsed)) return parsed.filter(Boolean);
+    } catch (e) {
+      // fallback: treat comma-separated string as list
+      return val
+        .split(",")
+        .map((s) => s.trim())
+        .filter(Boolean);
+    }
+  }
+  return [];
+}
+
 export default function ViewBooking({ bookingId, onClose, onViewSpot }: Props) {
   const { normalData: raw, isLoading } = useGetBookingById(
     bookingId ?? undefined
   );
-  const b = raw ? formatBooking(raw) : null;
+  const b: any = raw ? formatBooking(raw) : null;
+
   const servicesList = b
     ? b.service
       ? [b.service]
       : b.raw?.services ?? []
     : [];
-  const galleryItems = [
-    ...(b?.place?.gallery ?? []),
-    ...(b?.service?.images ?? []),
-  ].filter(Boolean);
 
+  // availability might exist in different places depending on formatBooking
+  const availability =
+    b?.availability ?? b?.raw?.availability ?? raw?.availability ?? null;
+
+  const availabilityImages: string[] = normalizeImagesField(
+    availability?.images
+  );
+
+  const placeGallery: string[] = normalizeImagesField(b?.place?.gallery);
+  const serviceImages: string[] = normalizeImagesField(b?.service?.images);
+
+  // keep availability images separate — galleryItems excludes availability images
+  const galleryItems = [...placeGallery, ...serviceImages].filter(Boolean);
+
+  
+  
   return (
     <Dialog
       open={Boolean(bookingId)}
@@ -59,8 +90,8 @@ export default function ViewBooking({ bookingId, onClose, onViewSpot }: Props) {
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div className="md:col-span-2">
-                <div className="mb-4">
+              <div className="md:col-span-2 space-y-4">
+                <div>
                   <h2 className="text-2xl font-semibold mb-1">
                     {b.place?.name ?? `Place #${b.place?.id ?? "—"}`}
                   </h2>
@@ -90,55 +121,56 @@ export default function ViewBooking({ bookingId, onClose, onViewSpot }: Props) {
                   </div>
                 </div>
 
-                <div className="space-y-4">
-                  <div className="bg-white/5 p-3 md:p-4 rounded-xl shadow-sm">
-                    <h4 className="text-sm font-medium mb-3">
-                      Accommodation & Services
-                    </h4>
-                    <div className="space-y-3 max-h-[40vh] md:max-h-[27rem] overflow-auto pr-2">
-                      {servicesList && servicesList.length > 0 ? (
-                        servicesList.map((s: any) => (
-                          <div
-                            key={s.id ?? s.uuid}
-                            className="flex items-start gap-3"
-                          >
-                            <div className="w-20 h-14 rounded-md overflow-hidden bg-slate-50 flex items-center justify-center border flex-shrink-0">
-                              {s.images && s.images[0] ? (
-                                <img
-                                  src={s.images[0]}
-                                  alt={s.name}
-                                  className="object-cover w-full h-full"
-                                />
-                              ) : (
-                                <Package className="w-6 h-6 text-muted-foreground" />
-                              )}
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <div className="font-semibold truncate">
-                                {s.name}
-                              </div>
-                              <div className="text-sm text-muted-foreground line-clamp-3">
-                                {s.description}
-                              </div>
-                              <div className="text-sm mt-1 text-muted-foreground">
-                                Price: {s.price ?? "—"}
-                              </div>
-                              {s.contact && (
-                                <div className="text-sm mt-1 text-muted-foreground">
-                                  Contact: {s.contact}
-                                </div>
-                              )}
-                            </div>
+                <div className="bg-white/5 p-3 md:p-4 rounded-xl shadow-sm">
+                  <h4 className="text-sm font-medium mb-3">
+                    Accommodation & Services
+                  </h4>
+                  <div className="space-y-3 max-h-[40vh] md:max-h-[27rem] overflow-auto pr-2">
+                    {servicesList && servicesList.length > 0 ? (
+                      servicesList.map((s: any) => (
+                        <div
+                          key={s.id ?? s.uuid}
+                          className="flex items-start gap-3"
+                        >
+                          <div className="w-20 h-14 rounded-md overflow-hidden bg-slate-50 flex items-center justify-center border flex-shrink-0">
+                            {s.images && s.images[0] ? (
+                              <img
+                                src={s.images[0]}
+                                alt={s.name}
+                                className="object-cover w-full h-full"
+                              />
+                            ) : (
+                              <Package className="w-6 h-6 text-muted-foreground" />
+                            )}
                           </div>
-                        ))
-                      ) : (
-                        <div className="text-sm text-muted-foreground">
-                          No services included
-                        </div>
-                      )}
-                    </div>
-                  </div>
 
+                          <div className="flex-1 min-w-0">
+                            <div className="font-semibold truncate">
+                              {s.name}
+                            </div>
+                            <div className="text-sm text-muted-foreground line-clamp-3">
+                              {s.description}
+                            </div>
+                            <div className="text-sm mt-1 text-muted-foreground">
+                              Price: {s.price ?? "—"}
+                            </div>
+                            {s.contact && (
+                              <div className="text-sm mt-1 text-muted-foreground">
+                                Contact: {s.contact}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      ))
+                    ) : (
+                      <div className="text-sm text-muted-foreground">
+                        No services included
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="bg-white/5 p-3 md:p-4 rounded-xl shadow-sm">
                     <h4 className="text-sm font-medium mb-3">Gallery</h4>
                     {galleryItems.length > 0 ? (
@@ -160,6 +192,70 @@ export default function ViewBooking({ bookingId, onClose, onViewSpot }: Props) {
                       <div className="text-sm text-muted-foreground">
                         No images available
                       </div>
+                    )}
+                  </div>
+
+                  <div className="bg-white/5 p-3 md:p-4 rounded-xl shadow-sm">
+                    <h4 className="text-sm font-medium mb-3">Availability</h4>
+
+                    {!availability ? (
+                      <div className="text-sm text-muted-foreground">
+                        No availability selected
+                      </div>
+                    ) : (
+                      <>
+                        <div className="mb-3">
+                          <div className="flex items-center justify-between gap-2">
+                            <div className="min-w-0">
+                              <div className="font-semibold">
+                                {availability.name}
+                              </div>
+                              <div className="text-sm text-muted-foreground line-clamp-2">
+                                {availability.description ?? "—"}
+                              </div>
+                            </div>
+                            <div className="text-right">
+                              <div className="text-base font-semibold">
+                                ₱
+                                {Number(
+                                  availability.price ?? 0
+                                ).toLocaleString()}
+                              </div>
+                              <div className="text-xs text-muted-foreground">
+                                per night
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div>
+                          <h5 className="text-xs font-medium mb-2">
+                            Availability Gallery
+                          </h5>
+                          {availabilityImages.length > 0 ? (
+                            <div className="grid grid-cols-3 gap-2">
+                              {availabilityImages.map(
+                                (img: string, i: number) => (
+                                  <div
+                                    key={i}
+                                    className="w-full h-20 sm:h-24 rounded-md overflow-hidden bg-slate-50"
+                                  >
+                                    <img
+                                      src={img}
+                                      alt={`avail-${i}`}
+                                      className="object-cover w-full h-full"
+                                    />
+                                  </div>
+                                )
+                              )}
+                            </div>
+                          ) : (
+                            <div className="text-sm text-muted-foreground">
+                              No availability images
+                            </div>
+                          )}
+                        </div>
+                      </>
                     )}
                   </div>
                 </div>

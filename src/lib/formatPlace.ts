@@ -11,6 +11,8 @@ export const formatPlace = (p: Place) => {
   const total = reviews.reduce((acc, r) => acc + Number(r?.rating ?? 0), 0);
   const avg = (reviews.length ? total / reviews.length : 0)?.toFixed(1);
 
+  console.log("dfddf", p);
+  
   return {
     placeId: p?.id,
     id: formattedId,
@@ -34,7 +36,7 @@ export const formatPlace = (p: Place) => {
       : [],
     reviewsCount: reviews.length,
     ratings: reviews,
-    services: (p.services || []).map((s:any, index:number) => ({
+    services: (p.services || []).map((s: any, index: number) => ({
       id: s.id || `${formattedId}-service-${index}`,
       name: s.name,
       type: s.type,
@@ -44,6 +46,7 @@ export const formatPlace = (p: Place) => {
       contact: s.contact,
       amenities: s.amenities || [],
       service_reviews: s?.service_reviews,
+      availabilities: s?.availabilities,
     })),
     accommodation: p.accommodation || [],
     raw: p,
