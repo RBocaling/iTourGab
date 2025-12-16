@@ -31,6 +31,7 @@ export const formatPlace = (p: Place) => {
     accessibility: p.accessibility,
     nearby: p.nearby || [],
     rating: avg ?? 0,
+
     reviews: Array.isArray(reviews)
       ? reviews.map((r: any) => r.description ?? "")
       : [],
@@ -47,6 +48,7 @@ export const formatPlace = (p: Place) => {
       amenities: s.amenities || [],
       service_reviews: s?.service_reviews,
       availabilities: s?.availabilities,
+      promo: s.promo,
     })),
     accommodation: p.accommodation || [],
     raw: p,

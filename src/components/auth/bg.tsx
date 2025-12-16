@@ -3,7 +3,7 @@ import { motion } from "framer-motion";
 import { Eye, EyeOff, Lock, User as UserIcon, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import heroLandscape from "@/assets/hero-landscape.jpg";
+import heroLandscape from "/bg.gif";
 import { Link } from "react-router-dom";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { login as loginApi } from "@/api/authApi";
@@ -104,7 +104,7 @@ export default function Login({ onLogin, onClose }: Props) {
                   type="text"
                   placeholder="Username"
                   value={formData.identifier}
-                  onChange={(e) =>
+                  onChange={(e) => 
                     setFormData((prev) => ({
                       ...prev,
                       identifier: e.target.value,

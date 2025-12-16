@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useRef } from "react";
+// src/pages/ProfilePage.tsx
+import React, { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import {
   User,
@@ -43,31 +44,50 @@ import {
 } from "@/components/alert/FeedbackModals";
 import { uploadImageToCloudinary } from "@/utils/uploadImageToCloudinary";
 
+// NEW imports (reusable pieces)
+import SearchableAddressModal, {
+  SelectedAddress,
+} from "@/components/ui/SearchableAddressModal";
+import GenderSelectModal from "@/components/ui/GenderSelectModal";
+import ContactNumberInput from "@/components/ui/ContactNumberInput";
+
 const ProfilePage: React.FC = () => {
-  const { user, logout } = useAuth2();
+  const { user, logout, refetch } = useAuth2();
   const navigate = useNavigate();
   const [notifications, setNotifications] = useState(
     user?.preferences?.notifications ?? true
   );
+
   const { data: itinerary, isLoading: isIteneraryLoading } =
     useGetItineraries();
   const { myReview, myVisited, isLoading } = useProfileTotal();
 
+  // UI states
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [confirmEditOpen, setConfirmEditOpen] = useState(false);
   const [isUploadOpen, setIsUploadOpen] = useState(false);
   const [confirmUploadOpen, setConfirmUploadOpen] = useState(false);
 
-  const [editForm, setEditForm] = useState({
+  // new modal states
+  const [addressModalOpen, setAddressModalOpen] = useState(false);
+  const [genderModalOpen, setGenderModalOpen] = useState(false);
+
+  // edit form now stores codes and human names
+  const [editForm, setEditForm] = useState<any>({
     first_name: "",
     last_name: "",
     username: "",
     contact_number: "",
     province: "",
+    provinceCode: "",
     city: "",
+    cityCode: "",
     barangay: "",
+    barangayCode: "",
+    gender: "",
   });
 
+  // file upload states
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
@@ -81,6 +101,7 @@ const ProfilePage: React.FC = () => {
     return () => URL.revokeObjectURL(url);
   }, [selectedFile]);
 
+  // feedback states
   const [successState, setSuccessState] = useState({
     open: false,
     title: "",
@@ -92,6 +113,7 @@ const ProfilePage: React.FC = () => {
     message: "",
   });
 
+  // Update mutation
   const updateMutation = useMutation({
     mutationFn: (payload: any) => updateCurrentUserApi(payload),
     onSuccess: () => {
@@ -114,12 +136,14 @@ const ProfilePage: React.FC = () => {
     },
   });
 
+  // Upload + update avatar
   const uploadAndUpdateMutation = useMutation({
     mutationFn: async ({ file }: { file: File }) => {
       const url = await uploadImageToCloudinary(file);
       return updateCurrentUserApi({ profile_url: url });
     },
     onSuccess: () => {
+      refetch();
       setIsUploadOpen(false);
       setConfirmUploadOpen(false);
       setSelectedFile(null);
@@ -223,16 +247,7 @@ const ProfilePage: React.FC = () => {
     },
   ];
 
-  const handleEditChange = (
-    e:
-      | React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
-      | React.FormEvent<HTMLInputElement>
-  ) => {
-    const target = e.target as HTMLInputElement;
-    const { name, value } = target;
-    setEditForm((prev) => ({ ...prev, [name]: value }));
-  };
-
+  // sync editForm when opening edit modal
   const openEditModal = () => {
     setEditForm({
       first_name: user?.first_name ?? "",
@@ -240,8 +255,12 @@ const ProfilePage: React.FC = () => {
       username: user?.username ?? "",
       contact_number: user?.contact_number ?? user?.profile?.phone ?? "",
       province: user?.province ?? "",
+      provinceCode: user?.province_code ?? user?.provinceCode ?? "",
       city: user?.city ?? "",
+      cityCode: user?.city_code ?? user?.cityCode ?? "",
       barangay: user?.barangay ?? "",
+      barangayCode: user?.barangay_code ?? user?.barangayCode ?? "",
+      gender: user?.gender ?? user?.profile?.gender ?? "",
     });
     setIsEditOpen(true);
   };
@@ -259,7 +278,13 @@ const ProfilePage: React.FC = () => {
       province: editForm.province,
       city: editForm.city,
       barangay: editForm.barangay,
+      gender: editForm.gender || undefined,
     };
+
+    if (editForm.provinceCode) payload.province_code = editForm.provinceCode;
+    if (editForm.cityCode) payload.city_code = editForm.cityCode;
+    if (editForm.barangayCode) payload.barangay_code = editForm.barangayCode;
+
     updateMutation.mutate(payload);
   };
 
@@ -286,8 +311,45 @@ const ProfilePage: React.FC = () => {
     uploadAndUpdateMutation.mutate({ file: selectedFile });
   };
 
+  // Edit form helpers
+  const handleEditChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
+    const t = e.target as HTMLInputElement;
+    const { name, value } = t;
+    setEditForm((prev: any) => ({ ...prev, [name]: value }));
+  };
+
+  // ContactNumberInput returns E.164 string; set into editForm.contact_number
+  const handleContactChange = (e164: string) => {
+    setEditForm((p: any) => ({ ...p, contact_number: e164 }));
+  };
+
+  // When address modal returns selection -> update form and close modal
+  const handleAddressSelect = (val: SelectedAddress) => {
+    setEditForm((p: any) => ({
+      ...p,
+      province: val.province?.name ?? "",
+      provinceCode: val.province?.code ?? "",
+      city: val.city?.name ?? "",
+      cityCode: val.city?.code ?? "",
+      barangay: val.barangay?.name ?? "",
+      barangayCode: val.barangay?.code ?? "",
+    }));
+
+    // close shortly after to allow any modal animation flush
+    setTimeout(() => setAddressModalOpen(false), 10);
+  };
+
+  // When gender modal returns selection -> update form and close modal
+  const handleGenderSelect = (gender: string) => {
+    setEditForm((p: any) => ({ ...p, gender }));
+    // close shortly after to allow a smooth transition
+    setTimeout(() => setGenderModalOpen(false), 10);
+  };
+
   return (
-    <div className="min-h-screen bg-background pt-5 md:pt-24 pb-20 md:pb-8">
+    <div className="min-h-screen bg-background pt-5 md:pt-24 pb-32 md:pb-8">
       <div className="max-w-4xl mx-auto px-4">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -340,24 +402,6 @@ const ProfilePage: React.FC = () => {
             </p>
           )}
         </motion.div>
-
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-          className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-8"
-        >
-          {stats.map((stat, index) => (
-            <Card key={index} className="p-4 text-center glass-card">
-              <div className="w-12 h-12 bg-gradient-primary rounded-full flex items-center justify-center mx-auto mb-2">
-                <stat.icon className="w-6 h-6 text-white" />
-              </div>
-              <p className="text-2xl font-bold text-primary">{stat.value}</p>
-              <p className="text-sm text-muted-foreground">{stat.label}</p>
-            </Card>
-          ))}
-        </motion.div>
-
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -391,12 +435,28 @@ const ProfilePage: React.FC = () => {
               )}
             </div>
             <div className="mt-4 flex gap-3">
-              <Button variant="outline" onClick={openEditModal}>
+              <Button variant="outline" className="w-full text-white bg-sky-500" onClick={openEditModal}>
                 <Edit3 className="w-4 h-4 mr-2" />
                 Edit Profile
               </Button>
             </div>
           </Card>
+        </motion.div>
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+          className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-8"
+        >
+          {stats.map((stat, index) => (
+            <Card key={index} className="p-4 text-center glass-card">
+              <div className="w-12 h-12 bg-gradient-primary rounded-full flex items-center justify-center mx-auto mb-2">
+                <stat.icon className="w-6 h-6 text-white" />
+              </div>
+              <p className="text-2xl font-bold text-primary">{stat.value}</p>
+              <p className="text-sm text-muted-foreground">{stat.label}</p>
+            </Card>
+          ))}
         </motion.div>
 
         <motion.div
@@ -486,18 +546,19 @@ const ProfilePage: React.FC = () => {
         </motion.div>
       </div>
 
+      {/* EDIT DIALOG */}
       <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
         <DialogContent className="max-w-lg w-full rounded-3xl">
           <DialogHeader>
             <DialogTitle className="text-lg">Edit Profile</DialogTitle>
           </DialogHeader>
+
           <div className="p-4 space-y-3">
             <div className="grid grid-cols-2 gap-2">
               <Input
                 name="first_name"
                 value={editForm.first_name ?? ""}
                 onChange={handleEditChange}
-                onInput={handleEditChange}
                 placeholder="First name"
                 autoComplete="given-name"
               />
@@ -505,7 +566,6 @@ const ProfilePage: React.FC = () => {
                 name="last_name"
                 value={editForm.last_name ?? ""}
                 onChange={handleEditChange}
-                onInput={handleEditChange}
                 placeholder="Last name"
                 autoComplete="family-name"
               />
@@ -515,42 +575,49 @@ const ProfilePage: React.FC = () => {
               name="username"
               value={editForm.username ?? ""}
               onChange={handleEditChange}
-              onInput={handleEditChange}
               placeholder="Username"
               autoComplete="username"
             />
 
-            <Input
-              name="contact_number"
+            {/* ContactNumberInput (reusable) */}
+            <ContactNumberInput
               value={editForm.contact_number ?? ""}
-              onChange={handleEditChange}
-              onInput={handleEditChange}
-              placeholder="Contact number"
-              inputMode="tel"
+              onChange={handleContactChange}
+              placeholder="9XX (mobile)"
+              required={false}
+              showErrorMessages={true}
+              className="w-full"
             />
 
+            {/* Address: open SearchableAddressModal */}
             <div className="grid grid-cols-3 gap-2">
-              <Input
-                name="province"
-                value={editForm.province ?? ""}
-                onChange={handleEditChange}
-                onInput={handleEditChange}
-                placeholder="Province"
-              />
-              <Input
-                name="city"
-                value={editForm.city ?? ""}
-                onChange={handleEditChange}
-                onInput={handleEditChange}
-                placeholder="City"
-              />
-              <Input
-                name="barangay"
-                value={editForm.barangay ?? ""}
-                onChange={handleEditChange}
-                onInput={handleEditChange}
-                placeholder="Barangay"
-              />
+              <div className="col-span-3">
+                <label className="text-sm text-muted-foreground mb-1 block">
+                  Address
+                </label>
+                <div className="flex gap-2">
+                  <input
+                    readOnly
+                    value={
+                      editForm.province
+                        ? `${editForm.province}${
+                            editForm.city ? ` • ${editForm.city}` : ""
+                          }${
+                            editForm.barangay ? ` • ${editForm.barangay}` : ""
+                          }`
+                        : ""
+                    }
+                    placeholder="Select Province / City / Barangay"
+                    className="flex-1 pl-3 pr-3 h-12 rounded-md bg-white border placeholder:text-muted-foreground text-sm truncate"
+                  />
+                  <Button
+                    onClick={() => setAddressModalOpen(true)}
+                    className="px-4 py-2 h-12"
+                  >
+                    Select
+                  </Button>
+                </div>
+              </div>
             </div>
 
             <div className="flex justify-end gap-2">
@@ -565,6 +632,7 @@ const ProfilePage: React.FC = () => {
         </DialogContent>
       </Dialog>
 
+      {/* UPLOAD DIALOG */}
       <Dialog
         open={isUploadOpen}
         onOpenChange={(open) => {
@@ -581,6 +649,7 @@ const ProfilePage: React.FC = () => {
               Upload Profile Picture
             </DialogTitle>
           </DialogHeader>
+
           <div className="p-4 space-y-4">
             <div className="flex flex-col sm:flex-row items-center gap-4">
               <div className="relative">
@@ -700,12 +769,7 @@ const ProfilePage: React.FC = () => {
                 Cancel
               </Button>
               {!selectedFile && (
-                <Button
-                  onClick={() => {
-                    /* no-op until file selected */
-                  }}
-                  disabled
-                >
+                <Button onClick={() => {}} disabled>
                   Upload
                 </Button>
               )}
@@ -714,6 +778,7 @@ const ProfilePage: React.FC = () => {
         </DialogContent>
       </Dialog>
 
+      {/* Confirm dialogs */}
       <ConfirmDialog
         open={confirmEditOpen}
         onOpenChange={setConfirmEditOpen}
@@ -752,6 +817,21 @@ const ProfilePage: React.FC = () => {
         title={errorState.title}
         description={errorState.message}
         primaryLabel="OK"
+      />
+
+      {/* REUSABLE MODALS */}
+      <SearchableAddressModal
+        open={addressModalOpen}
+        onClose={() => setAddressModalOpen(false)}
+        onSelect={handleAddressSelect}
+        title="Select address"
+      />
+
+      <GenderSelectModal
+        open={genderModalOpen}
+        onClose={() => setGenderModalOpen(false)}
+        onSelect={handleGenderSelect}
+        initial={editForm.gender}
       />
     </div>
   );

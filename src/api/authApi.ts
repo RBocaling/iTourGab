@@ -10,6 +10,11 @@ export const login = async (payload: LoginPayload): Promise<Tokens> => {
   return data;
 };
 
+export const googleLogin = async (payload: { token: string }) => {
+  const resp = await api.post("/auth/google", payload);
+  return resp.data;
+};
+
 export const logout = async (): Promise<void> => {
   try {
     const rt = getAuthState().refreshToken;
