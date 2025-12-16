@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from "react";
+// src/pages/MainApp.tsx
+import React, { useEffect } from "react";
 import { Routes, Route, Navigate, useNavigate } from "react-router-dom";
 import DesktopNavigation from "@/components/layout/DesktopNavigation";
 import BottomNavigation from "@/components/layout/BottomNavigation";
@@ -20,30 +21,55 @@ import { useAuth2 } from "@/hooks/useAuth";
 import RankingPlace from "./RankingPlace";
 import Hotlines from "./Hotlines";
 import ChatAi from "./ChatAi";
+import TermsModal from "@/components/ui/TermsCondition";
+import useTermsStore from "@/store/termsStore";
 
 const MainApp: React.FC = () => {
-  const { user, isAuthenticated } = useAuth2();
+  const { isAuthenticated } = useAuth2();
   const navigate = useNavigate();
-  
+  const { isOpen, accepted, open, close, accept, loadFromStorage } =
+    useTermsStore();
+
   useEffect(() => {
     if (!isAuthenticated) {
-      navigate("/login");
+      // navigate("/login");
     }
-  },[isAuthenticated])
+  }, [isAuthenticated, navigate]);
+
+  useEffect(() => {
+    loadFromStorage();
+  }, [loadFromStorage]);
+
+  useEffect(() => {
+    if (!isAuthenticated) {
+      close();
+      return;
+    }
+    if (!accepted) open();
+  }, [isAuthenticated, accepted, open, close]);
 
   return (
-    <div className="min-h-screen bg-background pt-20 md:p-0 ">
+    <div className="min-h-screen md:bg-background md:p-0">
       {!isAuthenticated ? (
-        <main className="min-h-screen bg-gradient-hero">
+        <main className="min-h-screen md:bg-gradient-hero">
           <Routes>
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
+            <Route path="*" element={<Navigate to="/login" replace />} />
           </Routes>
         </main>
       ) : (
-        <main className="relative ">
+        <main className="relative pt-20 md:pt-0">
           <DesktopNavigation />
           <MobileHeader />
+
+          <TermsModal
+            open={isOpen}
+            onClose={close}
+            onAccept={accept}
+            title="iTourGab — Terms & Conditions"
+          />
+
           <Routes>
             <Route path="/" element={<HomePage />} />
             <Route path="/map" element={<MapPage />} />
@@ -61,6 +87,7 @@ const MainApp: React.FC = () => {
             <Route path="/ratings/:spotId" element={<RatingsPage />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
+
           <BottomNavigation />
         </main>
       )}

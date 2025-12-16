@@ -35,6 +35,22 @@ import Loader from "@/components/loader/Loader";
 import { useMutation } from "@tanstack/react-query";
 import { createServiceRatingApi } from "@/api/serviceRatingApi";
 
+const isPromoValidToday = (promo: any) => {
+  if (!promo) return false;
+  if (promo.is_deleted) return false;
+
+  const now = new Date();
+  const start = promo.start_date ? new Date(promo.start_date) : null;
+  const end = promo.end_date ? new Date(promo.end_date) : null;
+
+  if (start && now < start) return false; // not started yet
+  if (end && now > end) return false; // expired
+
+  return promo.is_active !== false;
+};
+
+
+
 const SpotDetailsPage: React.FC = () => {
   const { spotId } = useParams();
   const navigate = useNavigate();
@@ -64,16 +80,7 @@ const SpotDetailsPage: React.FC = () => {
   });
   console.log("spot", spot);
   
-  if (!spot) {
-    return (
-      <div className="min-h-screen bg-background pt-20 md:pt-24 pb-20 md:pb-8 flex items-center justify-center">
-        <div className="text-center">
-          <h2 className="text-2xl font-bold mb-4">Spot not found</h2>
-          <Button onClick={() => navigate("")}>Go back to home</Button>
-        </div>
-      </div>
-    );
-  }
+ 
 
   const nextImage = () => {
     setCurrentImageIndex((prev) =>
@@ -86,10 +93,6 @@ const SpotDetailsPage: React.FC = () => {
       prev === 0 ? spot.images.length - 1 : prev - 1
     );
   };
-
-  if (isLoading) {
-    return <Loader />;
-  }
 
   const handleOpenServiceRatings = (service: any) => {
     setSelectedService(service);
@@ -148,6 +151,23 @@ const SpotDetailsPage: React.FC = () => {
 
   const fmt = (v: number) => `₱${v.toLocaleString()}`;
 
+
+
+  
+  if (isLoading) {
+    return <Loader />;
+  }
+
+   if (!spot) {
+     return (
+       <div className="min-h-screen bg-background pt-20 md:pt-24 pb-20 md:pb-8 flex items-center justify-center">
+         <div className="text-center">
+           <h2 className="text-2xl font-bold mb-4">Spot not found</h2>
+           <Button onClick={() => navigate("")}>Go back to home</Button>
+         </div>
+       </div>
+     );
+   }
   return (
     <div className="min-h-screen bg-background pt-5 md:pt-24 pb-28 md:pb-8">
       <div className="max-w-5xl mx-auto px-4">
@@ -403,7 +423,7 @@ const SpotDetailsPage: React.FC = () => {
                             <div className="flex-1">
                               <div className="flex items-start justify-between mb-2">
                                 <div>
-                                  <h4 className="font-semibold text-sm flex items-center gap-2">
+                                  <h4 className="font-semibold text-sm flex items-center gap-2 flex-wrap">
                                     {service.type === "accommodation" && (
                                       <Bed className="w-4 h-4" />
                                     )}
@@ -411,10 +431,20 @@ const SpotDetailsPage: React.FC = () => {
                                       <Utensils className="w-4 h-4" />
                                     )}
                                     {service.name}
+
+                                    {isPromoValidToday(service.promo) && (
+                                      <Badge className="bg-rose-100 text-rose-700 text-[10px] px-2 py-0.5 rounded-md">
+                                        🔖 {service.promo.discount_percent}% OFF
+                                      </Badge>
+                                    )}
                                   </h4>
+
                                   <p className="text-primary font-bold tracking-wide text-sm mt-2">
                                     {priceDisplay}
                                   </p>
+
+                                 
+
                                   <button
                                     onClick={() =>
                                       handleOpenServiceRatings(service)

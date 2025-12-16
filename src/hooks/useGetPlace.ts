@@ -24,6 +24,7 @@ export const useGetPlace = (id: string | number | undefined) => {
   });
 
   return {
+    isLoading:query.isLoading,
     refetch: query.refetch,
     ...query,
     normalData: query.data ?? null,

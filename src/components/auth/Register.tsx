@@ -12,30 +12,34 @@ import {
   X as XIcon,
   Check,
   AlertCircle,
-  Calendar as CalendarIcon,
+  Calendar,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import heroLandscape from "@/assets/hero-landscape.jpg";
+import ContactNumberInput from "@/components/ui/ContactNumberInput";
+import GenderSelectModal, { GenderValue } from "@/components/ui/GenderSelectModal";
+import heroLandscape from "/bg2.jpeg";
 import { Link, useNavigate } from "react-router-dom";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { register as registerApi, verifyAccountApi } from "@/api/authApi";
 import { useAuthStore } from "@/store/authStore";
 import OtpInput from "../ui/otp-input";
+import SearchableAddressModal, {
+  SelectedAddress,
+} from "@/components/ui/SearchableAddressModal";
 
 function isValidEmail(email: string) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 }
 
 function checkPasswordRules(pw: string) {
-  const rules = {
+  return {
     length: pw.length >= 8,
     firstUpper: /^[A-Z]/.test(pw),
     hasLower: /[a-z]/.test(pw),
     hasDigit: /\d/.test(pw),
     hasSymbol: /[!@#$%^&*()_\-+=[\]{};:'"\\|,.<>/?`~]/.test(pw),
   };
-  return rules;
 }
 
 export default function Register() {
@@ -43,15 +47,18 @@ export default function Register() {
   const [otpOpen, setOtpOpen] = useState(false);
   const [otpUserEmail, setOtpUserEmail] = useState<string | null>(null);
 
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<any>({
     first_name: "",
     last_name: "",
     email_address: "",
     username: "",
     contact_number: "",
     province: "",
+    provinceCode: "",
     city: "",
+    cityCode: "",
     barangay: "",
+    barangayCode: "",
     profile_url: "",
     gender: "",
     password: "",
@@ -70,6 +77,9 @@ export default function Register() {
   const [errorModalMessage, setErrorModalMessage] = useState<string | null>(
     null
   );
+
+  const [addressModalOpen, setAddressModalOpen] = useState(false);
+  const [genderModalOpen, setGenderModalOpen] = useState(false);
 
   const setAuth = useAuthStore((s) => s.setAuth);
   const qc = useQueryClient();
@@ -178,7 +188,7 @@ export default function Register() {
       : "UNSPECIFIED";
     if (!allowedGenders.includes(gender)) gender = "UNSPECIFIED";
 
-    const payload = {
+    const payload: any = {
       first_name: formData.first_name,
       last_name: formData.last_name,
       username: formData.username,
@@ -195,6 +205,10 @@ export default function Register() {
         : null,
       role: "CLIENT",
     };
+
+    if (formData.provinceCode) payload.province_code = formData.provinceCode;
+    if (formData.cityCode) payload.city_code = formData.cityCode;
+    if (formData.barangayCode) payload.barangay_code = formData.barangayCode;
 
     registerMutation.mutate(payload);
   };
@@ -227,28 +241,42 @@ export default function Register() {
     setErrorModalMessage(null);
   };
 
+  const onAddressSelect = (val: SelectedAddress) => {
+    setFormData((p: any) => ({
+      ...p,
+      province: val.province?.name ?? "",
+      provinceCode: val.province?.code ?? "",
+      city: val.city?.name ?? "",
+      cityCode: val.city?.code ?? "",
+      barangay: val.barangay?.name ?? "",
+      barangayCode: val.barangay?.code ?? "",
+    }));
+    setAddressModalOpen(false);
+  };
+
+
   return (
-    <div className="min-h-screen flex bg-background">
-      <div className="w-full lg:w-1/2 flex items-center justify-center p-8">
+    <div className="h-screen oveflow-y-auto flex bg-white ">
+      <div className="w-full h-screen pt-10 overflow-y-auto md:h-auto lg:w-1/2 flex items-center justify-center p-8 ">
         <motion.div
           initial={{ opacity: 0, x: -50 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.6 }}
-          className="w-full md:max-w-md space-y-8 md:bg-white rounded-3xl md:p-5 md:shadow-2xl"
+          className="w-full md:max-w-md space-y-8 py-10 md:bg-white rounded-3xl md:p-6 md:shadow-2xl"
         >
           <div className="text-center">
             <motion.div
               initial={{ opacity: 0, y: -20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2 }}
-              className="text-3xl font-bold text-gradient-primary"
+              className="text-3xl font-bold text-gradient-primary  mb-5"
             >
               <motion.div
                 animate={{ rotate: [0, 10, -10, 0] }}
                 transition={{ duration: 2, repeat: Infinity }}
-                className="bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4"
+                className="bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4 w-20 "
               >
-                <img src="/logo-itour.png" className="w-24" alt="" />
+                <img src="/logo-itour.png" className="w-20" alt="" />
               </motion.div>
               iTourGab
             </motion.div>
@@ -257,7 +285,7 @@ export default function Register() {
               initial={{ opacity: 0, y: -20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.3 }}
-              className="text-muted-foreground"
+              className="text-muted-foreground tracking-wider"
             >
               Create an account to start your adventure
             </motion.p>
@@ -272,29 +300,35 @@ export default function Register() {
           >
             <div className="grid grid-cols-2 gap-4">
               <div className="relative">
-                <UserIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 text-neutral-600 w-5 h-5 z-20" />
+                <UserIcon className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-500 w-5 h-5 z-10" />
                 <Input
                   type="text"
                   placeholder="First name"
                   value={formData.first_name}
                   onChange={(e) =>
-                    setFormData((p) => ({ ...p, first_name: e.target.value }))
+                    setFormData((p: any) => ({
+                      ...p,
+                      first_name: e.target.value,
+                    }))
                   }
-                  className="pl-12 input-modern h-12 bg-white"
+                  className="pl-12 h-12"
                   required
                 />
               </div>
 
               <div className="relative">
-                <UserIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 text-neutral-600 w-5 h-5 z-20" />
+                <UserIcon className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-500 w-5 h-5 z-10" />
                 <Input
                   type="text"
                   placeholder="Last name"
                   value={formData.last_name}
                   onChange={(e) =>
-                    setFormData((p) => ({ ...p, last_name: e.target.value }))
+                    setFormData((p: any) => ({
+                      ...p,
+                      last_name: e.target.value,
+                    }))
                   }
-                  className="pl-12 input-modern h-12 bg-white"
+                  className="pl-12 h-12"
                   required
                 />
               </div>
@@ -303,18 +337,18 @@ export default function Register() {
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-neutral-600 w-5 h-5 z-20" />
+                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-500 w-5 h-5 z-10" />
                   <Input
                     type="email"
                     placeholder="Email"
                     value={formData.email_address}
                     onChange={(e) =>
-                      setFormData((p) => ({
+                      setFormData((p: any) => ({
                         ...p,
                         email_address: e.target.value,
                       }))
                     }
-                    className="pl-12 input-modern h-12 bg-white"
+                    className="pl-12 h-12"
                     required
                   />
                   {!emailIsValid && formData.email_address.length > 0 && (
@@ -325,223 +359,258 @@ export default function Register() {
                 </div>
 
                 <div className="relative">
-                  <UserIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 text-neutral-600 w-5 h-5 z-20" />
+                  <UserIcon className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-500 w-5 h-5 z-10" />
                   <Input
                     type="text"
                     placeholder="Username"
                     value={formData.username}
                     onChange={(e) =>
-                      setFormData((p) => ({ ...p, username: e.target.value }))
+                      setFormData((p: any) => ({
+                        ...p,
+                        username: e.target.value,
+                      }))
                     }
-                    className="pl-12 input-modern h-12 bg-white"
+                    className="pl-12 h-12"
                     required
                   />
                 </div>
               </div>
 
               <div className="relative">
-                <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 text-neutral-600 w-5 h-5 z-20" />
-                <Input
-                  type="text"
-                  placeholder="Contact No"
+                <ContactNumberInput
                   value={formData.contact_number}
-                  onChange={(e) =>
-                    setFormData((p) => ({
-                      ...p,
-                      contact_number: e.target.value,
-                    }))
+                  onChange={(e164) =>
+                    setFormData((p: any) => ({ ...p, contact_number: e164 }))
                   }
-                  className="pl-12 input-modern h-12 bg-white"
+                  placeholder="9XX (mobile)"
+                  required={false}
+                  className="w-full"
+                  showErrorMessages={true}
                 />
               </div>
 
-              {/* Province / City / Barangay inputs (replaces single address field) */}
-              <div className="grid grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 gap-2">
+                <div className="flex gap-2 items-center">
+                  <div className="relative flex-1">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-500 z-10">
+                      <MapPin className="w-5 h-5" />
+                    </span>
+                    <input
+                      readOnly
+                      value={
+                        formData.province
+                          ? `${formData.province}${
+                              formData.city ? ` • ${formData.city}` : ""
+                            }${
+                              formData.barangay ? ` • ${formData.barangay}` : ""
+                            }`
+                          : ""
+                      }
+                      placeholder="Select Province / City / Barangay"
+                      className="w-full pl-12 pr-4 h-12 rounded-md bg-white border placeholder:text-muted-foreground text-sm truncate"
+                      title={
+                        formData.province
+                          ? `${formData.province}${
+                              formData.city ? ` • ${formData.city}` : ""
+                            }${
+                              formData.barangay ? ` • ${formData.barangay}` : ""
+                            }`
+                          : "Select Province / City / Barangay"
+                      }
+                    />
+                    {formData.province && (
+                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground text-xs">
+                        •
+                      </span>
+                    )}
+                  </div>
+
+                  <Button
+                    type="button"
+                    onClick={() => setAddressModalOpen(true)}
+                    className="px-4 py-2 h-12"
+                  >
+                    Select
+                  </Button>
+                </div>
+              </div>
+
+              {/* GENDER: replaced select with modal trigger */}
+              <div className="grid grid-cols-2 items-center gap-3">
                 <div className="relative">
-                  <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 text-neutral-600 w-5 h-5 z-20" />
+                  <label className="sr-only">Gender</label>
+                  <button
+                    type="button"
+                    onClick={() => setGenderModalOpen(true)}
+                    className="w-full h-12 rounded-md border bg-white flex items-center gap-3 px-3 text-sm"
+                  >
+                    <span
+                      className={`${
+                        formData.gender
+                          ? "text-slate-900"
+                          : "text-muted-foreground"
+                      }`}
+                    >
+                      {formData.gender ? formData.gender : "Select gender"}
+                    </span>
+                  </button>
+                </div>
+
+                <div className="relative">
+                  <div className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-500 w-5 h-5 z-10">
+                    <Calendar className="w-4 h-4" />
+                  </div>
                   <Input
-                    type="text"
-                    placeholder="Province"
-                    value={formData.province}
+                    type="date"
+                    placeholder="Birthday"
+                    value={formData.birthday}
                     onChange={(e) =>
-                      setFormData((p) => ({ ...p, province: e.target.value }))
+                      setFormData((p: any) => ({
+                        ...p,
+                        birthday: e.target.value,
+                      }))
                     }
-                    className="pl-12 input-modern h-12 bg-white"
+                    className="pl-12 h-12"
                   />
                 </div>
+              </div>
 
-                <div className="relative">
-                  <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 text-neutral-600 w-5 h-5 z-20" />
-                  <Input
-                    type="text"
-                    placeholder="City / Municipality"
-                    value={formData.city}
+              <div className="relative">
+                <div className="relative flex items-center   justify-between">
+                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-500 w-5 h-5 z-10" />
+                  <input
+                    required
+                    type={showPassword ? "text" : "password"}
+                    placeholder="Password"
+                    value={formData.password}
                     onChange={(e) =>
-                      setFormData((p) => ({ ...p, city: e.target.value }))
+                      setFormData((p: any) => ({
+                        ...p,
+                        password: e.target.value,
+                      }))
                     }
-                    className="pl-12 input-modern h-12 bg-white"
+                    className="pl-12 pr-12 h-12 w-full rounded-md border bg-white text-sm leading-5 box-border"
+                    onInvalid={(e) => {
+                      e.preventDefault();
+                    }}
                   />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors z-20"
+                    aria-label="Toggle password visibility"
+                  >
+                    {showPassword ? (
+                      <EyeOff className="w-5 h-5" />
+                    ) : (
+                      <Eye className="w-5 h-5" />
+                    )}
+                  </button>
                 </div>
 
-                <div className="relative">
-                  <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 text-neutral-600 w-5 h-5 z-20" />
-                  <Input
-                    type="text"
-                    placeholder="Barangay"
-                    value={formData.barangay}
-                    onChange={(e) =>
-                      setFormData((p) => ({ ...p, barangay: e.target.value }))
-                    }
-                    className="pl-12 input-modern h-12 bg-white"
-                  />
-                </div>
+                {formData.password && !passwordRules.hasSymbol && (
+                  <div className=" w-full mt-3 grid grid-cols-1 gap-2 text-xs">
+                    <div className="flex items-center gap-2">
+                      {passwordRules.length ? (
+                        <Check className="w-4 h-4 text-emerald-600" />
+                      ) : (
+                        <span className="w-4" />
+                      )}
+                      <div
+                        className={
+                          passwordRules.length
+                            ? "text-emerald-600"
+                            : "text-muted-foreground"
+                        }
+                      >
+                        At least 8 characters
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      {passwordRules.firstUpper ? (
+                        <Check className="w-4 h-4 text-emerald-600" />
+                      ) : (
+                        <span className="w-4" />
+                      )}
+                      <div
+                        className={
+                          passwordRules.firstUpper
+                            ? "text-emerald-600"
+                            : "text-muted-foreground"
+                        }
+                      >
+                        Starts with an uppercase letter
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      {passwordRules.hasLower ? (
+                        <Check className="w-4 h-4 text-emerald-600" />
+                      ) : (
+                        <span className="w-4" />
+                      )}
+                      <div
+                        className={
+                          passwordRules.hasLower
+                            ? "text-emerald-600"
+                            : "text-muted-foreground"
+                        }
+                      >
+                        Contains lowercase
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      {passwordRules.hasDigit ? (
+                        <Check className="w-4 h-4 text-emerald-600" />
+                      ) : (
+                        <span className="w-4" />
+                      )}
+                      <div
+                        className={
+                          passwordRules.hasDigit
+                            ? "text-emerald-600"
+                            : "text-muted-foreground"
+                        }
+                      >
+                        Contains a digit
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      {passwordRules.hasSymbol ? (
+                        <Check className="w-4 h-4 text-emerald-600" />
+                      ) : (
+                        <span className="w-4" />
+                      )}
+                      <div
+                        className={
+                          passwordRules.hasSymbol
+                            ? "text-emerald-600"
+                            : "text-muted-foreground"
+                        }
+                      >
+                        Contains a symbol (e.g. !@#)
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
 
               <div className="relative">
-                <select
-                  value={formData.gender}
-                  onChange={(e) =>
-                    setFormData((p) => ({ ...p, gender: e.target.value }))
-                  }
-                  className="w-full h-12 rounded-md border bg-white pl-3 pr-3"
-                >
-                  <option value="">Select gender</option>
-                  <option value="MALE">Male</option>
-                  <option value="FEMALE">Female</option>
-                </select>
-              </div>
-
-              <div className="relative">
-                <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-neutral-600 w-5 h-5 z-20">
-                  <CalendarIcon className="w-5 h-5" />
-                </div>
-                <Input
-                  type="date"
-                  placeholder="Birthday"
-                  value={formData.birthday}
-                  onChange={(e) =>
-                    setFormData((p) => ({ ...p, birthday: e.target.value }))
-                  }
-                  className="pl-12 input-modern h-12 bg-white"
-                />
-              </div>
-
-              <div className="relative">
-                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-neutral-600 w-5 h-5 z-20" />
-                <Input
-                  type={showPassword ? "text" : "password"}
-                  placeholder="Password"
-                  value={formData.password}
-                  onChange={(e) =>
-                    setFormData((p) => ({ ...p, password: e.target.value }))
-                  }
-                  className="pl-12 pr-12 input-modern h-12 bg-white"
-                  required
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
-                >
-                  {showPassword ? <EyeOff /> : <Eye />}
-                </button>
-                <div className="mt-2 text-xs">
-                  <div className="flex gap-2 items-center">
-                    {passwordRules.length ? (
-                      <Check className="w-4 h-4 text-emerald-600" />
-                    ) : (
-                      <span className="w-4" />
-                    )}
-                    <span
-                      className={
-                        passwordRules.length
-                          ? "text-emerald-600"
-                          : "text-muted-foreground"
-                      }
-                    >
-                      At least 8 characters
-                    </span>
-                  </div>
-                  <div className="flex gap-2 items-center">
-                    {passwordRules.firstUpper ? (
-                      <Check className="w-4 h-4 text-emerald-600" />
-                    ) : (
-                      <span className="w-4" />
-                    )}
-                    <span
-                      className={
-                        passwordRules.firstUpper
-                          ? "text-emerald-600"
-                          : "text-muted-foreground"
-                      }
-                    >
-                      Starts with an uppercase letter
-                    </span>
-                  </div>
-                  <div className="flex gap-2 items-center">
-                    {passwordRules.hasLower ? (
-                      <Check className="w-4 h-4 text-emerald-600" />
-                    ) : (
-                      <span className="w-4" />
-                    )}
-                    <span
-                      className={
-                        passwordRules.hasLower
-                          ? "text-emerald-600"
-                          : "text-muted-foreground"
-                      }
-                    >
-                      Contains lowercase
-                    </span>
-                  </div>
-                  <div className="flex gap-2 items-center">
-                    {passwordRules.hasDigit ? (
-                      <Check className="w-4 h-4 text-emerald-600" />
-                    ) : (
-                      <span className="w-4" />
-                    )}
-                    <span
-                      className={
-                        passwordRules.hasDigit
-                          ? "text-emerald-600"
-                          : "text-muted-foreground"
-                      }
-                    >
-                      Contains a digit
-                    </span>
-                  </div>
-                  <div className="flex gap-2 items-center">
-                    {passwordRules.hasSymbol ? (
-                      <Check className="w-4 h-4 text-emerald-600" />
-                    ) : (
-                      <span className="w-4" />
-                    )}
-                    <span
-                      className={
-                        passwordRules.hasSymbol
-                          ? "text-emerald-600"
-                          : "text-muted-foreground"
-                      }
-                    >
-                      Contains a symbol (e.g. !@#)
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              <div className="relative">
-                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-neutral-600 w-5 h-5 z-20" />
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-500 w-5 h-5 z-10" />
                 <Input
                   type={showPassword ? "text" : "password"}
                   placeholder="Confirm Password"
                   value={formData.confirmPassword}
                   onChange={(e) =>
-                    setFormData((p) => ({
+                    setFormData((p: any) => ({
                       ...p,
                       confirmPassword: e.target.value,
                     }))
                   }
-                  className="pl-12 pr-12 input-modern h-12 bg-white"
+                  className="pl-12 h-12"
                   required
                 />
                 <div className="mt-2 text-xs">
@@ -591,7 +660,7 @@ export default function Register() {
         initial={{ opacity: 0, scale: 1.1 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.8 }}
-        className="hidden lg:block lg:w-1/2 relative overflow-hidden"
+        className="hidden lg:block lg:w-1/2 relative "
       >
         <div
           className="absolute inset-0 bg-cover bg-center"
@@ -624,7 +693,6 @@ export default function Register() {
         </div>
       </motion.div>
 
-      {/* OTP modal, success and error modals unchanged */}
       {otpOpen && (
         <div className="h-screen w-full flex items-center justify-center fixed top-0 left-0 bg-black/30 z-50">
           <div className="flex max-w-sm gap-3 flex-col justify-center h-auto bg-white rounded-3xl p-5 shadow-lg">
@@ -728,6 +796,22 @@ export default function Register() {
           </div>
         </div>
       )}
+
+      <SearchableAddressModal
+        open={addressModalOpen}
+        onClose={() => setAddressModalOpen(false)}
+        onSelect={onAddressSelect}
+      />
+
+      <GenderSelectModal
+        open={genderModalOpen}
+        value={(formData.gender as GenderValue) ?? null}
+        onClose={() => setGenderModalOpen(false)}
+        onSelect={(g) => {
+          setFormData((p: any) => ({ ...p, gender: g }));
+          setGenderModalOpen(false);
+        }}
+      />
     </div>
   );
 }

@@ -29,6 +29,36 @@ import { createBookingApi } from "@/api/bookingApi";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import SelectPlaceDialog from "@/components/ui/SelectPlaceDialog";
 import { createServiceRatingApi } from "@/api/serviceRatingApi";
+import { Badge } from "@/components/ui/badge";
+
+const isPromoValidToday = (promo: any) => {
+  if (!promo) return false;
+  if (promo.is_deleted) return false;
+
+  const now = new Date();
+  const start = promo.start_date ? new Date(promo.start_date) : null;
+  const end = promo.end_date ? new Date(promo.end_date) : null;
+
+  if (start && now < start) return false;
+  if (end && now > end) return false;
+
+  return promo.is_active !== false;
+};
+
+const computePromoDiscount = (amount: number, promo: any) => {
+  if (!promo) return 0;
+
+  if (promo.discount_percent) {
+    return Math.round(amount * (promo.discount_percent / 100));
+  }
+
+  if (promo.discount_amount) {
+    return Math.min(amount, Number(promo.discount_amount));
+  }
+
+  return 0;
+};
+
 
 function parsePrice(price: string | number | undefined | null): number {
   if (price == null) return 0;
@@ -191,7 +221,23 @@ const totalAmount = useMemo(() => {
   return Math.round(base);
 }, [unitPrice, nights, rooms]);
 
+const activePromo = useMemo(() => {
+  if (!selectedService?.promo) return null;
+  return isPromoValidToday(selectedService.promo)
+    ? selectedService.promo
+    : null;
+}, [selectedService]);
 
+const promoDiscount = useMemo(() => {
+  if (!activePromo) return 0;
+  return computePromoDiscount(totalAmount, activePromo);
+}, [totalAmount, activePromo]);
+
+const finalTotal = useMemo(() => {
+  return Math.max(0, totalAmount - promoDiscount);
+}, [totalAmount, promoDiscount]);
+
+  
   const mutation = useMutation({
     mutationFn: (payload: any) => createBookingApi(payload),
     onSuccess: () => {
@@ -249,7 +295,10 @@ const totalAmount = useMemo(() => {
       guests,
       rooms,
       special_requests: specialRequests,
-      total_amount: totalAmount,
+      subtotal_amount: totalAmount,
+      promo_id: activePromo?.id ?? null,
+      promo_discount: promoDiscount,
+      total_amount: finalTotal,
     };
 
     mutation.mutate(payload);
@@ -416,9 +465,20 @@ const totalAmount = useMemo(() => {
                             <div className="flex-1">
                               <div className="flex items-start justify-between">
                                 <div>
-                                  <h4 className="font-semibold">
+                                  <h4 className="font-semibold flex items-center gap-2 flex-wrap">
                                     {selectedService.name}
+
+                                    {isPromoValidToday(
+                                      selectedService.promo
+                                    ) && (
+                                      <Badge className="bg-rose-100 text-rose-700 text-[10px] px-2 py-0.5 rounded-md">
+                                        🔖{" "}
+                                        {selectedService.promo.discount_percent}
+                                        % OFF
+                                      </Badge>
+                                    )}
                                   </h4>
+
                                   <p className="text-sm text-muted-foreground line-clamp-2">
                                     {selectedService.description}
                                   </p>
@@ -528,9 +588,16 @@ const totalAmount = useMemo(() => {
                                 <div className="flex-1">
                                   <div className="flex items-start justify-between">
                                     <div>
-                                      <h4 className="font-semibold">
-                                        {s.name}
+                                      <h4 className="font-semibold flex items-center gap-2 flex-wrap">
+                                        {s?.name}
+
+                                        {isPromoValidToday(s?.promo) && (
+                                          <Badge className="bg-rose-100 text-rose-700 text-[10px] px-2 py-0.5 rounded-md">
+                                            🔖 {s?.promo.discount_percent}% OFF
+                                          </Badge>
+                                        )}
                                       </h4>
+
                                       <p className="text-sm text-muted-foreground line-clamp-2">
                                         {s.description}
                                       </p>
@@ -896,9 +963,41 @@ const totalAmount = useMemo(() => {
                       <span className="font-medium">{rooms}</span>
                     </div>
                     <Separator />
-                    <div className="flex justify-between text-lg font-bold text-primary">
-                      <span>Total</span>
-                      <span>₱{totalAmount.toLocaleString()}</span>
+                    <div className="space-y-2">
+                      {/* ORIGINAL / SUBTOTAL */}
+                      <div className="flex justify-between">
+                        <span>Subtotal</span>
+                        <span
+                          className={
+                            promoDiscount > 0
+                              ? "line-through text-muted-foreground"
+                              : ""
+                          }
+                        >
+                          ₱{totalAmount.toLocaleString()}
+                        </span>
+                      </div>
+
+                      {/* PROMO */}
+                      {promoDiscount > 0 && (
+                        <div className="flex justify-between text-rose-600 font-semibold">
+                          <span>
+                            Promo{" "}
+                            {activePromo?.discount_percent
+                              ? `(${activePromo.discount_percent}% OFF)`
+                              : ""}
+                          </span>
+                          <span>- ₱{promoDiscount.toLocaleString()}</span>
+                        </div>
+                      )}
+
+                      <Separator />
+
+                      {/* FINAL TOTAL */}
+                      <div className="flex justify-between text-lg font-bold text-primary">
+                        <span>Total</span>
+                        <span>₱{finalTotal.toLocaleString()}</span>
+                      </div>
                     </div>
                   </>
                 ) : (
@@ -1014,7 +1113,7 @@ const totalAmount = useMemo(() => {
                 <Separator className="my-2" />
                 <div className="flex justify-between text-base font-semibold">
                   <span>Total</span>
-                  <span>₱{totalAmount.toLocaleString()}</span>
+                  <span>₱{finalTotal.toLocaleString()}</span>
                 </div>
               </div>
 
