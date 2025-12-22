@@ -1,6 +1,6 @@
 // src/pages/MainApp.tsx
 import React, { useEffect } from "react";
-import { Routes, Route, Navigate, useNavigate } from "react-router-dom";
+import { Routes, Route, Navigate, useNavigate, useLocation } from "react-router-dom";
 import DesktopNavigation from "@/components/layout/DesktopNavigation";
 import BottomNavigation from "@/components/layout/BottomNavigation";
 import Login from "@/components/auth/Login";
@@ -23,22 +23,14 @@ import Hotlines from "./Hotlines";
 import ChatAi from "./ChatAi";
 import TermsModal from "@/components/ui/TermsCondition";
 import useTermsStore from "@/store/termsStore";
+import Loader from "@/components/loader/Loader";
+import SupportChat from "./SupportChat";
 
 const MainApp: React.FC = () => {
-  const { isAuthenticated } = useAuth2();
   const navigate = useNavigate();
-  const { isOpen, accepted, open, close, accept, loadFromStorage } =
-    useTermsStore();
-
-  useEffect(() => {
-    if (!isAuthenticated) {
-      // navigate("/login");
-    }
-  }, [isAuthenticated, navigate]);
-
-  useEffect(() => {
-    loadFromStorage();
-  }, [loadFromStorage]);
+  const {pathname} = useLocation();
+  const { isAuthenticated, loading } = useAuth2();
+  const { isOpen, accepted, open, close, accept } = useTermsStore();
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -48,8 +40,14 @@ const MainApp: React.FC = () => {
     if (!accepted) open();
   }, [isAuthenticated, accepted, open, close]);
 
+  if (loading) {
+    return <Loader />;
+  }
+  console.log("pathname", pathname);
+  
+  
   return (
-    <div className="min-h-screen md:bg-background md:p-0">
+    <div className="min-h-screen md:bg-background ">
       {!isAuthenticated ? (
         <main className="min-h-screen md:bg-gradient-hero">
           <Routes>
@@ -85,14 +83,33 @@ const MainApp: React.FC = () => {
             <Route path="/search" element={<SearchPage />} />
             <Route path="/gabaldon-public-socials" element={<PublicChats />} />
             <Route path="/ratings/:spotId" element={<RatingsPage />} />
+            <Route path="/chat-support" element={<SupportChat />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
 
           <BottomNavigation />
         </main>
       )}
+      {pathname !== "/ai-support" &&
+        isAuthenticated &&
+        pathname !== "/chat-support" &&
+        pathname !==
+          "/booking" &&(
+            <button className="fixed bottom-24 right-0">
+              <div className="relative flex items-center justify-center">
+                <div className="absolute h-24 w-24 rounded-full bg-primary opacity-30 animate-ping" />
+                <img
+                  onClick={() => navigate("/ai-support")}
+                  src="/ai-model.png"
+                  className=" w-16 relative z-20"
+                  alt=""
+                />
+              </div>
+            </button>
+          )}
     </div>
   );
 };
+
 
 export default MainApp;

@@ -23,6 +23,7 @@ import {
   Bed,
   Utensils,
   ArrowRight,
+  ChevronDown,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -34,22 +35,27 @@ import { useGetPlace } from "@/hooks/useGetPlace";
 import Loader from "@/components/loader/Loader";
 import { useMutation } from "@tanstack/react-query";
 import { createServiceRatingApi } from "@/api/serviceRatingApi";
+import { ServiceType } from "@/types/serviceType";
+import ServiceTypeSelectModal from "@/components/ui/ServiceTypeSelect";
+import ServiceDetailsModal from "@/components/touristspot/ServiceDetailsModal";
+import { createFavoriteApi } from "@/api/favoriteApi";
+import { ErrorDialog, SuccessDialog } from "@/components/alert/FeedbackModals";
+import { createItineraryApi } from "@/api/iteneraryApi";
 
 const isPromoValidToday = (promo: any) => {
+  console.log("isPromoValidToday", promo);
+
   if (!promo) return false;
   if (promo.is_deleted) return false;
 
   const now = new Date();
   const start = promo.start_date ? new Date(promo.start_date) : null;
   const end = promo.end_date ? new Date(promo.end_date) : null;
-
   if (start && now < start) return false; // not started yet
   if (end && now > end) return false; // expired
 
   return promo.is_active !== false;
 };
-
-
 
 const SpotDetailsPage: React.FC = () => {
   const { spotId } = useParams();
@@ -70,6 +76,23 @@ const SpotDetailsPage: React.FC = () => {
   const [reviewText, setReviewText] = useState("");
   const [postWithName, setPostWithName] = useState(false);
   const { isLoading, formatData: spot, refetch } = useGetPlace(spotId);
+  const [serviceTypeFilter, setServiceTypeFilter] =
+    useState<ServiceType | null>(null);
+  const [openTypeModal, setOpenTypeModal] = useState(false);
+  const [showServiceDetails, setShowServiceDetails] = useState(false);
+  const [viewService, setViewService] = useState<any | null>(null);
+  const [shareModalOpen, setShareModalOpen] = useState(false);
+
+
+  const [itineraryModalOpen, setItineraryModalOpen] = useState(false);
+
+  const [itineraryForm, setItineraryForm] = useState({
+    name: "",
+    description: "",
+    start_date: "",
+    end_date: "",
+  });
+
   const { mutate } = useMutation({
     mutationFn: createServiceRatingApi,
     onSuccess: () => {
@@ -78,9 +101,79 @@ const SpotDetailsPage: React.FC = () => {
       setSelectedService(null);
     },
   });
-  console.log("spot", spot);
+
+  const addItineraryMutation = useMutation({
+    mutationFn: createItineraryApi,
+    onSuccess: () => {
+      setItineraryModalOpen(false);
+      setItineraryForm({
+        name: "",
+        description: "",
+        start_date: "",
+        end_date: "",
+      });
+
+      setSuccessAlert({
+        open: true,
+        title: "Added to Itinerary",
+        description: "This place has been added to your itinerary.",
+      });
+    },
+    onError: () => {
+      setErrorAlert({
+        open: true,
+        title: "Failed to add itinerary",
+        description: "Please try again.",
+      });
+    },
+  });
+
   
- 
+
+  const [successAlert, setSuccessAlert] = useState<{
+    open: boolean;
+    title?: string;
+    description?: string;
+  }>({
+    open: false,
+  });
+
+  const [errorAlert, setErrorAlert] = useState<{
+    open: boolean;
+    title?: string;
+    description?: string;
+  }>({
+    open: false,
+  });
+
+  console.log("spot", spot);
+
+  const [favoriteModalOpen, setFavoriteModalOpen] = useState(false);
+  const [favoriteNote, setFavoriteNote] = useState("");
+
+  const addFavoriteMutation = useMutation({
+    mutationFn: createFavoriteApi,
+    onSuccess: () => {
+      setIsFavorite(true);
+      setFavoriteModalOpen(false);
+      setFavoriteNote("");
+
+      setSuccessAlert({
+        open: true,
+        title: "Added to Favorites",
+        description: "This place has been saved to your favorites.",
+      });
+    },
+    onError: () => {
+      setErrorAlert({
+        open: true,
+        title: "Failed to Add Favorite",
+        description: "Something went wrong. Please try again.",
+      });
+    },
+  });
+
+  console.log("spot", spot);
 
   const nextImage = () => {
     setCurrentImageIndex((prev) =>
@@ -151,23 +244,26 @@ const SpotDetailsPage: React.FC = () => {
 
   const fmt = (v: number) => `₱${v.toLocaleString()}`;
 
+  const filteredServices = serviceTypeFilter
+    ? spot?.services?.filter((s: any) => s.type === serviceTypeFilter)
+    : spot?.services;
 
+  console.log("filteredServices", filteredServices);
 
-  
   if (isLoading) {
     return <Loader />;
   }
 
-   if (!spot) {
-     return (
-       <div className="min-h-screen bg-background pt-20 md:pt-24 pb-20 md:pb-8 flex items-center justify-center">
-         <div className="text-center">
-           <h2 className="text-2xl font-bold mb-4">Spot not found</h2>
-           <Button onClick={() => navigate("")}>Go back to home</Button>
-         </div>
-       </div>
-     );
-   }
+  if (!spot) {
+    return (
+      <div className="min-h-screen bg-background pt-20 md:pt-24 pb-20 md:pb-8 flex items-center justify-center">
+        <div className="text-center">
+          <h2 className="text-2xl font-bold mb-4">Spot not found</h2>
+          <Button onClick={() => navigate("")}>Go back to home</Button>
+        </div>
+      </div>
+    );
+  }
   return (
     <div className="min-h-screen bg-background pt-5 md:pt-24 pb-28 md:pb-8">
       <div className="max-w-5xl mx-auto px-4">
@@ -205,7 +301,7 @@ const SpotDetailsPage: React.FC = () => {
             <Button
               variant="outline"
               size="icon"
-              onClick={() => setIsFavorite(!isFavorite)}
+              onClick={() => setFavoriteModalOpen(true)}
               className={`rounded-full ${
                 isFavorite ? "text-red-500 border-red-200 bg-red-50" : ""
               }`}
@@ -214,7 +310,13 @@ const SpotDetailsPage: React.FC = () => {
                 className={`w-5 h-5 ${isFavorite ? "fill-current" : ""}`}
               />
             </Button>
-            <Button variant="outline" size="icon" className="rounded-full">
+
+            <Button
+              variant="outline"
+              size="icon"
+              className="rounded-full"
+              onClick={() => setShareModalOpen(true)}
+            >
               <Share2 className="w-5 h-5" />
             </Button>
           </div>
@@ -385,19 +487,41 @@ const SpotDetailsPage: React.FC = () => {
               </Card>
             </motion.div>
 
-            {spot.services.length > 0 && (
+            {spot?.services?.length > 0 && (
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.45 }}
               >
                 <Card className="p-6">
-                  <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
-                    <Bed className="w-5 h-5 text-primary" />
-                    Services & Accommodations
-                  </h3>
+                  <div className="flex items-center justify-between w-full">
+                    <h3 className="md:text-lg font-bold mb-4 flex items-center gap-2">
+                      <Bed className="w-5 h-5 text-primary" />
+                      Services & Accommodations
+                    </h3>
+                    <div className="">
+                      <ServiceTypeSelectModal
+                        open={openTypeModal}
+                        value={serviceTypeFilter}
+                        onOpenChange={setOpenTypeModal}
+                        onChange={(val) => {
+                          setServiceTypeFilter(val);
+                          setOpenTypeModal(false);
+                        }}
+                      />
+
+                      <button
+                        type="button"
+                        onClick={() => setOpenTypeModal(true)}
+                        className=" rounded-xl border border-primary/30 flex items-center gap-1 text-primary px-4 py-1.5 text-left text-xs"
+                      >
+                        {serviceTypeFilter ?? "Filter By  types"}{" "}
+                        <ChevronDown size={17} />
+                      </button>
+                    </div>
+                  </div>
                   <div className="space-y-4">
-                    {spot.services.map((service: any) => {
+                    {filteredServices?.map((service: any) => {
                       const averageRating = getServiceAverageRating(service);
                       const reviewsCount = service.service_reviews?.length || 0;
                       const hasReviews = reviewsCount > 0;
@@ -442,8 +566,6 @@ const SpotDetailsPage: React.FC = () => {
                                   <p className="text-primary font-bold tracking-wide text-sm mt-2">
                                     {priceDisplay}
                                   </p>
-
-                                 
 
                                   <button
                                     onClick={() =>
@@ -503,17 +625,29 @@ const SpotDetailsPage: React.FC = () => {
                                 <Phone className="w-3 h-3" />
                                 <span>{service.contact}</span>
                               </div>
-                              <Button
-                                size="sm"
-                                className="h-10 px-9 text-xs bg-gradient-primary"
-                                onClick={() =>
-                                  navigate(
-                                    `/booking?spot=${spot.placeId}&service=${service.id}`
-                                  )
-                                }
-                              >
-                                Book Now
-                              </Button>
+                              <div className="flex items-center gap-1">
+                                <Button
+                                  size="sm"
+                                  className="h-8 px-3 text-xs bg-transparent border border-sky-500 text-primary hover:text-white"
+                                  onClick={() => {
+                                    setViewService(service);
+                                    setShowServiceDetails(true);
+                                  }}
+                                >
+                                  details
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  className="h-8 px-3 text-xs bg-gradient-primary"
+                                  onClick={() =>
+                                    navigate(
+                                      `/booking?spot=${spot.placeId}&service=${service.id}`
+                                    )
+                                  }
+                                >
+                                  Book Now
+                                </Button>
+                              </div>
                             </div>
                           </div>
                         </div>
@@ -534,10 +668,14 @@ const SpotDetailsPage: React.FC = () => {
               <Card className="p-6 sticky top-24">
                 <h3 className="text-lg font-bold mb-4">Plan Your Visit</h3>
                 <div className="space-y-3">
-                  <Button className="w-full btn-primary shadow-xl shadow-primary/10 h-12 rounded-2xl">
+                  <Button
+                    className="w-full btn-primary shadow-xl shadow-primary/10 h-12 rounded-2xl"
+                    onClick={() => setItineraryModalOpen(true)}
+                  >
                     <Plus className="w-4 h-4 mr-2" />
                     Add to Itinerary
                   </Button>
+
                   <Button
                     variant="outline"
                     className="w-full border border-primary/40 h-12"
@@ -636,6 +774,15 @@ const SpotDetailsPage: React.FC = () => {
               </div>
             </motion.div>
           )}
+
+          <ServiceDetailsModal
+            open={showServiceDetails}
+            service={viewService}
+            onClose={() => {
+              setShowServiceDetails(false);
+              setViewService(null);
+            }}
+          />
 
           {showWalkMode && (
             <motion.div
@@ -1113,7 +1260,337 @@ const SpotDetailsPage: React.FC = () => {
             </motion.div>
           )}
         </AnimatePresence>
+
+        <AnimatePresence>
+          {favoriteModalOpen && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4"
+              onClick={() => setFavoriteModalOpen(false)}
+            >
+              <motion.div
+                initial={{ scale: 0.9, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.9, opacity: 0 }}
+                className="bg-background rounded-2xl w-full max-w-md p-6"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <h2 className="text-lg font-bold mb-4">Add to Favorites</h2>
+
+                {/* Selected Place */}
+                <div className="flex gap-3 mb-4">
+                  <img
+                    src={spot.images?.[0]}
+                    alt={spot.name}
+                    className="w-20 h-16 rounded-lg object-cover"
+                  />
+                  <div>
+                    <p className="font-semibold">{spot.name}</p>
+                    <p className="text-sm text-muted-foreground line-clamp-2">
+                      {spot.description}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Optional Description */}
+                <div className="mb-4">
+                  <label className="text-sm font-medium mb-1 block">
+                    Description (optional)
+                  </label>
+                  <textarea
+                    value={favoriteNote}
+                    onChange={(e) => setFavoriteNote(e.target.value)}
+                    placeholder="Add a note for this place"
+                    className="w-full rounded-xl border px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary"
+                    rows={3}
+                  />
+                </div>
+
+                {/* Actions */}
+                <div className="flex justify-end gap-2">
+                  <Button
+                    variant="outline"
+                    onClick={() => setFavoriteModalOpen(false)}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    className="bg-gradient-primary text-white"
+                    disabled={addFavoriteMutation.isPending}
+                    onClick={() =>
+                      addFavoriteMutation.mutate({
+                        touristspot_id: Number(spot?.placeId),
+                        description: favoriteNote || "",
+                      })
+                    }
+                  >
+                    {addFavoriteMutation.isPending
+                      ? "Saving..."
+                      : "Add Favorite"}
+                  </Button>
+                </div>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        <AnimatePresence>
+          {shareModalOpen && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-50 bg-black/70 backdrop-blur-md flex items-center justify-center p-4"
+              onClick={() => setShareModalOpen(false)}
+            >
+              <motion.div
+                initial={{ scale: 0.92, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.92, opacity: 0 }}
+                transition={{ type: "spring", stiffness: 260, damping: 22 }}
+                className="relative w-full max-w-md rounded-3xl overflow-hidden bg-white shadow-2xl"
+                onClick={(e) => e.stopPropagation()}
+              >
+                {/* Image Header */}
+                <div className="relative h-44 w-full">
+                  <img
+                    src={spot.images?.[0]}
+                    alt={spot.name}
+                    className="h-full w-full object-cover"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent" />
+
+                  <button
+                    onClick={() => setShareModalOpen(false)}
+                    className="absolute top-3 right-3 w-9 h-9 rounded-full bg-black/50 text-white flex items-center justify-center hover:bg-black/70 transition"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+
+                  <div className="absolute bottom-3 left-4">
+                    <p className="text-xs text-white/80">Share place</p>
+                    <h3 className="text-lg font-semibold text-white leading-tight">
+                      {spot.name}
+                    </h3>
+                  </div>
+                </div>
+
+                {/* Content */}
+                <div className="p-5 space-y-4">
+                  {/* URL Field */}
+                  <div>
+                    <label className="text-xs font-medium text-muted-foreground block mb-1">
+                      Shareable link
+                    </label>
+                    <div className="flex items-center gap-2">
+                      <input
+                        readOnly
+                        value={window.location.href}
+                        className="flex-1 rounded-xl border border-border px-3 py-2 text-xs bg-muted/60 truncate"
+                      />
+                      <Button
+                        size="icon"
+                        variant="outline"
+                        className="rounded-xl"
+                        onClick={async () => {
+                          try {
+                            await navigator.clipboard.writeText(
+                              window.location.href
+                            );
+                            setShareModalOpen(false);
+                            setSuccessAlert({
+                              open: true,
+                              title: "Link Copied",
+                              description:
+                                "The place link has been copied to your clipboard.",
+                            });
+                          } catch {
+                            setErrorAlert({
+                              open: true,
+                              title: "Copy Failed",
+                              description:
+                                "Unable to copy the link. Please try again.",
+                            });
+                          }
+                        }}
+                      >
+                        <Share2 className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  </div>
+
+                  {/* Actions */}
+                  <div className="flex justify-end gap-2 pt-2">
+                    <Button
+                      variant="ghost"
+                      className="rounded-xl"
+                      onClick={() => setShareModalOpen(false)}
+                    >
+                      Close
+                    </Button>
+                    <Button
+                      className="rounded-xl bg-gradient-primary text-white px-6"
+                      onClick={async () => {
+                        try {
+                          await navigator.clipboard.writeText(
+                            window.location.href
+                          );
+                          setShareModalOpen(false);
+                          setSuccessAlert({
+                            open: true,
+                            title: "Link Copied",
+                            description:
+                              "The place link has been copied to your clipboard.",
+                          });
+                        } catch {
+                          setErrorAlert({
+                            open: true,
+                            title: "Copy Failed",
+                            description:
+                              "Unable to copy the link. Please try again.",
+                          });
+                        }
+                      }}
+                    >
+                      Copy Link
+                    </Button>
+                  </div>
+                </div>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        <AnimatePresence>
+          {itineraryModalOpen && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4"
+              onClick={() => setItineraryModalOpen(false)}
+            >
+              <motion.div
+                initial={{ scale: 0.9, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.9, opacity: 0 }}
+                className="bg-background rounded-2xl w-full max-w-md p-6"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <h2 className="text-lg font-bold mb-4">Add to Itinerary</h2>
+
+                {/* Selected Place */}
+                <div className="flex gap-3 mb-4">
+                  <img
+                    src={spot.images?.[0]}
+                    alt={spot.name}
+                    className="w-20 h-16 rounded-lg object-cover"
+                  />
+                  <div>
+                    <p className="font-semibold">{spot.name}</p>
+                    <p className="text-sm text-muted-foreground line-clamp-2">
+                      {spot.description}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Title */}
+                <input
+                  className="w-full mb-2 rounded-xl border px-3 py-2 text-sm"
+                  placeholder="Itinerary title"
+                  value={itineraryForm.name}
+                  onChange={(e) =>
+                    setItineraryForm((p) => ({ ...p, name: e.target.value }))
+                  }
+                />
+
+                {/* Dates */}
+                <div className="grid grid-cols-2 gap-2 mb-2">
+                  <input
+                    type="datetime-local"
+                    className="rounded-xl border px-3 py-2 text-sm"
+                    value={itineraryForm.start_date}
+                    onChange={(e) =>
+                      setItineraryForm((p) => ({
+                        ...p,
+                        start_date: e.target.value,
+                      }))
+                    }
+                  />
+                  <input
+                    type="datetime-local"
+                    className="rounded-xl border px-3 py-2 text-sm"
+                    value={itineraryForm.end_date}
+                    onChange={(e) =>
+                      setItineraryForm((p) => ({
+                        ...p,
+                        end_date: e.target.value,
+                      }))
+                    }
+                  />
+                </div>
+
+                {/* Description */}
+                <textarea
+                  rows={3}
+                  placeholder="Description (optional)"
+                  className="w-full rounded-xl border px-3 py-2 text-sm mb-4"
+                  value={itineraryForm.description}
+                  onChange={(e) =>
+                    setItineraryForm((p) => ({
+                      ...p,
+                      description: e.target.value,
+                    }))
+                  }
+                />
+
+                {/* Actions */}
+                <div className="flex justify-end gap-2">
+                  <Button
+                    variant="outline"
+                    onClick={() => setItineraryModalOpen(false)}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    className="bg-gradient-primary text-white"
+                    disabled={addItineraryMutation.isPending}
+                    onClick={() =>
+                      addItineraryMutation.mutate({
+                        name: itineraryForm.name,
+                        description: itineraryForm.description,
+                        start_date: itineraryForm.start_date,
+                        end_date: itineraryForm.end_date,
+                        touristspot_id: Number(spot.placeId),
+                      })
+                    }
+                  >
+                    {addItineraryMutation.isPending
+                      ? "Saving..."
+                      : "Add to Itinerary"}
+                  </Button>
+                </div>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
+
+      <SuccessDialog
+        open={successAlert.open}
+        onOpenChange={(open) => setSuccessAlert((prev) => ({ ...prev, open }))}
+        title={successAlert.title}
+        description={successAlert.description}
+      />
+
+      <ErrorDialog
+        open={errorAlert.open}
+        onOpenChange={(open) => setErrorAlert((prev) => ({ ...prev, open }))}
+        title={errorAlert.title}
+        description={errorAlert.description}
+      />
     </div>
   );
 };

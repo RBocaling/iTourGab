@@ -95,7 +95,7 @@ export default function AiChat() {
       <div className="flex items-center gap-3 px-5 py-4 bg-white/60 backdrop-blur-sm border-b border-white/10">
         <div className="flex items-center gap-3">
           <div className="w-12 h-12 rounded-xl bg-white/70 backdrop-blur-md flex items-center justify-center shadow-sm ring-1 ring-white/30">
-            <img src="/ai.png" className="w-14" alt="" />
+            <img src="/profile-ai.png" className="w-14" alt="" />
           </div>
         </div>
         <div className="flex-1 min-w-0">
@@ -114,6 +114,10 @@ export default function AiChat() {
       </div>
 
       <div ref={listRef} className="flex-1 overflow-y-auto px-6 py-5 space-y-4">
+        <div className="flex items-center justify-center flex-col  w-full">
+          <img src="/message-ai.png" className="max-w-[15rem] mx-auto w-full" alt="" />
+          <p className="text-sm text-neutral-500 tracking-wider text-center">Lorem ipsum dolor, sit amet consectetur adipisicing elit. Perferendis eos vel earum blanditiis inventore incidunt vitae in provident assumenda exercitationem. Amet, eius reiciendis. Provident nisi rem mollitia </p>
+        </div>
         {loadingChats ? (
           <div className="w-full flex items-center justify-center py-12">
             <div className="flex flex-col items-center gap-4">
@@ -136,7 +140,7 @@ export default function AiChat() {
               {c.is_tourist_ai ? (
                 <div className="relative max-w-[78%] bg-white/85 backdrop-blur-sm px-4 py-3 rounded-2xl shadow-md ring-1 ring-white/30">
                   <div className="flex items-start gap-3">
-                    <img src="/ai.png" className="w-9 h-9" alt="" />
+                    <img src="/ai2.png" className="w-7 h-6" alt="" />
                     <div className="min-w-0">
                       <div className="text-sm text-slate-800 leading-6 whitespace-pre-wrap">
                         {c.response?.text ?? "..."}
@@ -202,8 +206,6 @@ export default function AiChat() {
 
       <div className="px-5 py-4 bg-white/60 backdrop-blur-md border-t border-white/10 mb-14 md:mb-5">
         <div className="flex items-center gap-3">
-        
-
           <div className="flex-1 relative">
             <textarea
               value={input}
@@ -261,7 +263,7 @@ export default function AiChat() {
         @keyframes dotBounce {
           0% {
             transform: translateY(0);
-            opacity: 0.6;
+          opacity: 0.6;
           }
           50% {
             transform: translateY(-6px);

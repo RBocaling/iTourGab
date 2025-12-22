@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { MapPin, Star, Calendar, Camera, Filter, Search, Heart, ArrowRight, Users, Clock, Navigation, Bot, Nfc, Telescope } from 'lucide-react';
+import { MapPin, Star, Calendar, Camera, Filter, Search, Heart, ArrowRight, Users, Clock, Navigation, Bot, Nfc, Telescope, MapPinHouse, MessageSquareLock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
@@ -8,6 +8,8 @@ import { Badge } from '@/components/ui/badge';
 import { useNavigate } from 'react-router-dom';
 import { useGetPlaces } from '@/hooks/useGetPlace';
 import Loader from '@/components/loader/Loader';
+import { TouristSpotType } from '@/types/touristSpotType';
+import TouristSpotTypeModal from '@/components/ui/TouristSpotTypeModal';
 
 const HomePage: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -16,17 +18,20 @@ const HomePage: React.FC = () => {
   const [searchSuggestions, setSearchSuggestions] = useState<typeof touristSpots>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const navigate = useNavigate();
+  const [typeFilter, setTypeFilter] = useState<TouristSpotType | null>(null);
+  const [showTypeModal, setShowTypeModal] = useState(false);
   const {isLoading, formatData: touristSpots } = useGetPlaces();
-  console.log("touristSpots", touristSpots);
   
-  const filteredSpots = touristSpots?.filter(spot => {
-    const matchesSearch = spot.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         spot.description.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesCategory = selectedCategory === 'all' || spot.category === selectedCategory;
-    return matchesSearch && matchesCategory;
-  });
+ const filteredSpots = touristSpots?.filter((spot:any) => {
+   const matchesSearch =
+     spot.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+     spot.description.toLowerCase().includes(searchQuery.toLowerCase());
 
-  console.log("filteredSpots", filteredSpots);
+   const matchesType = !typeFilter || spot.type === typeFilter;
+   
+   return matchesSearch && matchesType;
+ });
+
   
   // Search suggestions logic
   useEffect(() => {
@@ -64,9 +69,10 @@ const HomePage: React.FC = () => {
   const handleSuggestionClick = (spot: typeof touristSpots[0]) => {
     setSearchQuery('');
     setShowSuggestions(false);
-    navigate(`/spot/${spot.id}`);
+    navigate(`/spot/${spot.placeId}`);
   };
 
+  
   if (isLoading) {
      return <Loader />;
   }
@@ -177,9 +183,9 @@ const HomePage: React.FC = () => {
               color: "from-purple-500 to-purple-600",
             },
             {
-              icon: Bot,
-              label: "Chat AI Assistant",
-              action: () => navigate("/ai-support"),
+              icon: MessageSquareLock,
+              label: "Chat Admin",
+              action: () => navigate("/chat-support"),
               color: "from-pink-500 to-pink-600",
             },
           ].map((item, index) => (
@@ -203,12 +209,20 @@ const HomePage: React.FC = () => {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.3 }}
-          className="mb-9"
+          className="mb-9 flex items-center justify-between"
         >
           <p className="text-muted-foreground">
             {filteredSpots.length} destination
             {filteredSpots.length !== 1 ? "s" : ""} found
           </p>
+          <Button
+            variant="outline"
+            size="sm"
+            className="rounded-xl"
+            onClick={() => setShowTypeModal(true)}
+          >
+            Filter by Type
+          </Button>
         </motion.div>
 
         {/* Destination Grid */}
@@ -238,23 +252,10 @@ const HomePage: React.FC = () => {
                   <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
 
                   {/* Favorite Button */}
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      toggleFavorite(spot.id);
-                    }}
-                    className={`absolute top-3 right-3 w-8 h-8 rounded-full flex items-center justify-center transition-all ${
-                      favorites.includes(spot.id)
-                        ? "bg-red-500 text-white"
-                        : "bg-white/20 text-primary hover:bg-white/40"
-                    }`}
-                  >
-                    <Heart
-                      className={`w-4 h-4 ${
-                        favorites.includes(spot.id) ? "fill-current" : ""
-                      }`}
-                    />
-                  </button>
+
+                  <p className="absolute top-3 right-3 text-xs font-semibold text-white bg-primary py-1.5 px-3 rounded-full">
+                    {spot.type}
+                  </p>
 
                   {/* Rating */}
                   <div className="absolute top-3 left-3 bg-white/60 rounded-full px-2 py-1 flex items-center gap-1">
@@ -333,6 +334,13 @@ const HomePage: React.FC = () => {
             </motion.div>
           ))}
         </motion.div>
+
+        <TouristSpotTypeModal
+          open={showTypeModal}
+          value={typeFilter}
+          onChange={setTypeFilter}
+          onClose={() => setShowTypeModal(false)}
+        />
 
         {/* No Results */}
         {filteredSpots.length === 0 && (

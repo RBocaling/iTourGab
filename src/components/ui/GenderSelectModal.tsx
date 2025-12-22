@@ -28,20 +28,7 @@ const OPTIONS: Option[] = [
     Icon: Users,
     color: "from-pink-100 to-pink-50",
   },
-  {
-    id: "OTHER",
-    label: "Other",
-    subtitle: "Non-binary / They",
-    Icon: Heart,
-    color: "from-violet-100 to-violet-50",
-  },
-  {
-    id: "UNSPECIFIED",
-    label: "Unspecified",
-    subtitle: "Prefer not to say",
-    Icon: User,
-    color: "from-slate-100 to-slate-50",
-  },
+ 
 ];
 
 const backdrop = { hidden: { opacity: 0 }, visible: { opacity: 1 } };

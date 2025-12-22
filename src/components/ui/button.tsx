@@ -10,24 +10,34 @@ const buttonVariants = cva(
     variants: {
       variant: {
         default: "bg-primary text-primary-foreground hover:bg-primary/90",
-        destructive: "bg-destructive text-destructive-foreground hover:bg-destructive/90",
-        outline: "border border-input bg-background hover:bg-primary/70 hover:text-accent-foreground",
-        secondary: "bg-secondary text-secondary-foreground hover:bg-secondary/80",
+        destructive:
+          "bg-destructive text-destructive-foreground hover:bg-destructive/90",
+        outline:
+          "border border-input bg-background hover:bg-primary/70 hover:text-accent-foreground",
+        secondary:
+          "bg-secondary text-secondary-foreground hover:bg-secondary/80",
         ghost: "hover:bg-primary/70 hover:text-accent-foreground",
         link: "text-primary underline-offset-4 hover:underline",
+        gradient:
+          "gradient-sky text-primary-foreground rounded-2xl shadow-sky-md hover:shadow-sky-lg hover:-translate-y-1 hover:scale-[1.02] active:scale-[0.98]",
+        "gradient-outline":
+          "bg-transparent border-2 border-primary text-primary hover:gradient-sky hover:text-primary-foreground hover:border-transparent rounded-2xl transition-all duration-300",
+        glass:
+          "glass border border-border/50 text-foreground hover:bg-card/90 rounded-2xl shadow-sky",
       },
       size: {
         default: "h-10 px-4 py-2",
         sm: "h-9 rounded-xl px-3",
         lg: "h-11 rounded-xl px-8",
         icon: "h-10 w-10",
+        xl: "h-16 rounded-2xl px-12 text-lg font-semibold",
       },
     },
     defaultVariants: {
       variant: "default",
       size: "default",
     },
-  },
+  }
 );
 
 export interface ButtonProps

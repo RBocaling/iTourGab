@@ -22,10 +22,9 @@ const App = () => {
         <Sonner />
         <BrowserRouter>
           <Routes>
-            <Route path="/" element={<MainApp />} />
             <Route path="/welcome-to-i-tour-gab" element={<LandingPage />} />
             <Route path="/*" element={<MainApp />} />
-            <Route path="*" element={<NotFound />} />
+            {/* <Route path="*" element={<NotFound />} /> */}
           </Routes>
         </BrowserRouter>
       </TooltipProvider>

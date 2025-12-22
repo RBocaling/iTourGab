@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { getAllPlacesApi, getPlaceByIdApi } from "@/api/placeApi";
-import { formatPlace, formatPlaces } from "@/lib/formatPlace";
+import { formatPlace, formatPlaces, parseEntranceFee } from "@/lib/formatPlace";
 import type { Place } from "@/types/place";
 
 export const useGetPlaces = () => {
@@ -23,11 +23,18 @@ export const useGetPlace = (id: string | number | undefined) => {
     enabled: Boolean(id),
   });
 
+  const data = query.data ?? null;
+
+  const entranceFee = data ? parseEntranceFee(data.entrance) : 0;
+
   return {
-    isLoading:query.isLoading,
-    refetch: query.refetch,
     ...query,
-    normalData: query.data ?? null,
-    formatData: query.data ? formatPlace(query.data) : null,
+    isLoading: query.isLoading,
+    refetch: query.refetch,
+
+    normalData: data ? { ...data, entranceFee } : null,
+
+    formatData: data ? formatPlace(data) : null,
   };
 };
+

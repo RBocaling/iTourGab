@@ -16,23 +16,23 @@ export const useAuth2 = () => {
     staleTime: 1000 * 60 * 5,
   });
 
-  const logoutMutation = useMutation({
-    mutationFn: () => logoutApi(),
-    onSuccess: () => {
+  const data = userQuery.data?.data;
+
+  const isReady = !accessToken || !userQuery.isLoading;
+
+  return {
+    user: data
+      ? { ...data, name: `${data.first_name} ${data.last_name}` }
+      : null,
+    isAuthenticated: Boolean(accessToken && data),
+    loading: !isReady,
+    logout: async () => {
+      await logoutApi();
       clearAuth();
       qc.removeQueries(["auth-user"] as any);
     },
-  });
-
-  const data = userQuery.data?.data;
-
-  return {
-    user: data ? { ...data, name: `${data.first_name} ${data.last_name}` } : null,
-    isAuthenticated: Boolean(accessToken && data),
-    loading: userQuery.isLoading,
-    logout: () => logoutMutation.mutateAsync(),
-    refetch: () => userQuery.refetch(),
+    refetch: userQuery.refetch,
     error: userQuery.error ?? null,
   };
-
 };
+

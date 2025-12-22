@@ -9,6 +9,10 @@
     --background: 220 15% 97%;
     --foreground: 210 25% 12%;
 
+     --gradient-start: 199 89% 65%;
+    --gradient-end: 217 91% 60%;
+    --gradient-accent: 199 100% 85%;
+
     /* Primary Nature Blue-Green */
     --primary: 195 85% 45%;
     --primary-light: 195 80% 65%;
@@ -86,6 +90,46 @@
     --sidebar-ring: 217.2 91.2% 59.8%;
   }
 
+@layer utilities {
+  .gradient-sky {
+    background: linear-gradient(135deg, hsl(var(--gradient-start)), hsl(var(--gradient-end)));
+  }
+
+  .gradient-sky-subtle {
+    background: linear-gradient(180deg, hsl(var(--gradient-accent) / 0.3), transparent);
+  }
+
+  .glass {
+    background: hsl(var(--card) / 0.8);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+  }
+
+  .glass-strong {
+    background: hsl(var(--card) / 0.95);
+    backdrop-filter: blur(30px);
+    -webkit-backdrop-filter: blur(30px);
+  }
+
+  .shadow-sky {
+    box-shadow: var(--shadow-medium);
+  }
+
+  .shadow-sky-lg {
+    box-shadow: var(--shadow-large);
+  }
+
+  .shadow-glow {
+    box-shadow: var(--shadow-glow);
+  }
+
+  .text-gradient {
+    background: linear-gradient(135deg, hsl(var(--gradient-start)), hsl(var(--gradient-end)));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+}
   .dark {
     /* Dark Nature Theme */
     --background: 210 30% 8%;

@@ -227,7 +227,9 @@ export default function BookingsPage() {
               const img =
                 b.place?.images?.[0] ??
                 b.service?.images?.[0] ??
+                b.availability?.images?.[0] ??
                 "/placeholder.jpg";
+
               const contactPhone =
                 b.service?.contact ?? b.place?.contact ?? b.contactPhone ?? "—";
               const reviews =
@@ -363,14 +365,16 @@ export default function BookingsPage() {
                             variant="outline"
                             size="sm"
                             onClick={() =>
-                              navigate(`/spot/${b.service?.tourist_spot?.id}`)
+                              navigate(
+                                `/spot/${b.place?.id ?? b.tourist_spot?.id}`
+                              )
                             }
                             className="w-full sm:w-auto flex items-center justify-center gap-2"
                           >
                             <MapPin className="w-4 h-4" />
                             View on Map
                           </Button>
-                          {canCancel && (
+                          {statusKey === "PENDING" &&canCancel && (
                             <Button
                               variant="outline"
                               size="sm"
