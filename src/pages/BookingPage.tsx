@@ -9,6 +9,8 @@ import {
   Star,
   X,
   AlertTriangle,
+  ArrowDown,
+  ChevronDown,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -30,6 +32,9 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import SelectPlaceDialog from "@/components/ui/SelectPlaceDialog";
 import { createServiceRatingApi } from "@/api/serviceRatingApi";
 import { Badge } from "@/components/ui/badge";
+import { ServiceType } from "@/types/serviceType";
+import ServiceTypeSelectModal from "@/components/ui/ServiceTypeSelect";
+import ServiceDetailsModal from "@/components/touristspot/ServiceDetailsModal";
 
 const isPromoValidToday = (promo: any) => {
   if (!promo) return false;
@@ -59,7 +64,6 @@ const computePromoDiscount = (amount: number, promo: any) => {
   return 0;
 };
 
-
 function parsePrice(price: string | number | undefined | null): number {
   if (price == null) return 0;
   if (typeof price === "number") return price;
@@ -68,19 +72,16 @@ function parsePrice(price: string | number | undefined | null): number {
   return Number.isFinite(n) ? n : 0;
 }
 
-const steps = [
-  { number: 1, title: "Select Service", icon: MapPin },
-  { number: 2, title: "Select Availability", icon: MapPin },
-  { number: 3, title: "Trip Details", icon: Calendar },
-  { number: 4, title: "Review & Confirm", icon: Check },
-];
-
 export default function BookingPage() {
   const location = useLocation();
   const navigate = useNavigate();
   const qc = useQueryClient();
   const { toast } = useToast();
 
+const [serviceTypeFilter, setServiceTypeFilter] = useState<ServiceType | null>(
+  null
+  );
+  const [openTypeModal, setOpenTypeModal] = useState(false);
   const query = new URLSearchParams(location.search);
   const spotParam = query.get("spot") ?? query.get("placeId") ?? undefined;
   const serviceParam =
@@ -92,7 +93,7 @@ export default function BookingPage() {
   const [placeDialogOpen, setPlaceDialogOpen] = useState(false);
 
   const activePlaceId = selectedPlaceId ?? spotParam;
-  const { normalData: place, isLoading: placeLoading } = useGetPlace(
+  const { normalData: place } = useGetPlace(
     activePlaceId ? (activePlaceId as any) : undefined
   );
 
@@ -100,9 +101,8 @@ export default function BookingPage() {
   const [selectedAccommodationId, setSelectedAccommodationId] = useState<
     string | number | null
   >(null);
-  const [selectedServiceId, setSelectedServiceId] = useState<
-   any
-  >(serviceParam ?? null);
+  const [selectedServiceId, setSelectedServiceId] = useState<any>(null);
+
   const [selectedAvailabilityId, setSelectedAvailabilityId] = useState<
     string | number | null
   >(null);
@@ -120,10 +120,15 @@ export default function BookingPage() {
   const [postWithName, setPostWithName] = useState(false);
   const [showRateSuccessModal, setShowRateSuccessModal] = useState(false);
 
+const [showServiceDetailsModal, setShowServiceDetailsModal] = useState(false);
+const [viewService, setViewService] = useState<any | null>(null);
   const [showServiceRatingsModal, setShowServiceRatingsModal] = useState(false);
   const [viewRatingsService, setViewRatingsService] = useState<any | null>(
     null
   );
+
+  const [showAvailabilityModal, setShowAvailabilityModal] = useState(false);
+  const [viewAvailability, setViewAvailability] = useState<any | null>(null);
 
   const accommodations = useMemo(() => place?.accommodation ?? [], [place]);
   const services = useMemo(() => place?.services ?? [], [place]);
@@ -137,28 +142,30 @@ export default function BookingPage() {
 
   useEffect(() => {
     if (!serviceParam) return;
-    if (selectedPlaceId) return;
     if (!services || services.length === 0) return;
-    if (selectedServiceId) return;
-    const svc:any = services.find(
+
+    const svc = services.find(
       (s: any) => String(s.id) === String(serviceParam)
     );
+
     if (svc) {
       setSelectedServiceId(svc.id);
-      const firstAvail =
-        Array.isArray(svc.availabilities) && svc.availabilities.length
-          ? svc.availabilities[0]
-          : null;
-      if (firstAvail) setSelectedAvailabilityId(firstAvail.id);
+      setSelectedAvailabilityId(null);
     }
-  }, [serviceParam, services, selectedPlaceId, selectedServiceId]);
+  }, [serviceParam, services]);
 
-  useEffect(() => {
-    if (!selectedPlaceId) return;
-    setSelectedAccommodationId(null);
+useEffect(() => {
+  if (!selectedPlaceId) return;
+
+  setSelectedAccommodationId(null);
+  setSelectedAvailabilityId(null);
+
+  // HUWAG i-reset kung galing sa URL
+  if (!serviceParam) {
     setSelectedServiceId(null);
-    setSelectedAvailabilityId(null);
-  }, [selectedPlaceId]);
+  }
+}, [selectedPlaceId, serviceParam]);
+
 
   const selectedAccommodation = useMemo(
     () =>
@@ -168,7 +175,7 @@ export default function BookingPage() {
     [accommodations, selectedAccommodationId]
   );
 
-  const selectedService:any = useMemo(
+  const selectedService: any = useMemo(
     () =>
       services.find((s: any) => String(s.id) === String(selectedServiceId)) ??
       null,
@@ -216,28 +223,29 @@ export default function BookingPage() {
     return 0;
   }, [selectedAccommodation, selectedService, selectedAvailability]);
 
-const totalAmount = useMemo(() => {
-  const base = Number(unitPrice) * Math.max(1, nights) * Math.max(1, rooms);
-  return Math.round(base);
-}, [unitPrice, nights, rooms]);
+  const totalAmount = useMemo(() => {
+    const base = Number(unitPrice) * Math.max(1, nights) * Math.max(1, rooms);
+    return Math.round(base);
+  }, [unitPrice, nights, rooms]);
 
-const activePromo = useMemo(() => {
-  if (!selectedService?.promo) return null;
-  return isPromoValidToday(selectedService.promo)
-    ? selectedService.promo
-    : null;
-}, [selectedService]);
+  const activePromo = useMemo(() => {
+    if (!selectedService?.promo) return null;
+    return isPromoValidToday(selectedService.promo)
+      ? selectedService.promo
+      : null;
+  }, [selectedService]);
 
-const promoDiscount = useMemo(() => {
-  if (!activePromo) return 0;
-  return computePromoDiscount(totalAmount, activePromo);
-}, [totalAmount, activePromo]);
+  const promoDiscount = useMemo(() => {
+    if (!activePromo) return 0;
+    return computePromoDiscount(totalAmount, activePromo);
+  }, [totalAmount, activePromo]);
 
-const finalTotal = useMemo(() => {
-  return Math.max(0, totalAmount - promoDiscount);
-}, [totalAmount, promoDiscount]);
+  const entranceFee = place?.entranceFee ?? 0;
 
-  
+  const finalTotal = useMemo(() => {
+    return Math.max(0, totalAmount + entranceFee - promoDiscount);
+  }, [totalAmount, entranceFee, promoDiscount]);
+
   const mutation = useMutation({
     mutationFn: (payload: any) => createBookingApi(payload),
     onSuccess: () => {
@@ -262,14 +270,34 @@ const finalTotal = useMemo(() => {
     },
   });
 
-  const canProceedToNext =
-    step === 1
-      ? selectedAccommodationId != null || selectedServiceId != null
-      : step === 2
-      ? selectedServiceId != null && selectedAvailabilityId != null
-      : step === 3
-      ? dates.checkIn && dates.checkOut
-      : true;
+  const canProceedToNext = useMemo(() => {
+    if (step === 1) {
+      return Boolean(place);
+    }
+
+    if (step === 2) {
+      if (!selectedService) return false;
+      return Boolean(selectedAvailabilityId);
+    }
+
+    if (step === 3) {
+      if (selectedService?.type === "FOOD") return true;
+      return Boolean(dates.checkIn && dates.checkOut);
+    }
+
+    return true;
+  }, [
+    step,
+    place,
+    selectedService,
+    selectedAvailabilityId,
+    dates.checkIn,
+    dates.checkOut,
+  ]);
+
+
+console.log("selectedAvailability", selectedService?.type);
+
 
   function handleSubmit() {
     if (!place) {
@@ -279,7 +307,7 @@ const finalTotal = useMemo(() => {
       });
       return;
     }
-    if (!dates.checkIn || !dates.checkOut) {
+    if (selectedService?.type ==="ROOM" &&(!dates.checkIn || !dates.checkOut)) {
       toast({
         title: "Missing dates",
         description: "Please choose check-in and check-out dates.",
@@ -288,16 +316,18 @@ const finalTotal = useMemo(() => {
     }
 
     const payload: any = {
-      service_id: selectedServiceId ?? null,
-      availability_id: selectedAvailabilityId ?? null,
-      start_date: dates.checkIn,
-      end_date: dates.checkOut,
-      guests,
-      rooms,
+      touristspot_id: place.id,
+      service_id: selectedService?.id ?? null,
+      availability_id:
+        selectedService?.type === "ROOM" ? selectedAvailabilityId : null,
+      start_date: selectedService?.type === "ROOM" ? dates.checkIn : null,
+      end_date: selectedService?.type === "ROOM" ? dates.checkOut : null,
+      rooms: selectedService?.type === "ROOM" ? rooms : null,
+      guests:
+        selectedService?.type === "ROOM" && selectedAvailability?.max_guests
+          ? selectedAvailability.max_guests * rooms
+          : null,
       special_requests: specialRequests,
-      subtotal_amount: totalAmount,
-      promo_id: activePromo?.id ?? null,
-      promo_discount: promoDiscount,
       total_amount: finalTotal,
     };
 
@@ -328,9 +358,87 @@ const finalTotal = useMemo(() => {
     return { avg: sum / reviews.length, count: reviews.length };
   };
 
+
+  const bookingFlow = useMemo(() => {
+    if (!selectedService) return "PLACE_ONLY";
+    if (selectedService.type === "FOOD") return "FOOD";
+    return "ROOM";
+  }, [selectedService]);
+
+
+  
+  const steps = useMemo(() => {
+    return [
+      { number: 1, title: "Select Place", icon: MapPin },
+      { number: 2, title: "Select Availability", icon: MapPin },
+      { number: 3, title: "Trip Details", icon: Calendar },
+      { number: 4, title: "Review & Confirm", icon: Check },
+    ];
+  }, []);
+
+  const isRoomService = selectedService?.type === "ROOM";
+
+  useEffect(() => {
+    if (selectedAvailability && isRoomService) {
+      setViewAvailability(selectedAvailability);
+    }
+  }, [rooms]);
+
+ 
+
+ const getNextStep = () => {
+   if (step === 1) {
+     if (!selectedService) return 3; // PLACE ONLY
+     return 2; // FOOD & ROOM → Availability
+   }
+
+   if (step === 2) {
+     if (selectedService?.type === "FOOD") return 4;
+     return 3;
+   }
+
+   if (step === 3) {
+     return 4;
+   }
+
+   return step;
+ };
+
+const getPrevStep = () => {
+  // REVIEW
+  if (step === 4) {
+    if (!selectedService) return 3; // PLACE ONLY → Trip Details
+    if (selectedService.type === "FOOD") return 2; // FOOD → Availability
+    return 3; // ROOM → Trip Details
+  }
+
+  // TRIP DETAILS
+  if (step === 3) {
+    if (!selectedService) return 1; // PLACE ONLY → Place
+    if (selectedService.type === "FOOD") return 2; // FOOD → Availability
+    return 2; // ROOM → Availability
+  }
+
+  // AVAILABILITY
+  if (step === 2) {
+    return 1; // Always back to Place
+  }
+
+  return step;
+};
+
+
+
+ const filteredServices = serviceTypeFilter
+   ? services?.filter((s: any) => s.type === serviceTypeFilter)
+   : services;
+
+
+console.log("{place?.entranceFee ", place?.entranceFee);
+
   return (
-    <div className="min-h-screen bg-background pt-3 md:pt-24 pb-20 md:pb-8">
-      <div className="max-w-4xl mx-auto px-4">
+    <div className="min-h-screen bg-background pt-3 flex flex-col items-center justify-center md:pt-24 pb-20 md:pb-8">
+      <div className="max-w-4xlmx-auto px-6 md:px-4">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -403,7 +511,7 @@ const finalTotal = useMemo(() => {
                 className="space-y-4"
               >
                 <div className="flex items-center justify-between">
-                  <h2 className="text-xl font-bold mb-2">
+                  <h2 className="text-xl font-bold mb-2 line-clamp-1">
                     Choose from {place?.name ?? "a place"}
                   </h2>
                   <div className="flex items-center gap-2">
@@ -445,9 +553,36 @@ const finalTotal = useMemo(() => {
 
                 <div className="max-h-[60vh] overflow-auto pr-2 space-y-4">
                   <div className="mt-4">
-                    <h3 className="text-lg font-semibold">
-                      Accommodations & Services
-                    </h3>
+                    <div className="mb-3 w-full flex flex-col md:flex-row items-center justify-between">
+                      <h3 className="text-sm md:text-base font-semibold flex items-center">
+                        Accommodations & Services{" "}
+                        <img
+                          src="/service.png"
+                          className="w-16 rotate-6 animate-pulse"
+                          alt=""
+                        />
+                      </h3>
+
+                      <ServiceTypeSelectModal
+                        open={openTypeModal}
+                        value={serviceTypeFilter}
+                        onOpenChange={setOpenTypeModal}
+                        onChange={(val) => {
+                          setServiceTypeFilter(val);
+                          setOpenTypeModal(false);
+                        }}
+                      />
+
+                      <button
+                        type="button"
+                        onClick={() => setOpenTypeModal(true)}
+                        className=" rounded-xl w-full md:w-auto border border-primary/30 flex items-center justify-center gap-1 text-primary px-4 py-2.5 md:py-1.5 text-left text-xs"
+                      >
+                        {serviceTypeFilter ?? "Filter By  types"}{" "}
+                        <ChevronDown size={17} />
+                      </button>
+                    </div>
+
                     {serviceParam && !selectedPlaceId ? (
                       selectedService ? (
                         <Card className="p-3 ring-2 ring-primary bg-primary/5 m-2">
@@ -482,42 +617,6 @@ const finalTotal = useMemo(() => {
                                   <p className="text-sm text-muted-foreground line-clamp-2">
                                     {selectedService.description}
                                   </p>
-                                  <button
-                                    type="button"
-                                    className="mt-2 inline-flex items-center gap-1 text-xs text-yellow-500 hover:text-yellow-600"
-                                    onClick={() => {
-                                      setViewRatingsService(selectedService);
-                                      setShowServiceRatingsModal(true);
-                                    }}
-                                  >
-                                    {(() => {
-                                      const { avg, count } =
-                                        getServiceRatingSummary(
-                                          selectedService
-                                        );
-                                      if (!avg || !count) {
-                                        return (
-                                          <>
-                                            <Star className="w-3 h-3 text-gray-300" />
-                                            <span className="text-[11px] text-muted-foreground">
-                                              No ratings yet
-                                            </span>
-                                          </>
-                                        );
-                                      }
-                                      return (
-                                        <>
-                                          <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
-                                          <span className="font-semibold text-[11px]">
-                                            {avg.toFixed(1)}
-                                          </span>
-                                          <span className="text-[11px] text-muted-foreground">
-                                            ({count})
-                                          </span>
-                                        </>
-                                      );
-                                    })()}
-                                  </button>
                                 </div>
                                 <div className="text-right">
                                   <div className="text-base font-semibold">
@@ -543,17 +642,18 @@ const finalTotal = useMemo(() => {
                           Selected service not found
                         </div>
                       )
-                    ) : services.length === 0 ? (
+                    ) : filteredServices.length === 0 ? (
                       <div className="text-sm text-muted-foreground">
                         No services available
                       </div>
                     ) : (
                       <div className="space-y-3">
-                        {services.map((s: any) => {
+                        {filteredServices?.map((s: any) => {
                           const selected =
                             String(s.id) === String(selectedServiceId);
                           const { avg, count } = getServiceRatingSummary(s);
                           const { min, max } = servicePriceRange(s);
+
                           return (
                             <Card
                               key={s.id}
@@ -564,18 +664,11 @@ const finalTotal = useMemo(() => {
                               }`}
                               onClick={() => {
                                 setSelectedServiceId(s.id);
-                                const firstAvail =
-                                  Array.isArray(s.availabilities) &&
-                                  s.availabilities.length
-                                    ? s.availabilities[0]
-                                    : null;
-                                setSelectedAvailabilityId(
-                                  firstAvail ? firstAvail.id : null
-                                );
+                                setSelectedAvailabilityId(null);
                               }}
                             >
                               <div className="flex items-start gap-3">
-                                <div className="w-24 h-16 rounded-md overflow-hidden bg-slate-50 flex items-center justify-center">
+                                <div className="w-24 h-16 rounded-md overflow-hidden bg-slate-50">
                                   <img
                                     src={
                                       s.images?.[0] ??
@@ -585,15 +678,15 @@ const finalTotal = useMemo(() => {
                                     className="object-cover w-full h-full"
                                   />
                                 </div>
+
                                 <div className="flex-1">
                                   <div className="flex items-start justify-between">
                                     <div>
                                       <h4 className="font-semibold flex items-center gap-2 flex-wrap">
-                                        {s?.name}
-
-                                        {isPromoValidToday(s?.promo) && (
+                                        {s.name}
+                                        {isPromoValidToday(s.promo) && (
                                           <Badge className="bg-rose-100 text-rose-700 text-[10px] px-2 py-0.5 rounded-md">
-                                            🔖 {s?.promo.discount_percent}% OFF
+                                            🔖 {s.promo.discount_percent}% OFF
                                           </Badge>
                                         )}
                                       </h4>
@@ -601,35 +694,52 @@ const finalTotal = useMemo(() => {
                                       <p className="text-sm text-muted-foreground line-clamp-2">
                                         {s.description}
                                       </p>
-                                      <button
-                                        type="button"
-                                        className="mt-2 inline-flex items-center gap-1 text-xs text-yellow-500 hover:text-yellow-600"
-                                        onClick={(e) => {
-                                          e.stopPropagation();
-                                          setViewRatingsService(s);
-                                          setShowServiceRatingsModal(true);
-                                        }}
-                                      >
-                                        {avg && count ? (
-                                          <>
-                                            <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
-                                            <span className="font-semibold text-[11px]">
-                                              {avg.toFixed(1)}
-                                            </span>
-                                            <span className="text-[11px] text-muted-foreground">
-                                              ({count})
-                                            </span>
-                                          </>
-                                        ) : (
-                                          <>
-                                            <Star className="w-3 h-3 text-gray-300" />
-                                            <span className="text-[11px] text-muted-foreground">
-                                              No ratings yet
-                                            </span>
-                                          </>
-                                        )}
-                                      </button>
+
+                                      {/* ratings (unchanged) */}
+                                      <div className="flex items-center gap-5 ">
+                                        <button
+                                          type="button"
+                                          className="mt-2 inline-flex items-center gap-1 text-xs text-yellow-500 hover:text-yellow-600"
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            setViewRatingsService(s);
+                                            setShowServiceRatingsModal(true);
+                                          }}
+                                        >
+                                          {avg && count ? (
+                                            <>
+                                              <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
+                                              <span className="font-semibold text-[11px]">
+                                                {avg.toFixed(1)}
+                                              </span>
+                                              <span className="text-[11px] text-muted-foreground">
+                                                ({count})
+                                              </span>
+                                            </>
+                                          ) : (
+                                            <>
+                                              <Star className="w-3 h-3 text-gray-300" />
+                                              <span className="text-[11px] text-muted-foreground">
+                                                No ratings yet
+                                              </span>
+                                            </>
+                                          )}
+                                        </button>
+
+                                        <button
+                                          type="button"
+                                          className="mt-1 block text-xs font-medium text-primary underline"
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            setViewService(s);
+                                            setShowServiceDetailsModal(true);
+                                          }}
+                                        >
+                                          View details
+                                        </button>
+                                      </div>
                                     </div>
+
                                     <div className="text-right">
                                       <div className="text-base font-semibold">
                                         {!min && !max
@@ -655,7 +765,7 @@ const finalTotal = useMemo(() => {
               </motion.div>
             )}
 
-            {step === 2 && (
+            {step === 2 && selectedService && (
               <motion.div
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
@@ -680,38 +790,85 @@ const finalTotal = useMemo(() => {
                       {selectedService.availabilities.map((a: any) => {
                         const isSelected =
                           String(a.id) === String(selectedAvailabilityId);
+
                         return (
                           <div
                             key={a.id}
-                            className={`p-3 rounded-lg border transition cursor-pointer ${
-                              isSelected
-                                ? "ring-2 ring-primary bg-primary/5"
-                                : "bg-white/3"
-                            }`}
                             onClick={() => setSelectedAvailabilityId(a.id)}
+                            className={`border rounded-3xl p-4 cursor-pointer transition
+          ${isSelected ? "border-primary bg-primary/5" : "hover:bg-muted/40"}
+        `}
                           >
-                            <div className="flex items-start justify-between gap-4">
-                              <div className="min-w-0">
+                            <div className="flex items-start justify-between">
+                              <div>
                                 <h4 className="font-semibold">{a.name}</h4>
-                                <p className="text-sm text-muted-foreground line-clamp-2">
+
+                                <p className="text-sm text-muted-foreground">
                                   {a.description ?? "—"}
                                 </p>
-                                <div className="text-xs text-muted-foreground mt-2">
-                                  {a.images && a.images.length
-                                    ? `${a.images.length} image(s)`
-                                    : "No images"}
-                                </div>
+
+                                {selectedService.type === "ROOM" &&
+                                  a.max_guests && (
+                                    <p className="mt-1 text-xs text-muted-foreground">
+                                      👥Max guests: {a.max_guests}
+                                    </p>
+                                  )}
                               </div>
-                              <div className="text-right">
-                                <div className="text-base font-semibold">
-                                  {a.price
-                                    ? `₱${parsePrice(a.price).toLocaleString()}`
-                                    : "₱—"}
-                                </div>
-                                <div className="text-sm text-muted-foreground">
-                                  per night
-                                </div>
+
+                              <div className="text-right font-semibold">
+                                ₱{Number(a.price ?? 0).toLocaleString()}
                               </div>
+                            </div>
+
+                            {/* ROOMS SELECTOR — ONLY WHEN SELECTED + ROOM SERVICE */}
+
+                            <div className="mt-3 flex items-center justify-between">
+                              <button
+                                type="button"
+                                className="text-primary whitespace-nowrap underline text-sm font-medium"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setViewAvailability(a);
+                                  setShowAvailabilityModal(true);
+                                }}
+                              >
+                                View Details
+                              </button>
+                              {selectedService.type == "ROOM" && (
+                                <div className="flex flex-col md:flex-row items-center md:gap-5">
+                                  <div className="text-xs font-semibold text-muted-foreground">
+                                    Number Of Rooms
+                                  </div>
+
+                                  <div className="flex items-center gap-2">
+                                    <button
+                                      type="button"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        setRooms((r) => Math.max(1, r - 1));
+                                      }}
+                                      className="w-8 h-8 rounded-full border flex items-center justify-center"
+                                    >
+                                      −
+                                    </button>
+
+                                    <span className="w-6 text-center font-medium">
+                                      {rooms}
+                                    </span>
+
+                                    <button
+                                      type="button"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        setRooms((r) => r + 1);
+                                      }}
+                                      className="w-8 h-8 rounded-full border flex items-center justify-center"
+                                    >
+                                      +
+                                    </button>
+                                  </div>
+                                </div>
+                              )}
                             </div>
                           </div>
                         );
@@ -730,76 +887,38 @@ const finalTotal = useMemo(() => {
               >
                 <Card className="p-6">
                   <h2 className="text-xl font-bold mb-4">Trip Details</h2>
-                  <div className="grid md:grid-cols-2 gap-4">
-                    <div>
-                      <Label htmlFor="checkIn">Check-in Date</Label>
-                      <Input
-                        id="checkIn"
-                        type="date"
-                        value={dates.checkIn}
-                        onChange={(e) =>
-                          setDates((d) => ({ ...d, checkIn: e.target.value }))
-                        }
-                        min={new Date().toISOString().split("T")[0]}
-                        className="mt-1"
-                      />
-                    </div>
+                  {selectedService?.type !== "FOOD" && (
+                    <div className="grid md:grid-cols-2 gap-4">
+                      <div>
+                        <Label htmlFor="checkIn">Check-in Date</Label>
+                        <Input
+                          id="checkIn"
+                          type="date"
+                          value={dates.checkIn}
+                          onChange={(e) =>
+                            setDates((d) => ({ ...d, checkIn: e.target.value }))
+                          }
+                          className="mt-1"
+                        />
+                      </div>
 
-                    <div>
-                      <Label htmlFor="checkOut">Check-out Date</Label>
-                      <Input
-                        id="checkOut"
-                        type="date"
-                        value={dates.checkOut}
-                        onChange={(e) =>
-                          setDates((d) => ({ ...d, checkOut: e.target.value }))
-                        }
-                        min={
-                          dates.checkIn ||
-                          new Date().toISOString().split("T")[0]
-                        }
-                        className="mt-1"
-                      />
+                      <div>
+                        <Label htmlFor="checkOut">Check-out Date</Label>
+                        <Input
+                          id="checkOut"
+                          type="date"
+                          value={dates.checkOut}
+                          onChange={(e) =>
+                            setDates((d) => ({
+                              ...d,
+                              checkOut: e.target.value,
+                            }))
+                          }
+                          className="mt-1"
+                        />
+                      </div>
                     </div>
-
-                    <div>
-                      <Label htmlFor="guests">Number of Guests</Label>
-                      <Select
-                        value={String(guests)}
-                        onValueChange={(v) => setGuests(Number(v))}
-                      >
-                        <SelectTrigger className="mt-1">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {[1, 2, 3, 4, 5, 6].map((n) => (
-                            <SelectItem key={n} value={String(n)}>
-                              {n} Guest{n > 1 ? "s" : ""}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    <div>
-                      <Label htmlFor="rooms">Number of Rooms</Label>
-                      <Select
-                        value={String(rooms)}
-                        onValueChange={(v) => setRooms(Number(v))}
-                      >
-                        <SelectTrigger className="mt-1">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {[1, 2, 3, 4].map((n) => (
-                            <SelectItem key={n} value={String(n)}>
-                              {n} Room{n > 1 ? "s" : ""}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
+                  )}
 
                   <div className="mt-4">
                     <Label>Special Requests</Label>
@@ -905,7 +1024,7 @@ const finalTotal = useMemo(() => {
             <div className="flex justify-between mt-8">
               <Button
                 variant="outline"
-                onClick={() => setStep(Math.max(1, step - 1))}
+                onClick={() => setStep(getPrevStep())}
                 disabled={step === 1}
               >
                 Previous
@@ -914,10 +1033,9 @@ const finalTotal = useMemo(() => {
               {step < steps.length ? (
                 <Button
                   onClick={() => {
-                    if (canProceedToNext) setStep(step + 1);
+                    if (!canProceedToNext) return;
+                    setStep(getNextStep());
                   }}
-                  disabled={!canProceedToNext}
-                  className="bg-gradient-primary text-white"
                 >
                   Next Step
                 </Button>
@@ -939,7 +1057,14 @@ const finalTotal = useMemo(() => {
 
               <div className="space-y-3 text-sm">
                 <div>
-                  <p className="text-muted-foreground">Service</p>
+                  <p className="text-muted-foreground">
+                    Service{" "}
+                    {selectedService && (
+                      <span className="text-xs font-bold tracking-wide text-primary bg-primary/20 rounded-full py-1 px-3">
+                        {selectedService?.type}
+                      </span>
+                    )}
+                  </p>
                   <p className="font-medium">
                     {selectedService ? selectedService.name : "—"}
                   </p>
@@ -952,59 +1077,70 @@ const finalTotal = useMemo(() => {
                   </p>
                 </div>
 
-                {dates.checkIn && dates.checkOut ? (
-                  <>
-                    <div className="flex justify-between">
-                      <span>Nights</span>
-                      <span className="font-medium">{nights}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>Rooms</span>
-                      <span className="font-medium">{rooms}</span>
-                    </div>
-                    <Separator />
-                    <div className="space-y-2">
-                      {/* ORIGINAL / SUBTOTAL */}
+                <>
+                  {dates.checkIn && dates.checkOut && (
+                    <>
                       <div className="flex justify-between">
-                        <span>Subtotal</span>
-                        <span
-                          className={
-                            promoDiscount > 0
-                              ? "line-through text-muted-foreground"
-                              : ""
-                          }
-                        >
-                          ₱{totalAmount.toLocaleString()}
-                        </span>
+                        <span>Nights</span>
+                        <span className="font-medium">{nights}</span>
                       </div>
-
-                      {/* PROMO */}
-                      {promoDiscount > 0 && (
-                        <div className="flex justify-between text-rose-600 font-semibold">
-                          <span>
-                            Promo{" "}
-                            {activePromo?.discount_percent
-                              ? `(${activePromo.discount_percent}% OFF)`
-                              : ""}
-                          </span>
-                          <span>- ₱{promoDiscount.toLocaleString()}</span>
-                        </div>
-                      )}
-
-                      <Separator />
-
-                      {/* FINAL TOTAL */}
-                      <div className="flex justify-between text-lg font-bold text-primary">
-                        <span>Total</span>
-                        <span>₱{finalTotal.toLocaleString()}</span>
+                      <div className="flex justify-between">
+                        <span>Rooms</span>
+                        <span className="font-medium">{rooms}</span>
                       </div>
+                    </>
+                  )}
+                  <Separator />
+
+                  <div className="flex justify-between text-sm mt-2">
+                    <span className="text-muted-foreground">Entrance Fee</span>
+                    {place?.entranceFee > 0 ? (
+                      <span className="font-medium">
+                        ₱{place.entranceFee.toLocaleString()}
+                      </span>
+                    ) : (
+                      <span className="font-medium text-green-500">Free</span>
+                    )}
+                  </div>
+
+                  <Separator />
+                  <div className="space-y-2">
+                    {/* ORIGINAL / SUBTOTAL */}
+                    <div className="flex justify-between">
+                      <span>Total Service Amount</span>
+                      <span
+                        className={
+                          promoDiscount > 0
+                            ? "line-through text-muted-foreground"
+                            : ""
+                        }
+                      >
+                        ₱{totalAmount.toLocaleString()}
+                      </span>
                     </div>
-                  </>
-                ) : (
-                  <p className="text-muted-foreground text-sm">
-                    Choose dates to see the total.
-                  </p>
-                )}
+
+                    {/* PROMO */}
+                    {promoDiscount > 0 && (
+                      <div className="flex justify-between text-rose-600 font-semibold">
+                        <span>
+                          Promo{" "}
+                          {activePromo?.discount_percent
+                            ? `(${activePromo.discount_percent}% OFF)`
+                            : ""}
+                        </span>
+                        <span>- ₱{promoDiscount.toLocaleString()}</span>
+                      </div>
+                    )}
+
+                    <Separator />
+
+                    {/* FINAL TOTAL */}
+                    <div className="flex justify-between text-lg font-bold text-primary">
+                      <span>Total</span>
+                      <span>₱{finalTotal.toLocaleString()}</span>
+                    </div>
+                  </div>
+                </>
               </div>
             </Card>
 
@@ -1149,7 +1285,7 @@ const finalTotal = useMemo(() => {
               initial={{ y: 40, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               exit={{ y: 40, opacity: 0 }}
-              className="w-full h-[50vh] max-w-lg rounded-3xl bg-white shadow-2xl flex flex-col overflow-hidden"
+              className="w-full h-[65vh] max-w-lg rounded-3xl bg-white shadow-2xl flex flex-col overflow-hidden"
             >
               <div className="h-full overflow-y-auto p-6 flex flex-col">
                 <div className="flex items-center justify-between mb-4">
@@ -1229,7 +1365,7 @@ const finalTotal = useMemo(() => {
                   className="text-sm"
                 />
 
-                <div className="mt-5 flex gap-2">
+                <div className="mt-1 flex gap-2">
                   <Button
                     className="flex-1 bg-gradient-primary text-white rounded-xl"
                     onClick={handleSubmitRating}
@@ -1245,6 +1381,141 @@ const finalTotal = useMemo(() => {
                     Skip
                   </Button>
                 </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+
+        {showAvailabilityModal && viewAvailability && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[60] bg-black/70 backdrop-blur-sm flex items-center justify-center px-4"
+            onClick={() => setShowAvailabilityModal(false)}
+          >
+            <motion.div
+              initial={{ y: 30, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              exit={{ y: 30, opacity: 0 }}
+              className="w-full max-w-2xl rounded-3xl bg-white shadow-2xl overflow-hidden"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* HEADER */}
+              <div className="flex items-center justify-between px-6 py-4 border-b">
+                <div>
+                  <h2 className="text-lg font-bold">{viewAvailability.name}</h2>
+                  <p className="text-xs text-muted-foreground">
+                    {selectedService?.name}
+                  </p>
+                </div>
+                <button
+                  onClick={() => setShowAvailabilityModal(false)}
+                  className="p-1.5 rounded-full hover:bg-slate-100"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+
+              {/* BODY */}
+              <div className="p-6 space-y-6 max-h-[75vh] overflow-y-auto">
+                {/* INFO GRID */}
+                <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div>
+                    <p className="text-muted-foreground">Price per night</p>
+                    <p className="font-semibold">
+                      ₱{Number(viewAvailability.price ?? 0).toLocaleString()}
+                    </p>
+                  </div>
+
+                  {selectedService?.type === "ROOM" &&
+                    viewAvailability.max_guests && (
+                      <div>
+                        <p className="text-muted-foreground">Max guests</p>
+                        <p className="font-semibold">
+                          {viewAvailability.max_guests}
+                        </p>
+                      </div>
+                    )}
+                </div>
+
+                {/* DESCRIPTION */}
+                <div>
+                  <p className="text-sm text-muted-foreground mb-1">
+                    Description
+                  </p>
+                  <p className="text-sm">
+                    {viewAvailability.description ?? "—"}
+                  </p>
+                </div>
+
+                {/* SERVICE AMENITIES */}
+                {selectedService?.amenities?.length > 0 && (
+                  <div>
+                    <p className="text-sm text-muted-foreground mb-2">
+                      Amenities
+                    </p>
+                    <div className="flex flex-wrap gap-2">
+                      {selectedService.amenities.map((a: string, i: number) => (
+                        <Badge key={i} className="bg-slate-100 text-slate-700">
+                          {a}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* IMAGE GALLERY — MOVED TO BOTTOM */}
+                {(() => {
+                  const imgs = viewAvailability.images?.length
+                    ? viewAvailability.images
+                    : selectedService?.images ?? [];
+
+                  return imgs.length ? (
+                    <div>
+                      <p className="text-sm text-muted-foreground mb-2">
+                        Gallery
+                      </p>
+                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                        {imgs.map((img: string, i: number) => (
+                          <div
+                            key={i}
+                            className="w-full h-32 rounded-xl overflow-hidden bg-slate-100"
+                          >
+                            <img
+                              src={img}
+                              alt={`availability-${i}`}
+                              className="w-full h-full object-cover"
+                            />
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="text-sm text-muted-foreground">
+                      No images available
+                    </div>
+                  );
+                })()}
+              </div>
+
+              {/* FOOTER */}
+              <div className="px-6 py-4 border-t flex justify-end gap-2">
+                <Button
+                  variant="outline"
+                  onClick={() => setShowAvailabilityModal(false)}
+                >
+                  Close
+                </Button>
+                <Button
+                  className="bg-gradient-primary text-white"
+                  onClick={() => {
+                    setSelectedAvailabilityId(viewAvailability.id);
+                    setShowAvailabilityModal(false);
+                  }}
+                >
+                  Select this option
+                </Button>
               </div>
             </motion.div>
           </motion.div>
@@ -1283,6 +1554,15 @@ const finalTotal = useMemo(() => {
             </motion.div>
           </motion.div>
         )}
+
+        <ServiceDetailsModal
+          open={showServiceDetailsModal}
+          service={viewService}
+          onClose={() => {
+            setShowServiceDetailsModal(false);
+            setViewService(null);
+          }}
+        />
 
         {showServiceRatingsModal && viewRatingsService && (
           <motion.div

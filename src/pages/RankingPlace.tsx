@@ -53,7 +53,7 @@ const navigate = useNavigate()
     console.log("ranked", ranked);
     
   return (
-    <div className="w-full max-w-7xl mx-auto px-4 py-6 mt-24">
+    <div className="w-full max-w-7xl mx-auto px-4 py-6 md:mt-24">
       <div className="flex items-start justify-between mb-4">
         <div>
           <h2 className="text-2xl md:text-3xl font-semibold">

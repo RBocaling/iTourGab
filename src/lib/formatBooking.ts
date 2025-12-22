@@ -10,59 +10,35 @@ const slugify = (s?: string) =>
     
 
 export const formatBooking = (b: BookingRaw, index = 0): FormattedBooking => {
- const place = b?.service?.tourist_spot?.name;
-    const formattedId =
-      place
-        ?.toLowerCase()
-        ?.replace(/\s+/g, "-")
-        ?.replace(/[^a-z0-9-]/g, "") || b?.service?.tourist_spot?.id;
-  
-  const placeFromService =
-    b.service?.tourist_spot ?? b.service?.tourist_spot ?? null;
-  const rawPlace = b.place ?? placeFromService ?? null;
-  const placeName =
-    rawPlace?.name ??
-    rawPlace?.title ??
-    (b.placeId ? String(b.placeId) : "unknown");
-  const spotSlug = slugify(placeName) || `place-${b.placeId ?? "unknown"}`;
-  const checkIn = b.dates?.checkIn ?? b.start_date ?? null;
-  const checkOut = b.dates?.checkOut ?? b.end_date ?? null;
+  const rawPlace = b.tourist_spot ?? b.place ?? b.service?.tourist_spot ?? null;
+
+  const placeName = rawPlace?.name ?? rawPlace?.title ?? "Unknown place";
+
+  const spotSlug = slugify(placeName) || `place-${rawPlace?.id ?? index + 1}`;
+
   const bookingId = b.id ? String(b.id) : `book-${spotSlug}-${index + 1}`;
 
   const firstService =
-    (b.service && Object.keys(b.service).length
+    b.service && Object.keys(b.service).length
       ? b.service
       : Array.isArray(b.services)
       ? b.services[0]
-      : null) ?? null;
-  const serviceId = firstService?.id ?? b.service_id ?? b.serviceId ?? null;
+      : null;
+
+  const serviceId = firstService?.id ?? b.service_id ?? null;
   const serviceName = firstService?.name ?? null;
 
-  const accommodationId =
-    b.accommodation?.id ?? b.accommodationId ?? b.accommodation_id ?? null;
-  const accommodationName = b.accommodation?.name ?? null;
-
   const total =
-    b.totalAmount ??
-    (b.total_amount !== undefined && b.total_amount !== null
-      ? Number.isFinite(Number(b.total_amount))
-        ? Number(b.total_amount)
-        : null
-      : null);
+    b.totalAmount ?? (b.total_amount != null ? Number(b.total_amount) : null);
 
-  const formattedService: ServiceRaw | null = firstService
+  const formattedService = firstService
     ? {
-        id: firstService.id ?? firstService.uuid ?? null,
+        id: firstService.id ?? null,
         uuid: firstService.uuid ?? undefined,
         name: firstService.name ?? null,
         type: firstService.type ?? null,
         description: firstService.description ?? null,
-        price:
-          firstService.price === null || firstService.price === undefined
-            ? null
-            : Number.isFinite(Number(firstService.price))
-            ? Number(firstService.price)
-            : firstService.price,
+        price: firstService.price != null ? Number(firstService.price) : null,
         images:
           Array.isArray(firstService.images) && firstService.images.length
             ? firstService.images
@@ -75,17 +51,14 @@ export const formatBooking = (b: BookingRaw, index = 0): FormattedBooking => {
           ? firstService.amenities
           : [],
         tourist_spot: firstService.tourist_spot ?? null,
-        isDeleted: firstService.is_deleted ?? firstService.isDeleted ?? false,
-        createdAt: firstService.created_at ?? firstService.createdAt ?? null,
-        updatedAt: firstService.updated_at ?? firstService.updatedAt ?? null,
+        service_reviews: firstService.service_reviews,
         raw: firstService,
-        service_reviews: firstService?.service_reviews,
       }
     : null;
 
-  const formattedPlace: PlaceShort | null = rawPlace
+  const formattedPlace = rawPlace
     ? {
-        id: formattedId,
+        id: rawPlace.id ?? null,
         uuid: rawPlace.uuid ?? undefined,
         name: rawPlace.name ?? null,
         description: rawPlace.description ?? null,
@@ -102,39 +75,33 @@ export const formatBooking = (b: BookingRaw, index = 0): FormattedBooking => {
         duration: rawPlace.duration ?? null,
         entrance: rawPlace.entrance ?? null,
         accessibility: rawPlace.accessibility ?? null,
-        isDeleted: rawPlace.is_deleted ?? rawPlace.isDeleted ?? false,
-        createdAt: rawPlace.created_at ?? rawPlace.createdAt ?? null,
-        updatedAt: rawPlace.updated_at ?? rawPlace.updatedAt ?? null,
-      raw: rawPlace,
-
-
+        raw: rawPlace,
       }
     : null;
-  
+
   return {
     id: bookingId,
     spotId: spotSlug,
     spotName: placeName,
     serviceId: serviceId ? String(serviceId) : null,
-    serviceName: serviceName ?? null,
-    accommodationId: accommodationId ?? null,
-    accommodationName: accommodationName ?? null,
-    checkIn,
-    checkOut,
+    serviceName,
+    checkIn: b.start_date,
+    checkOut: b.end_date,
     guests: b.guests ?? 1,
     rooms: b.rooms ?? 1,
-    specialRequests: b.special_requests ?? b.specialRequests ?? null,
     total,
+    specialRequests: b.special_requests ?? null,
     place: formattedPlace,
     service: formattedService,
+    availability: b.availability,
+    tourist_spot: b.tourist_spot,
+    status: b.status,
+    cancelReason: b.cancel_reason,
+    rejectReason: b.reject_reason,
     raw: b,
-    status: b?.status,
-    service_reviews: b?.service?.service_reviews,
-    cancelReason: b?.cancel_reason,
-    rejectReason: b?.reject_reason,
-    availability: b?.availability,
   };
 };
+
 
 export const formatBookings = (rows: BookingRaw[]) =>
   Array.isArray(rows) ? rows.map((r, i) => formatBooking(r, i)) : [];

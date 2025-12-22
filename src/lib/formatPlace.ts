@@ -1,4 +1,19 @@
+
 import type { Place } from "@/types/place";
+
+export function parseEntranceFee(val?: string | null): number {
+  if (!val) return 0;
+
+  const normalized = val.toLowerCase().trim();
+  if (normalized === "free" || normalized === "₱0" || normalized === "0") {
+    return 0;
+  }
+
+  const digits = normalized.replace(/[^\d.]/g, "");
+  const amount = Number(digits);
+
+  return Number.isFinite(amount) ? amount : 0;
+}
 
 export const formatPlace = (p: Place) => {
   const formattedId =
@@ -10,9 +25,7 @@ export const formatPlace = (p: Place) => {
   const reviews = p.reviews ?? [];
   const total = reviews.reduce((acc, r) => acc + Number(r?.rating ?? 0), 0);
   const avg = (reviews.length ? total / reviews.length : 0)?.toFixed(1);
-
-  console.log("dfddf", p);
-  
+  const entranceFee = parseEntranceFee(p.entrance);
   return {
     placeId: p?.id,
     id: formattedId,
@@ -27,6 +40,7 @@ export const formatPlace = (p: Place) => {
     difficulty: p.difficulty,
     bestTime: p.best_time ?? p.bestTime,
     duration: p.duration,
+    entranceFee,
     entrance: p.entrance,
     accessibility: p.accessibility,
     nearby: p.nearby || [],
@@ -52,6 +66,7 @@ export const formatPlace = (p: Place) => {
     })),
     accommodation: p.accommodation || [],
     raw: p,
+    type: p?.type,
   };
 };
 

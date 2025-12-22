@@ -1,42 +1,56 @@
-import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import { useNavigate, useSearchParams } from 'react-router-dom';
-import MapboxMap from '@/components/map/MapboxMap';
-import { Card } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Star, MapPin, Calendar, ArrowRight, X } from 'lucide-react';
-import { useGetPlaces } from '@/hooks/useGetPlace';
-import Loader from '@/components/loader/Loader';
+import React, { useState, useEffect, useMemo } from "react";
+import { motion } from "framer-motion";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import MapboxMap from "@/components/map/MapboxMap";
+import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Star, MapPin, Calendar, ArrowRight, X } from "lucide-react";
+import { useGetPlaces } from "@/hooks/useGetPlace";
+import Loader from "@/components/loader/Loader";
+import { TouristSpotType } from "@/types/touristSpotType";
+import TouristSpotTypeModal from "@/components/ui/TouristSpotTypeModal";
 
 const MapPage: React.FC = () => {
   const [selectedSpotId, setSelectedSpotId] = useState<string | null>(null);
   const [searchParams] = useSearchParams();
   const { isLoading, formatData: touristSpots } = useGetPlaces();
-  console.log("touristSpots", touristSpots);
-  
-  
+  const [typeFilter, setTypeFilter] = useState<TouristSpotType | null>(null);
+  const [openTypeFilter, setOpenTypeFilter] = useState(false);
+
   const navigate = useNavigate();
 
+const filteredSpots = !typeFilter
+  ? touristSpots
+  : touristSpots.filter((spot) => spot.type === typeFilter);
+
+
+
+
+  console.log("touristSpots", selectedSpotId);
+  
   useEffect(() => {
-    const focusSpotId = searchParams.get('focus');
-    const searchQuery = searchParams.get('search');
-    
+    const focusSpotId = searchParams.get("focus");
+    const searchQuery = searchParams.get("search");
+
     if (focusSpotId) {
       setSelectedSpotId(focusSpotId);
-    } else if (searchQuery) {
-      const matchingSpot = touristSpots?.find(spot => 
-        spot.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        spot.features.some(feature => feature.toLowerCase().includes(searchQuery.toLowerCase()))
+    } else if (searchQuery && touristSpots) {
+      const matchingSpot = touristSpots.find(
+        (spot) =>
+          spot.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          spot.features.some((f) =>
+            f.toLowerCase().includes(searchQuery.toLowerCase())
+          )
       );
       if (matchingSpot) {
         setSelectedSpotId(matchingSpot.placeId);
       }
     }
-  }, [searchParams]);
+  }, [searchParams, touristSpots]);
 
-  const selectedSpot = selectedSpotId 
-    ? touristSpots?.find(spot => spot.placeId === selectedSpotId) 
+  const selectedSpot = selectedSpotId
+    ? touristSpots?.find((spot) => spot.placeId === selectedSpotId)
     : null;
 
   const handleSpotSelect = (spotId: string) => {
@@ -49,35 +63,50 @@ const MapPage: React.FC = () => {
     }
   };
 
-   if (isLoading) {
-     return <Loader />;
-   }
+  if (isLoading) return <Loader />;
 
   return (
     <div className="min-h-screen bg-background pt-4 md:pt-32 pb-20 md:pb-8">
       <div className="max-w-7xl mx-auto px-4 h-[calc(100vh-140px)] md:h-[calc(100vh-120px)]">
-        {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           className="mb-6"
         >
-          <h1 className="text-3xl md:text-4xl font-bold mb-2">Explore Map</h1>
-          <p className="text-muted-foreground">
+          <div className="flex items-center justify-between w-full">
+            <h1 className="text-2xl md:text-4xl font-bold mb-2">Explore Map</h1>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setOpenTypeFilter(true)}
+            >
+              {typeFilter
+                ? `Filter: ${typeFilter.charAt(0)}${typeFilter
+                    .slice(1)
+                    .toLowerCase()}`
+                : "Filter Location"}
+            </Button>
+          </div>
+          <p className="text-muted-foreground mb-3">
             Discover Gabaldon's tourist spots
           </p>
+
+          <TouristSpotTypeModal
+            open={openTypeFilter}
+            value={typeFilter}
+            onChange={setTypeFilter}
+            onClose={() => setOpenTypeFilter(false)}
+          />
         </motion.div>
 
-        {/* Map Container */}
         <div className="relative h-full rounded-2xl overflow-hidden shadow-2xl">
           <MapboxMap
             onSpotSelect={handleSpotSelect}
             selectedSpotId={selectedSpotId}
             className="w-full h-full"
-            touristSpots={touristSpots}
+            touristSpots={filteredSpots}
           />
 
-          {/* Selected Spot Card */}
           {selectedSpot && (
             <motion.div
               initial={{ opacity: 0, x: 300 }}
@@ -88,7 +117,7 @@ const MapPage: React.FC = () => {
               <Card className="glass-card overflow-hidden">
                 <button
                   onClick={() => setSelectedSpotId(null)}
-                  className="absolute top-3 right-3 z-10 w-8 h-8 bg-white/80 rounded-full flex items-center justify-center hover:bg-white transition-colors"
+                  className="absolute top-3 right-3 z-10 w-8 h-8 bg-white/80 rounded-full flex items-center justify-center hover:bg-white"
                 >
                   <X className="w-4 h-4" />
                 </button>
@@ -118,6 +147,7 @@ const MapPage: React.FC = () => {
                   <h3 className="text-lg font-bold mb-2">
                     {selectedSpot.name}
                   </h3>
+
                   <p className="text-sm text-muted-foreground mb-3 line-clamp-2">
                     {selectedSpot.description}
                   </p>
@@ -137,31 +167,6 @@ const MapPage: React.FC = () => {
                     </div>
                   </div>
 
-                  {/* Features */}
-                  <div className="mb-4">
-                    <div className="flex flex-wrap gap-1">
-                      {selectedSpot.features
-                        .slice(0, 3)
-                        .map((feature, index) => (
-                          <Badge
-                            key={index}
-                            variant="secondary"
-                            className="text-xs px-2 py-1 bg-primary/10 text-primary"
-                          >
-                            {feature}
-                          </Badge>
-                        ))}
-                      {selectedSpot.features.length > 3 && (
-                        <Badge
-                          variant="secondary"
-                          className="text-xs px-2 py-1 bg-muted text-muted-foreground"
-                        >
-                          +{selectedSpot.features.length - 3} more
-                        </Badge>
-                      )}
-                    </div>
-                  </div>
-
                   <div className="flex gap-2">
                     <Button
                       onClick={handleViewDetails}
@@ -174,7 +179,9 @@ const MapPage: React.FC = () => {
                       variant="outline"
                       size="sm"
                       className="px-3 h-9"
-                      onClick={() => navigate(`/booking?spot=${selectedSpotId}`)}
+                      onClick={() =>
+                        navigate(`/booking?spot=${selectedSpotId}`)
+                      }
                     >
                       📅
                     </Button>

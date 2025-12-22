@@ -113,4 +113,6 @@ export type FormattedBooking = {
   cancelReason?: string | null;
   rejectReason?: string | null;
   availability:any;
+  tourist_spot:any;
+  
 };

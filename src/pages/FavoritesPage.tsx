@@ -1,5 +1,4 @@
-// src/pages/FavoritesPage.tsx (or wherever this lives)
-import React, { useState } from "react";
+import { useState } from "react";
 import { motion } from "framer-motion";
 import { Heart, Star, Trash2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -110,8 +109,6 @@ export default function FavoritesPage() {
     deleteTarget?.placeName ??
     deleteTarget?.name ??
     "this place";
-
-  console.log("favorites", favorites);
 
   return (
     <div className="min-h-screen bg-background pt-5 md:pt-24 pb-20 md:pb-8">

@@ -60,6 +60,11 @@ export default {
           DEFAULT: "hsl(var(--muted))",
           foreground: "hsl(var(--muted-foreground))",
         },
+        sky: {
+          light: "hsl(var(--gradient-accent))",
+          DEFAULT: "hsl(var(--gradient-start))",
+          dark: "hsl(var(--gradient-end))",
+        },
         popover: {
           DEFAULT: "hsl(var(--popover))",
           foreground: "hsl(var(--popover-foreground))",

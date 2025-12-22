@@ -4,8 +4,6 @@ import "mapbox-gl/dist/mapbox-gl.css";
 import { motion } from "framer-motion";
 import { MapPin, Navigation, Layers, Search, Store } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { useGetPlaces } from "@/hooks/useGetPlace";
-import { Place } from "@/types/place";
 
 // Mapbox token provided by user
 mapboxgl.accessToken =
@@ -15,8 +13,15 @@ interface MapboxMapProps {
   onSpotSelect?: (spotId: string) => void;
   selectedSpotId?: string;
   className?: string;
-  touristSpots:Place[];
+  touristSpots: any;
 }
+
+/* ✅ ADD ONLY THIS HELPER */
+const getMarkerIcon = (category?: string) => {
+  if (category?.toLowerCase() === "resort") return "/resort.png";
+  if (category?.toLowerCase() === "attraction") return "/attraction.png";
+  return "/icons/location.png";
+};
 
 const MapboxMap: React.FC<MapboxMapProps> = ({
   onSpotSelect,
@@ -33,6 +38,8 @@ const MapboxMap: React.FC<MapboxMapProps> = ({
   const [showNearbyLocations, setShowNearbyLocations] = useState(false);
   const [showStyleMenu, setShowStyleMenu] = useState(false);
 
+  console.log("touristSpots", touristSpots);
+  
   const mapStyles = [
     {
       id: "satellite-streets-v12",
@@ -66,13 +73,11 @@ const MapboxMap: React.FC<MapboxMapProps> = ({
     },
   ];
 
-  // Center coordinates for Gabaldon area
   const centerCoordinates: [number, number] = [121.3240814, 15.5018428];
 
   useEffect(() => {
     if (!mapContainer.current) return;
 
-    // Initialize map
     map.current = new mapboxgl.Map({
       container: mapContainer.current,
       style: `mapbox://styles/mapbox/${mapStyle}`,
@@ -83,34 +88,25 @@ const MapboxMap: React.FC<MapboxMapProps> = ({
       attributionControl: false,
     });
 
-    // Add navigation controls
     map.current.addControl(
-      new mapboxgl.NavigationControl({
-        visualizePitch: true,
-      }),
+      new mapboxgl.NavigationControl({ visualizePitch: true }),
       "top-right"
     );
-
-    // Add scale control
     map.current.addControl(new mapboxgl.ScaleControl(), "bottom-right");
 
-    // Add 3D terrain
     map.current.on("style.load", () => {
       if (!map.current) return;
 
-      // Add terrain source
       map.current.addSource("mapbox-terrain", {
         type: "raster-dem",
         url: "mapbox://mapbox.terrain-rgb",
       });
 
-      // Add terrain layer
       map.current.setTerrain({
         source: "mapbox-terrain",
         exaggeration: 1.2,
       });
 
-      // Add sky layer for better 3D effect
       map.current.addLayer({
         id: "sky",
         type: "sky",
@@ -122,52 +118,57 @@ const MapboxMap: React.FC<MapboxMapProps> = ({
       });
     });
 
-    // Add markers
     addMarkers();
 
-    // Cleanup
     return () => {
-      if (map.current) {
-        map.current.remove();
-      }
+      map.current?.remove();
     };
   }, []);
 
-  useEffect(() => {
-    if (searchQuery) {
-      const filtered = touristSpots.filter(
-        (spot) =>
-          spot.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          spot.category.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          spot.description.toLowerCase().includes(searchQuery.toLowerCase())
-      );
-      setFilteredSpots(filtered);
-    } else {
-      setFilteredSpots(touristSpots);
-    }
-  }, [searchQuery]);
+useEffect(() => {
+  if (!touristSpots) return;
+
+  if (!searchQuery) {
+    setFilteredSpots(touristSpots);
+    return;
+  }
+
+  const q = searchQuery.toLowerCase();
+
+  setFilteredSpots(
+    touristSpots.filter(
+      (spot) =>
+        spot.name.toLowerCase().includes(q) ||
+        spot.category.toLowerCase().includes(q) ||
+        spot.description.toLowerCase().includes(q)
+    )
+  );
+}, [touristSpots, searchQuery]);
+
 
   const addMarkers = () => {
-    // Clear existing markers
     markers.current.forEach((marker) => marker.remove());
     markers.current = [];
 
     filteredSpots.forEach((spot) => {
-      // Create custom marker element
       const markerElement = document.createElement("div");
       markerElement.className = "custom-marker";
+
+      /* 🔥 ONLY CHANGE IS HERE */
       markerElement.innerHTML = `
         <div class="marker-container ${
           selectedSpotId === spot.id ? "marker-selected" : ""
         }">
           <div class="marker-pin">
-            <div class="marker-icon">📍</div>
+            <img
+              src="${getMarkerIcon(spot.type)}"
+              style="width:30px;height:30px;"
+            />
           </div>
           <div class="marker-pulse"></div>
         </div>
       `;
 
-      // Add styles
       const style = document.createElement("style");
       style.textContent = `
         .marker-container {
@@ -191,22 +192,7 @@ const MapboxMap: React.FC<MapboxMapProps> = ({
           box-shadow: 0 4px 20px rgba(34, 197, 94, 0.3);
           border: 3px solid white;
         }
-        .marker-icon {
-          transform: rotate(45deg);
-          font-size: 16px;
-        }
-        .marker-pulse {
-          position: absolute;
-          top: 50%;
-          left: 50%;
-          width: 20px;
-          height: 20px;
-          background: hsl(195 85% 45%);
-          border-radius: 50%;
-          transform: translate(-50%, -50%);
-          animation: pulse 2s infinite;
-          opacity: 0.6;
-        }
+       
         @keyframes pulse {
           0% { transform: translate(-50%, -50%) scale(0.5); opacity: 0.8; }
           50% { transform: translate(-50%, -50%) scale(1.5); opacity: 0.3; }
@@ -215,17 +201,12 @@ const MapboxMap: React.FC<MapboxMapProps> = ({
       `;
       document.head.appendChild(style);
 
-      // Create marker
       const marker = new mapboxgl.Marker(markerElement)
         .setLngLat([spot.coordinates.lng, spot.coordinates.lat])
         .addTo(map.current!);
 
-      // Add click event
       markerElement.addEventListener("click", () => {
-        if (onSpotSelect) {
-          onSpotSelect(spot.placeId);
-        }
-        // Fly to marker
+        onSpotSelect?.(spot.placeId);
         map.current?.flyTo({
           center: [spot.coordinates.lng, spot.coordinates.lat],
           zoom: 15,
@@ -234,7 +215,6 @@ const MapboxMap: React.FC<MapboxMapProps> = ({
         });
       });
 
-     
       markers.current.push(marker);
     });
   };
@@ -246,37 +226,29 @@ const MapboxMap: React.FC<MapboxMapProps> = ({
   const handleMapStyleChange = (styleId: string) => {
     setMapStyle(styleId);
     setShowStyleMenu(false);
-
-    if (map.current) {
-      map.current.setStyle(`mapbox://styles/mapbox/${styleId}`);
-      map.current.setPitch(styleId.includes("satellite") ? 45 : 0);
-    }
+    map.current?.setStyle(`mapbox://styles/mapbox/${styleId}`);
+    map.current?.setPitch(styleId.includes("satellite") ? 45 : 0);
   };
 
   const centerOnGabaldon = () => {
-    if (map.current) {
-      map.current.flyTo({
-        center: centerCoordinates,
-        zoom: 12,
-        pitch: 45,
-        duration: 2000,
-      });
-    }
+    map.current?.flyTo({
+      center: centerCoordinates,
+      zoom: 12,
+      pitch: 45,
+      duration: 2000,
+    });
   };
 
   return (
     <div className={`relative w-full h-full ${className}`}>
-      {/* Map Container */}
       <div
         ref={mapContainer}
         className="absolute inset-0 rounded-lg shadow-lg"
       />
 
-      {/* Map Controls - Hidden for cleaner design */}
       <div className="absolute top-4 left-4 z-10 space-y-3 hidden">
-        {/* Search - Hidden to reduce clutter */}
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input
             type="text"
             placeholder="Search locations..."
@@ -287,13 +259,12 @@ const MapboxMap: React.FC<MapboxMapProps> = ({
         </div>
       </div>
 
-      {/* Map Style Toggle */}
       <div className="absolute top-4 right-4 z-10">
         <motion.button
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
           onClick={() => setShowStyleMenu(!showStyleMenu)}
-          className="glass-card px-4 py-2 flex items-center gap-2 hover:bg-white/20 transition-all"
+          className="glass-card px-4 py-2 flex items-center gap-2"
         >
           <Layers className="w-5 h-5" />
           <span className="text-sm font-medium">
@@ -301,45 +272,25 @@ const MapboxMap: React.FC<MapboxMapProps> = ({
           </span>
         </motion.button>
 
-        {/* Map Style Menu */}
         {showStyleMenu && (
           <motion.div
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             className="absolute top-full right-0 mt-2 glass-card p-3 min-w-[240px] space-y-2"
           >
-            <div className="text-xs font-semibold text-muted-foreground mb-2 px-2">
-              MAP STYLE
-            </div>
             {mapStyles.map((style) => (
               <button
                 key={style.id}
                 onClick={() => handleMapStyleChange(style.id)}
-                className={`w-full px-3 py-3 rounded-lg text-left transition-all ${
-                  mapStyle === style.id
-                    ? "bg-primary/20 border-2 border-primary/40"
-                    : "hover:bg-white/10 border-2 border-transparent"
-                }`}
+                className="w-full px-3 py-3 rounded-lg hover:bg-white/10 text-left"
               >
-                <div className="flex items-center gap-3">
-                  <span className="text-2xl">{style.icon}</span>
-                  <div className="flex-1">
-                    <div className="font-semibold text-sm">{style.name}</div>
-                    <div className="text-xs text-muted-foreground">
-                      {style.description}
-                    </div>
-                  </div>
-                  {mapStyle === style.id && (
-                    <div className="w-2 h-2 rounded-full bg-primary"></div>
-                  )}
-                </div>
+                {style.icon} {style.name}
               </button>
             ))}
           </motion.div>
         )}
       </div>
 
-      {/* Center Button */}
       <motion.button
         whileHover={{ scale: 1.1 }}
         whileTap={{ scale: 0.9 }}
@@ -349,59 +300,17 @@ const MapboxMap: React.FC<MapboxMapProps> = ({
         <Navigation className="w-6 h-6" />
       </motion.button>
 
-      {/* Nearby Locations Toggle */}
       {selectedSpotId && (
         <motion.button
           whileHover={{ scale: 1.1 }}
           whileTap={{ scale: 0.9 }}
           onClick={() => setShowNearbyLocations(!showNearbyLocations)}
-          className={`absolute bottom-4 right-4 z-10 btn-floating ${
-            showNearbyLocations ? "bg-primary text-white" : ""
-          }`}
+          className="absolute bottom-4 right-4 z-10 btn-floating"
         >
           <MapPin className="w-6 h-6" />
         </motion.button>
       )}
 
-      {/* Nearby Locations Panel */}
-      {showNearbyLocations && selectedSpotId && (
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="absolute bottom-20 left-4 z-10 glass-card p-4 max-w-xs"
-        >
-          <h3 className="font-semibold mb-3 flex items-center">
-            <MapPin className="w-4 h-4 mr-2 text-primary" />
-            Nearby Locations
-          </h3>
-          <div className="space-y-2 max-h-64 overflow-y-auto">
-            {[
-              { name: "Restaurant Row", distance: "0.5 km", type: "Food" },
-              { name: "General Store", distance: "0.8 km", type: "Shop" },
-              { name: "Souvenir Shop", distance: "1.2 km", type: "Shop" },
-              { name: "Local Eatery", distance: "1.5 km", type: "Food" },
-              { name: "Gas Station", distance: "2.0 km", type: "Service" },
-            ].map((location, index) => (
-              <div
-                key={index}
-                className="flex items-center justify-between p-2 hover:bg-white/10 rounded-lg transition-all cursor-pointer"
-              >
-                <div>
-                  <p className="text-sm font-medium">{location.name}</p>
-                  <p className="text-xs text-muted-foreground">
-                    {location.type}
-                  </p>
-                </div>
-                <span className="text-xs text-primary font-medium">
-                  {location.distance}
-                </span>
-              </div>
-            ))}
-          </div>
-        </motion.div>
-      )}
-
-      {/* Loading Overlay */}
       <div className="absolute inset-0 pointer-events-none bg-gradient-to-b from-transparent to-background/10 rounded-lg" />
     </div>
   );
