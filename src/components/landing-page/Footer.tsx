@@ -34,7 +34,7 @@ const Footer = () => {
               <Button 
                 variant="glass" 
                 size="xl"
-                className="bg-primary-foreground/20 text-primary-foreground border-primary-foreground/30 hover:bg-primary-foreground/30"
+                className="bg-primary-foreground/20 text-black border-primary-foreground/30 hover:bg-primary-foreground/30"
               >
                 Download Free App
               </Button>

@@ -36,3 +36,11 @@ export const getPlaceByIdApi = async (id: string | number): Promise<Place> => {
     throw new Error(message);
   }
 };
+export const getPlacePublicApi = async ()=> {
+  try {
+    const { data } = await api.get<ItemResponse>(`/tourist_spots/public`);
+    return data.data;
+  } catch (err: any) {
+    throw new Error(err);
+  }
+};

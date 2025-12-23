@@ -25,6 +25,7 @@ import TermsModal from "@/components/ui/TermsCondition";
 import useTermsStore from "@/store/termsStore";
 import Loader from "@/components/loader/Loader";
 import SupportChat from "./SupportChat";
+import StoresBySpotPage from "./StoresBySpotPage";
 
 const MainApp: React.FC = () => {
   const navigate = useNavigate();
@@ -72,6 +73,10 @@ const MainApp: React.FC = () => {
             <Route path="/" element={<HomePage />} />
             <Route path="/map" element={<MapPage />} />
             <Route path="/emergency-safe-hotlines" element={<Hotlines />} />
+            <Route
+              path="/tourist-spot/:spotId/stores"
+              element={<StoresBySpotPage />}
+            />
             <Route path="/ai-support" element={<ChatAi />} />
             <Route path="/ranking-spot" element={<RankingPlace />} />
             <Route path="/spot/:spotId" element={<SpotDetailsPage />} />
@@ -93,20 +98,19 @@ const MainApp: React.FC = () => {
       {pathname !== "/ai-support" &&
         isAuthenticated &&
         pathname !== "/chat-support" &&
-        pathname !==
-          "/booking" &&(
-            <button className="fixed bottom-24 right-0">
-              <div className="relative flex items-center justify-center">
-                <div className="absolute h-24 w-24 rounded-full bg-primary opacity-30 animate-ping" />
-                <img
-                  onClick={() => navigate("/ai-support")}
-                  src="/ai-model.png"
-                  className=" w-16 relative z-20"
-                  alt=""
-                />
-              </div>
-            </button>
-          )}
+        pathname !== "/booking" && (
+          <button className="fixed bottom-24 right-0">
+            <div className="relative flex items-center justify-center">
+              <div className="absolute h-24 w-24 rounded-full bg-primary opacity-30 animate-ping" />
+              <img
+                onClick={() => navigate("/ai-support")}
+                src="/ai-model.png"
+                className=" w-16 relative z-20"
+                alt=""
+              />
+            </div>
+          </button>
+        )}
     </div>
   );
 };

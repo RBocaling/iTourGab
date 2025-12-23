@@ -2,13 +2,19 @@ import { Button } from "@/components/ui/button";
 import { ArrowRight, Play, MapPin, Users, Camera } from "lucide-react";
 import heroImage from "@/assets/hero-landscape.jpg";
 import { useNavigate } from "react-router-dom";
+import useGetPlacePublic from "@/hooks/usePublicPlace";
+import Loader from "../loader/Loader";
 
 const HeroSection = () => {
-  const navigate = useNavigate()
+  const navigate = useNavigate();
+  const { data: touristSpots, isLoading } = useGetPlacePublic();
+  if (isLoading) {
+    return <Loader />;
+  }
   return (
     <section
       id="home"
-      className="relative min-h-screen flex items-center overflow-hidden"
+      className="relative min-h-screen flex items-start md:items-center overflow-hidden"
     >
       {/* Background Image */}
       <div className="absolute inset-0">
@@ -84,7 +90,9 @@ const HeroSection = () => {
                 <MapPin className="w-6 h-6 text-primary" />
               </div>
               <div>
-                <p className="text-2xl font-bold text-foreground">15+</p>
+                <p className="text-2xl font-bold text-foreground">
+                  {touristSpots?.length}+
+                </p>
                 <p className="text-sm text-muted-foreground">Tourist Spots</p>
               </div>
             </div>
@@ -93,8 +101,13 @@ const HeroSection = () => {
                 <Users className="w-6 h-6 text-primary" />
               </div>
               <div>
-                <p className="text-2xl font-bold text-foreground">50K+</p>
-                <p className="text-sm text-muted-foreground">Happy Visitors</p>
+                <p className="text-2xl font-bold text-foreground">
+                  {touristSpots?.reduce(
+                    (acc: number, item: any) => acc + item?.totalViews,
+                    0
+                  )}
+                </p>
+                <p className="text-sm text-muted-foreground">Total Visitors</p>
               </div>
             </div>
             <div className="flex items-center gap-3">
@@ -102,7 +115,14 @@ const HeroSection = () => {
                 <Camera className="w-6 h-6 text-primary" />
               </div>
               <div>
-                <p className="text-2xl font-bold text-foreground">1000+</p>
+                <p className="text-2xl font-bold text-foreground">
+                  {" "}
+                  {touristSpots?.reduce(
+                    (acc: number, item: any) => acc + item?.totalImages,
+                    0
+                  )}
+                  +
+                </p>
                 <p className="text-sm text-muted-foreground">Photo Spots</p>
               </div>
             </div>

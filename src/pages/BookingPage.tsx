@@ -2,7 +2,6 @@ import React, { useEffect, useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useLocation, useNavigate } from "react-router-dom";
 import {
-  ArrowLeft,
   MapPin,
   Calendar,
   Check,
@@ -27,6 +26,8 @@ import { Badge } from "@/components/ui/badge";
 import { ServiceType } from "@/types/serviceType";
 import ServiceTypeSelectModal from "@/components/ui/ServiceTypeSelect";
 import ServiceDetailsModal from "@/components/touristspot/ServiceDetailsModal";
+import BackButton from "@/components/ui/BackButton";
+import { format } from "date-fns";
 
 const isPromoValidToday = (promo: any) => {
   if (!promo) return false;
@@ -287,8 +288,6 @@ useEffect(() => {
   ]);
 
 
-console.log("selectedAvailability", selectedService?.type);
-
 
   function handleSubmit() {
     if (!place) {
@@ -435,14 +434,7 @@ console.log("{place?.entranceFee ", place?.entranceFee);
           animate={{ opacity: 1, y: 0 }}
           className="flex items-center gap-4 mb-6"
         >
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => navigate(-1)}
-            className="rounded-full bg-white/80 backdrop-blur-sm border border-white/30"
-          >
-            <ArrowLeft className="w-5 h-5" />
-          </Button>
+          <BackButton />
           <div>
             <h1 className="text-2xl md:text-3xl font-bold">Book Your Stay</h1>
             <p className="text-muted-foreground">
@@ -984,7 +976,13 @@ console.log("{place?.entranceFee ", place?.entranceFee);
                       <div>
                         <p className="text-muted-foreground">Dates</p>
                         <p className="font-medium">
-                          {dates.checkIn} to {dates.checkOut}
+                          {dates.checkIn
+                            ? format(new Date(dates.checkIn), "MMM dd")
+                            : "-"}{" "}
+                          to {" "}
+                          {dates.checkOut
+                            ? format(new Date(dates.checkOut), "MMM dd")
+                            : "-"}
                         </p>
                       </div>
 
