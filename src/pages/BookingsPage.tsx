@@ -24,6 +24,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { createServiceRatingApi } from "@/api/serviceRatingApi";
 import { useToast } from "@/hooks/use-toast";
 import { updateStatus } from "@/api/bookingApi";
+import ServiceChatModal from "@/components/chat/ServiceChatModal";
 
 const statusConfig = {
   PENDING: {
@@ -78,6 +79,10 @@ export default function BookingsPage() {
   const [showReasonModal, setShowReasonModal] = useState(false);
   const [reasonTitle, setReasonTitle] = useState("");
   const [reasonText, setReasonText] = useState("");
+
+  const [openChat, setOpenChat] = useState(false);
+  const [chatService, setChatService] = useState<any | null>(null);
+  const [chatSpot, setChatSpot] = useState<any | null>(null);
 
   const navigate = useNavigate();
 
@@ -173,6 +178,8 @@ export default function BookingsPage() {
     setShowReasonModal(true);
   };
 
+  console.log("bookingsbookings", bookings);
+  
   return (
     <div className="min-h-screen overflow-y-auto bg-background pt-5 md:pt-32 pb-28 md:pb-8">
       <div className="max-w-4xl mx-auto px-4">
@@ -244,8 +251,8 @@ export default function BookingsPage() {
               const availabilityDescription =
                 b.availability?.description ?? null;
 
-              console.log("hjhhj",b);
-              
+              console.log("hjhhj", b);
+
               return (
                 <motion.div
                   key={b.id}
@@ -353,6 +360,21 @@ export default function BookingsPage() {
                         </div>
 
                         <div className="mt-4 flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+                          {b?.serviceId && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="w-full sm:w-auto flex items-center gap-2"
+                              onClick={() => {
+                                setChatService(b.service);
+                                setChatSpot(b.place ?? b.tourist_spot);
+                                setOpenChat(true);
+                              }}
+                            >
+                              Chat Owner
+                            </Button>
+                          )}
+
                           <Button
                             variant="outline"
                             size="sm"
@@ -374,7 +396,7 @@ export default function BookingsPage() {
                             <MapPin className="w-4 h-4" />
                             View on Map
                           </Button>
-                          {statusKey === "PENDING" &&canCancel && (
+                          {statusKey === "PENDING" && canCancel && (
                             <Button
                               variant="outline"
                               size="sm"
@@ -429,6 +451,16 @@ export default function BookingsPage() {
         bookingId={selectedBookingId}
         onClose={() => setSelectedBookingId(null)}
         onViewSpot={(id) => navigate(`/spot/${id}`)}
+      />
+      <ServiceChatModal
+        open={openChat}
+        onClose={() => {
+          setOpenChat(false);
+          setChatService(null);
+          setChatSpot(null);
+        }}
+        service={chatService}
+        spot={chatSpot}
       />
 
       <AnimatePresence>

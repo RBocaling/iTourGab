@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useParams, useNavigate } from 'react-router-dom';
 import { 
-  ArrowLeft, Star, MapPin, Calendar, Clock, DollarSign, 
+   Star, MapPin, Calendar, Clock, DollarSign, 
   Camera, Heart, Share2, Navigation, Users, Info,
   ChevronLeft, ChevronRight, Plus, Phone, Grid, X, Bed, Utensils
 } from 'lucide-react';
@@ -60,14 +60,6 @@ const SpotDetailsPage: React.FC = () => {
           animate={{ opacity: 1, y: 0 }}
           className="flex items-center gap-4 mb-6"
         >
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => navigate(-1)}
-            className="rounded-full bg-white/80 backdrop-blur-sm border border-white/30"
-          >
-            <ArrowLeft className="w-5 h-5" />
-          </Button>
           <div className="flex-1">
             <h1 className="text-lg md:text-3xl font-bold">{spot.name}</h1>
             <div className="flex items-center gap-2 mt-1">
@@ -425,7 +417,7 @@ const SpotDetailsPage: React.FC = () => {
                       className="border h-12 border-primary/40"
                       onClick={() => {}}
                     >
-                     Walk
+                      Walk
                     </Button>
                     <Button
                       variant="outline"

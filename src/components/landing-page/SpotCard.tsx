@@ -1,30 +1,37 @@
-import { MapPin, Clock, Star } from "lucide-react";
+import { MapPin, Clock, Star, Info } from "lucide-react";
 
 interface SpotCardProps {
   image: string;
   title: string;
-  location: string;
+  description: string;
   rating: number;
   duration: string;
   delay?: number;
 }
 
-const SpotCard = ({ image, title, location, rating, duration, delay = 0 }: SpotCardProps) => {
+const SpotCard = ({
+  image,
+  title,
+  description,
+  rating,
+  duration,
+  delay = 0,
+}: SpotCardProps) => {
   return (
-    <div 
+    <div
       className="group relative bg-card rounded-3xl overflow-hidden shadow-sky hover:shadow-sky-lg transition-all duration-500 hover:-translate-y-2"
       style={{ animationDelay: `${delay}ms` }}
     >
       {/* Image */}
       <div className="relative h-56 overflow-hidden">
-        <img 
-          src={image} 
+        <img
+          src={image}
           alt={title}
           className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
         />
         {/* Gradient overlay */}
         <div className="absolute inset-0 bg-gradient-to-t from-foreground/60 via-transparent to-transparent" />
-        
+
         {/* Rating badge */}
         <div className="absolute top-4 right-4 glass rounded-full px-3 py-1 flex items-center gap-1">
           <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" />
@@ -34,18 +41,20 @@ const SpotCard = ({ image, title, location, rating, duration, delay = 0 }: SpotC
 
       {/* Content */}
       <div className="p-5 space-y-3">
-        <h3 className="text-lg font-semibold text-card-foreground group-hover:text-primary transition-colors">
-          {title}
-        </h3>
-        
-        <div className="flex items-center gap-4 text-sm text-muted-foreground">
-          <div className="flex items-center gap-1">
-            <MapPin className="w-4 h-4 text-primary" />
-            <span>{location}</span>
-          </div>
+        <div className="flex items-center justify-between gap-7 w-full">
+          <h3 className="text-lg font-semibold text-card-foreground line-clamp-1 group-hover:text-primary transition-colors">
+            {title}
+          </h3>
           <div className="flex items-center gap-1">
             <Clock className="w-4 h-4 text-primary" />
-            <span>{duration}</span>
+            <span className="whitespace-nowrap">{duration}</span>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-4 text-sm text-muted-foreground">
+          <div className="flex items-center gap-1">
+            <Info className="w-4 h-4 text-primary" />
+            <span>{description}</span>
           </div>
         </div>
       </div>

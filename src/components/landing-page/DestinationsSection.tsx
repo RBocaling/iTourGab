@@ -3,39 +3,16 @@ import waterfallImage from "@/assets/waterfall.jpg";
 import riceTerraceImage from "@/assets/rice-terraces.jpg";
 import mountainImage from "@/assets/mountain-trail.jpg";
 import hotSpringImage from "@/assets/hot-spring.jpg";
+import useGetPlacePublic from "@/hooks/usePublicPlace";
+import Loader from "../loader/Loader";
 
-const touristSpots = [
-  {
-    image: waterfallImage,
-    title: "Dupinga Falls",
-    location: "Brgy. Dupinga",
-    rating: 4.8,
-    duration: "2-3 hours",
-  },
-  {
-    image: riceTerraceImage,
-    title: "Gabaldon Rice Terraces",
-    location: "Highland Area",
-    rating: 4.9,
-    duration: "Half day",
-  },
-  {
-    image: mountainImage,
-    title: "Mt. Mingan Trail",
-    location: "Sierra Madre",
-    rating: 4.7,
-    duration: "Full day",
-  },
-  {
-    image: hotSpringImage,
-    title: "Minalungao Hot Springs",
-    location: "Near Park",
-    rating: 4.6,
-    duration: "3-4 hours",
-  },
-];
 
 const DestinationsSection = () => {
+  const { data: touristSpots, isLoading } = useGetPlacePublic();
+  if (isLoading) {
+    return <Loader/>
+  }
+  
   return (
     <section id="destinations" className="py-20 md:py-32 bg-muted/30">
       <div className="container mx-auto px-4">
@@ -55,7 +32,7 @@ const DestinationsSection = () => {
 
         {/* Spots Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {touristSpots.map((spot, index) => (
+          {touristSpots?.map((spot, index) => (
             <SpotCard
               key={spot.title}
               {...spot}

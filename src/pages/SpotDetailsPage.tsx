@@ -2,7 +2,6 @@ import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useParams, useNavigate } from "react-router-dom";
 import {
-  ArrowLeft,
   Star,
   MapPin,
   Calendar,
@@ -41,18 +40,18 @@ import ServiceDetailsModal from "@/components/touristspot/ServiceDetailsModal";
 import { createFavoriteApi } from "@/api/favoriteApi";
 import { ErrorDialog, SuccessDialog } from "@/components/alert/FeedbackModals";
 import { createItineraryApi } from "@/api/iteneraryApi";
+import ServiceChatModal from "@/components/chat/ServiceChatModal";
+import BackButton from "@/components/ui/BackButton";
 
 const isPromoValidToday = (promo: any) => {
-  console.log("isPromoValidToday", promo);
-
   if (!promo) return false;
   if (promo.is_deleted) return false;
 
   const now = new Date();
   const start = promo.start_date ? new Date(promo.start_date) : null;
   const end = promo.end_date ? new Date(promo.end_date) : null;
-  if (start && now < start) return false; // not started yet
-  if (end && now > end) return false; // expired
+  if (start && now < start) return false; 
+  if (end && now > end) return false; 
 
   return promo.is_active !== false;
 };
@@ -83,8 +82,9 @@ const SpotDetailsPage: React.FC = () => {
   const [viewService, setViewService] = useState<any | null>(null);
   const [shareModalOpen, setShareModalOpen] = useState(false);
 
-
   const [itineraryModalOpen, setItineraryModalOpen] = useState(false);
+
+  const [openServiceChat, setOpenServiceChat] = useState(false);
 
   const [itineraryForm, setItineraryForm] = useState({
     name: "",
@@ -145,8 +145,6 @@ const SpotDetailsPage: React.FC = () => {
   }>({
     open: false,
   });
-
-  console.log("spot", spot);
 
   const [favoriteModalOpen, setFavoriteModalOpen] = useState(false);
   const [favoriteNote, setFavoriteNote] = useState("");
@@ -248,8 +246,6 @@ const SpotDetailsPage: React.FC = () => {
     ? spot?.services?.filter((s: any) => s.type === serviceTypeFilter)
     : spot?.services;
 
-  console.log("filteredServices", filteredServices);
-
   if (isLoading) {
     return <Loader />;
   }
@@ -272,14 +268,7 @@ const SpotDetailsPage: React.FC = () => {
           animate={{ opacity: 1, y: 0 }}
           className="flex items-center gap-4 mb-6"
         >
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => navigate("/")}
-            className="rounded-full bg-white/80 backdrop-blur-sm border border-white/30"
-          >
-            <ArrowLeft className="w-5 h-5" />
-          </Button>
+          <BackButton />
           <div className="flex-1">
             <h1 className="text-2xl md:text-3xl font-bold">{spot.name}</h1>
             <div className="flex items-center gap-2 mt-1">
@@ -532,13 +521,13 @@ const SpotDetailsPage: React.FC = () => {
                           : `${fmt(range.min)} — ${fmt(range.max)}`
                         : service.price || service.amount
                         ? fmt(Number(service.price ?? service.amount))
-                          : "See availabilities";
+                        : "See availabilities";
                       console.log("service.promo", service);
-                      
+
                       return (
                         <div
                           key={service.id}
-                          className="border rounded-xl p-4 hover:shadow-md transition-shadow"
+                          className="border rounded-2xl p-4 hover:shadow-md transition-shadow"
                         >
                           <div className="flex items-start gap-4">
                             <img
@@ -622,12 +611,22 @@ const SpotDetailsPage: React.FC = () => {
                                 </Badge>
                               )}
                             </div>
+                            <div className=" mb-2.5 flex items-center gap-1 text-xs text-muted-foreground">
+                              <Phone className="w-3 h-3" />
+                              <span>{service.contact}</span>
+                            </div>
                             <div className="flex items-center justify-between">
-                              <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                                <Phone className="w-3 h-3" />
-                                <span>{service.contact}</span>
-                              </div>
-                              <div className="flex items-center gap-1">
+                              <div className="grid grid-cols-3  items-center gap-1">
+                                <Button
+                                  size="sm"
+                                  className="h-8 px-3 text-xs bg-transparent border border-sky-500 text-primary hover:text-white"
+                                  onClick={() => {
+                                    setViewService(service);
+                                    setOpenServiceChat(true);
+                                  }}
+                                >
+                                  Chat
+                                </Button>
                                 <Button
                                   size="sm"
                                   className="h-8 px-3 text-xs bg-transparent border border-sky-500 text-primary hover:text-white"
@@ -690,9 +689,9 @@ const SpotDetailsPage: React.FC = () => {
                     <Button
                       variant="outline"
                       className="border h-12 border-primary/40"
-                      onClick={() => setShowWalkMode(true)}
+                      onClick={() => navigate(`/tourist-spot/${spotId}/stores`)}
                     >
-                      Explore
+                      Available Stores
                     </Button>
                     <Button
                       variant="outline"
@@ -1579,6 +1578,18 @@ const SpotDetailsPage: React.FC = () => {
           )}
         </AnimatePresence>
       </div>
+
+      {openServiceChat && viewService && (
+        <ServiceChatModal
+          open={openServiceChat}
+          onClose={() => {
+            setOpenServiceChat(false);
+            setViewService(null);
+          }}
+          service={viewService}
+          spot={spot}
+        />
+      )}
 
       <SuccessDialog
         open={successAlert.open}

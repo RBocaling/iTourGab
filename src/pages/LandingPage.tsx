@@ -4,6 +4,7 @@ import DestinationsSection from "@/components/landing-page/DestinationsSection";
 import AboutSection from "@/components/landing-page/AboutSection";
 import Footer from "@/components/landing-page/Footer";
 import DownloadPopup, { useDownloadPopup } from "@/components/landing-page/DownloadPopup";
+import TourismFAQ from "@/components/landing-page/TouristFaq";
 
 const Index = () => {
   const { showPopup, closePopup } = useDownloadPopup();
@@ -15,6 +16,7 @@ const Index = () => {
         <HeroSection />
         <DestinationsSection />
         <AboutSection />
+        <TourismFAQ />
       </main>
       <Footer />
       {showPopup && <DownloadPopup onClose={closePopup} />}

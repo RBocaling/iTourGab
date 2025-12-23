@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Search, ArrowLeft, MapPin, Star, Filter, X } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { Search, MapPin, Star, Filter, X } from 'lucide-react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -8,6 +8,7 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import MapboxMap from '@/components/map/MapboxMap';
 import { Place } from '@/types/place';
+import BackButton from '@/components/ui/BackButton';
 
 const SearchPage: React.FC = ({ touristSpots }: { touristSpots:Place[] }) => {
   const [searchQuery, setSearchQuery] = useState("");
@@ -50,14 +51,7 @@ const SearchPage: React.FC = ({ touristSpots }: { touristSpots:Place[] }) => {
       <div className="bg-gradient-primary px-4 py-4">
         <div className="max-w-7xl mx-auto">
           <div className="flex items-center gap-4 mb-4">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => navigate(-1)}
-              className="rounded-full bg-white/20 backdrop-blur-sm border border-white/30 text-white hover:bg-white/30"
-            >
-              <ArrowLeft className="w-5 h-5" />
-            </Button>
+            <BackButton />
             <h1 className="text-xl font-bold text-white">
               Search Destinations
             </h1>

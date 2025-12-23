@@ -67,6 +67,7 @@ export const formatPlace = (p: Place) => {
     accommodation: p.accommodation || [],
     raw: p,
     type: p?.type,
+    stores: p?.stores,
   };
 };
 

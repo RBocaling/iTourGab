@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { ArrowLeft, Star, Send } from "lucide-react";
+import {  Star, Send } from "lucide-react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -13,6 +13,7 @@ import { useRatings } from "@/hooks/useRating";
 import { useAuth2 } from "@/hooks/useAuth";
 import { createRatingApi } from "@/api/ratingApi";
 import type { RatingRaw } from "@/types/rating";
+import BackButton from "@/components/ui/BackButton";
 
 type Review = {
   id: string;
@@ -153,14 +154,7 @@ const RatingsPage: React.FC = () => {
       <div className="bg-gradient-primary px-4 py-6">
         <div className="max-w-4xl mx-auto">
           <div className="flex items-center gap-4 mb-4">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => navigate(-1)}
-              className="rounded-full bg-white/20 backdrop-blur-sm border border-white/30 text-white hover:bg-white/30"
-            >
-              <ArrowLeft className="w-5 h-5" />
-            </Button>
+            <BackButton />
             <div className="flex-1 min-w-0">
               <h1 className="text-xl font-bold text-white truncate">
                 {place?.name ?? `Spot ${spotId}`}
