@@ -9,20 +9,12 @@ import {
   Star,
   X,
   AlertTriangle,
-  ArrowDown,
   ChevronDown,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
@@ -160,7 +152,6 @@ useEffect(() => {
   setSelectedAccommodationId(null);
   setSelectedAvailabilityId(null);
 
-  // HUWAG i-reset kung galing sa URL
   if (!serviceParam) {
     setSelectedServiceId(null);
   }
@@ -437,8 +428,8 @@ const getPrevStep = () => {
 console.log("{place?.entranceFee ", place?.entranceFee);
 
   return (
-    <div className="min-h-screen bg-background pt-3 flex flex-col items-center justify-center md:pt-24 pb-20 md:pb-8">
-      <div className="max-w-4xlmx-auto px-6 md:px-4">
+    <div className="min-h-screen bg-background pt-3 md:pt-24 pb-24 md:pb-8">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -502,7 +493,7 @@ console.log("{place?.entranceFee ", place?.entranceFee);
           </div>
         </motion.div>
 
-        <div className="grid lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2">
             {step === 1 && (
               <motion.div
@@ -512,7 +503,7 @@ console.log("{place?.entranceFee ", place?.entranceFee);
               >
                 <div className="flex items-center justify-between">
                   <h2 className="text-xl font-bold mb-2 line-clamp-1">
-                    Choose from {place?.name ?? "a place"}
+                    {!place?.name && "Choose from"} {place?.name ?? "a place"}
                   </h2>
                   <div className="flex items-center gap-2">
                     <div className="hidden sm:block text-sm text-muted-foreground">
@@ -1052,7 +1043,7 @@ console.log("{place?.entranceFee ", place?.entranceFee);
           </div>
 
           <div className="space-y-6">
-            <Card className="p-6 sticky top-24">
+            <Card className="p-4 lg:p-6 lg:sticky lg:top-24">
               <h3 className="text-lg font-bold mb-4">Booking Summary</h3>
 
               <div className="space-y-3 text-sm">

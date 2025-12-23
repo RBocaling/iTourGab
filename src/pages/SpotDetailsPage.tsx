@@ -532,7 +532,9 @@ const SpotDetailsPage: React.FC = () => {
                           : `${fmt(range.min)} — ${fmt(range.max)}`
                         : service.price || service.amount
                         ? fmt(Number(service.price ?? service.amount))
-                        : "See availabilities";
+                          : "See availabilities";
+                      console.log("service.promo", service);
+                      
                       return (
                         <div
                           key={service.id}
