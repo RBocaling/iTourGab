@@ -20,13 +20,14 @@ import {
 } from "@/api/authApi";
 import { useAuthStore } from "@/store/authStore";
 import { useGoogleLogin } from "@react-oauth/google";
+import ForgotPasswordModal from "../forgot-password/ForgotPassword";
 
 export default function Login() {
   const [formData, setFormData] = useState({ email_address: "", password: "" });
   const [showPassword, setShowPassword] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [googleError, setGoogleError] = useState<string | null>(null);
-
+  const [openForgot, setOpenForgot] = useState(false);
   const setAuth = useAuthStore((s) => s.setAuth);
   const qc = useQueryClient();
 
@@ -211,6 +212,16 @@ export default function Login() {
               </div>
             </div>
 
+            <div className="text-right">
+              <button
+                type="button"
+                onClick={() => setOpenForgot(true)}
+                className="text-xs text-primary hover:underline"
+              >
+                Forgot password?
+              </button>
+            </div>
+
             <Button
               type="submit"
               disabled={loginMutation.isPending}
@@ -357,6 +368,11 @@ export default function Login() {
           style={{ backgroundImage: `url(${heroLandscape})` }}
         />
       </motion.div>
+
+      <ForgotPasswordModal
+        open={openForgot}
+        onClose={() => setOpenForgot(false)}
+      />
     </div>
   );
 }

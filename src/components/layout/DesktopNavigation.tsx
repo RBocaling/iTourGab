@@ -15,13 +15,20 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAuth2 } from "@/hooks/useAuth";
+import { useNotifications } from "@/hooks/useNotifications";
+import { ScrollArea } from "../ui/scroll-area";
+import { cn } from "@/lib/utils";
+import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
 
 const DesktopNavigation = () => {
   const { logout, user } = useAuth2();
   const location = useLocation();
   const navigate = useNavigate();
-
-  console.log("user", user);
+const {
+      notifications,
+      unreadCount,
+      isLoading: notifLoading,
+    } = useNotifications();
 
   const navItems = [
     { id: "home", label: "Home", icon: Home, path: "/" },
@@ -95,12 +102,89 @@ const DesktopNavigation = () => {
 
           {/* User Section */}
           <div className="flex items-center space-x-3">
-            <Button variant="ghost" size="icon" className="relative">
-              <Bell className="w-5 h-5" />
-              <div className="absolute -top-1 -right-1 w-3 h-3 bg-primary rounded-full flex items-center justify-center">
-                <span className="text-xs text-white">3</span>
-              </div>
-            </Button>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="ghost" size="icon" className="relative">
+                  <Bell className="w-7 h-7" />
+                  {!notifLoading && unreadCount > 0 && (
+                    <span className="absolute -top-1 -right-1 min-w-[16px] h-4 px-1 rounded-full bg-red-500 text-white text-[10px] flex items-center justify-center">
+                      {unreadCount > 9 ? "9+" : unreadCount}
+                    </span>
+                  )}
+                </Button>
+              </PopoverTrigger>
+
+              <PopoverContent
+                align="end"
+                sideOffset={12}
+                className="w-[360px] max-h-[520px] rounded-3xl p-0 shadow-xl border bg-white overflow-hidden"
+              >
+                {/* Header */}
+                <div className="px-4 py-3 border-b flex items-center justify-between shrink-0">
+                  <div className="font-semibold text-sm">Notifications</div>
+                  {unreadCount > 0 && (
+                    <span className="text-xs text-muted-foreground">
+                      {unreadCount} unread
+                    </span>
+                  )}
+                </div>
+
+                {/* Scrollable Body */}
+                <ScrollArea className="h-[420px]">
+                  {notifications.length === 0 ? (
+                    <div className="p-6 text-center text-sm text-muted-foreground">
+                      No notifications yet
+                    </div>
+                  ) : (
+                    <div className="divide-y">
+                      {notifications.map((n: any) => {
+                        const isUnread = !n.is_read;
+
+                        return (
+                          <motion.div
+                            key={n.id}
+                            initial={
+                              isUnread ? { x: [-6, 6, -4, 4, 0] } : false
+                            }
+                            animate={{ x: 0 }}
+                            transition={{ duration: 0.35 }}
+                            className={cn(
+                              "px-4 py-3 cursor-pointer transition",
+                              isUnread
+                                ? "bg-primary/5 hover:bg-primary/10"
+                                : "hover:bg-muted/50"
+                            )}
+                          >
+                            <div className="flex gap-3">
+                              {/* Dot */}
+                              <span
+                                className={cn(
+                                  "mt-2 w-2 h-2 rounded-full shrink-0",
+                                  isUnread ? "bg-primary" : "bg-transparent"
+                                )}
+                              />
+
+                              {/* Content */}
+                              <div className="flex-1">
+                                <div className="text-sm font-medium">
+                                  {n.name}
+                                </div>
+                                <div className="text-xs text-muted-foreground line-clamp-2 mt-1">
+                                  {n.description}
+                                </div>
+                                <div className="text-[10px] text-muted-foreground mt-1">
+                                  {new Date(n.created_at).toLocaleString()}
+                                </div>
+                              </div>
+                            </div>
+                          </motion.div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </ScrollArea>
+              </PopoverContent>
+            </Popover>
 
             <div className="h-6 w-px bg-border" />
 
