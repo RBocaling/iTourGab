@@ -49,10 +49,10 @@ const MobileHeader = () => {
           <PopoverContent
             align="end"
             sideOffset={12}
-            className="w-[360px] rounded-3xl p-0 shadow-xl border bg-white"
+            className="w-[360px] max-h-[520px] rounded-3xl p-0 shadow-xl border bg-white overflow-hidden"
           >
             {/* Header */}
-            <div className="px-4 py-3 border-b flex items-center justify-between">
+            <div className="px-4 py-3 border-b flex items-center justify-between shrink-0">
               <div className="font-semibold text-sm">Notifications</div>
               {unreadCount > 0 && (
                 <span className="text-xs text-muted-foreground">
@@ -61,8 +61,8 @@ const MobileHeader = () => {
               )}
             </div>
 
-            {/* Body */}
-            <ScrollArea className="max-h-[420px]">
+            {/* Scrollable Body */}
+            <ScrollArea className="h-[420px]">
               {notifications.length === 0 ? (
                 <div className="p-6 text-center text-sm text-muted-foreground">
                   No notifications yet
@@ -89,7 +89,7 @@ const MobileHeader = () => {
                           {/* Dot */}
                           <span
                             className={cn(
-                              "mt-2 w-2 h-2 rounded-full",
+                              "mt-2 w-2 h-2 rounded-full shrink-0",
                               isUnread ? "bg-primary" : "bg-transparent"
                             )}
                           />
@@ -111,8 +111,6 @@ const MobileHeader = () => {
                 </div>
               )}
             </ScrollArea>
-
-           
           </PopoverContent>
         </Popover>
 

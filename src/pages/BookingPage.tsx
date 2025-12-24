@@ -247,8 +247,10 @@ useEffect(() => {
         description:
           "Your booking request was submitted. Tell us about your experience.",
       });
-      setShowConfirmModal(false);
-      setShowRatingModal(true);
+      if (selectedService) {
+        navigate("/bookings")
+      } setShowConfirmModal(false);
+      setShowRatingModal(selectedService ? true:false);
       setRatingValue(0);
       setHoverRating(0);
       setRatingText("");
@@ -979,7 +981,7 @@ console.log("{place?.entranceFee ", place?.entranceFee);
                           {dates.checkIn
                             ? format(new Date(dates.checkIn), "MMM dd")
                             : "-"}{" "}
-                          to {" "}
+                          to{" "}
                           {dates.checkOut
                             ? format(new Date(dates.checkOut), "MMM dd")
                             : "-"}
@@ -1263,7 +1265,7 @@ console.log("{place?.entranceFee ", place?.entranceFee);
           </motion.div>
         )}
 
-        {showRatingModal && (
+        {showRatingModal && selectedService && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}

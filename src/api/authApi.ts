@@ -58,3 +58,33 @@ export const verifyAccountApi = async (payload: any) => {
   const { data } = await api.post<any>("/auth/verify-account", body);
   return data;
 };
+
+
+
+//forgot pass
+export const forgotPasswordApi = async (payload: { email: string }) => {
+  const { data } = await api.post("/auth/forgot-password", {
+    email_address:payload?.email,
+  });
+  return data;
+};
+
+export const verifyForgotPasswordOtpApi = async (payload: {
+  email: string;
+  otp: string;
+}) => {
+  const { data } = await api.post("/auth/forgot-password/verify", {
+    email_address: payload.email,
+    otp: payload.otp,
+  });
+  return data;
+};
+
+
+export const resetPasswordApi = async (payload: {
+  email: string;
+  newPassword: string;
+}) => {
+  const { data } = await api.post("/auth/forgot-password/reset", payload);
+  return data;
+};
