@@ -149,7 +149,7 @@ export default function ForgotPasswordModal({ open, onClose }: Props) {
           {/* OTP STEP */}
           {step === "OTP" && (
             <>
-              <OtpInput length={6} value={otp} onChange={setOtp} />
+              <OtpInput length={6} value={otp } onChange={setOtp} />
 
               <Button
                 className="w-full h-12 rounded-xl"
