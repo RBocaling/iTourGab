@@ -204,6 +204,8 @@ useEffect(() => {
     return { min, max };
   };
 
+  console.log("selectedService", selectedService);
+  
   const unitPrice = useMemo(() => {
     if (selectedAccommodation)
       return parsePrice((selectedAccommodation as any).price);
@@ -247,7 +249,7 @@ useEffect(() => {
         description:
           "Your booking request was submitted. Tell us about your experience.",
       });
-      if (selectedService) {
+      if (!selectedService) {
         navigate("/bookings")
       } setShowConfirmModal(false);
       setShowRatingModal(selectedService ? true:false);
@@ -1265,7 +1267,7 @@ console.log("{place?.entranceFee ", place?.entranceFee);
           </motion.div>
         )}
 
-        {showRatingModal && selectedService && (
+        {showRatingModal && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
