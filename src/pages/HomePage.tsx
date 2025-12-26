@@ -22,16 +22,22 @@ const HomePage: React.FC = () => {
   const [showTypeModal, setShowTypeModal] = useState(false);
   const {isLoading, formatData: touristSpots } = useGetPlaces();
   
- const filteredSpots = touristSpots?.filter((spot:any) => {
-   const matchesSearch =
-     spot.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-     spot.description.toLowerCase().includes(searchQuery.toLowerCase());
+const filteredSpots = touristSpots?.filter((spot: any) => {
+  const hasSearch = searchQuery.trim().length > 0;
 
-   const matchesType = !typeFilter || spot.type === typeFilter;
-   
-   return matchesSearch && matchesType;
- });
+  const matchesSearch = !hasSearch
+    ? true
+    : spot.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      spot.description.toLowerCase().includes(searchQuery.toLowerCase());
 
+  const matchesType = !typeFilter || spot.raw?.type === typeFilter;
+
+  return matchesSearch && matchesType;
+});
+
+
+
+  console.log("typeFilter", filteredSpots);
   
   // Search suggestions logic
   useEffect(() => {
@@ -76,6 +82,10 @@ const HomePage: React.FC = () => {
   if (isLoading) {
      return <Loader />;
   }
+
+
+  console.log("filteredSpots22", filteredSpots);
+  
   return (
     <div className="min-h-screen bg-background pt-2 md:pt-32 pb-28 md:pb-8 p-3">
       <div className="max-w-7xl mx-auto px-4">
@@ -234,7 +244,7 @@ const HomePage: React.FC = () => {
         >
           {filteredSpots.map((spot, index) => (
             <motion.div
-              key={spot.id}
+              key={index}
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.1 * index }}
@@ -251,10 +261,8 @@ const HomePage: React.FC = () => {
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
 
-                  {/* Favorite Button */}
-
                   <p className="absolute top-3 right-3 text-xs font-semibold text-white bg-primary py-1.5 px-3 rounded-full">
-                    {spot.type}
+                    {spot?.type}
                   </p>
 
                   {/* Rating */}

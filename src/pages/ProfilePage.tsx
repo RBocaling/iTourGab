@@ -386,7 +386,7 @@ const ProfilePage: React.FC = () => {
           </p>
           <div className="flex items-center justify-center gap-2">
             <Badge className="capitalize bg-gradient-primary text-white">
-              Client
+              Tourist
             </Badge>
             <Badge variant="outline">
               <MapPin className="w-3 h-3 mr-1" />

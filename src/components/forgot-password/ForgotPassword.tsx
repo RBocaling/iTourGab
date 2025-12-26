@@ -38,7 +38,8 @@ export default function ForgotPasswordModal({ open, onClose }: Props) {
   const [otp, setOtp] = useState("");
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
+    const [showPassword, setShowPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [error, setError] = useState("");
 
   useEffect(() => {
@@ -149,7 +150,7 @@ export default function ForgotPasswordModal({ open, onClose }: Props) {
           {/* OTP STEP */}
           {step === "OTP" && (
             <>
-              <OtpInput length={6} value={otp } onChange={setOtp} />
+              <OtpInput length={6} value={otp} onChange={setOtp} />
 
               <Button
                 className="w-full h-12 rounded-xl"
@@ -181,6 +182,7 @@ export default function ForgotPasswordModal({ open, onClose }: Props) {
           {/* RESET STEP */}
           {step === "RESET" && (
             <>
+              {/* NEW PASSWORD */}
               <div className="relative">
                 <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                 <input
@@ -193,19 +195,30 @@ export default function ForgotPasswordModal({ open, onClose }: Props) {
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-4 top-1/2 -translate-y-1/2"
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground"
                 >
                   {showPassword ? <EyeOff /> : <Eye />}
                 </button>
               </div>
 
-              <Input
-                type="password"
-                placeholder="Confirm password"
-                className="h-12 rounded-xl"
-                value={confirm}
-                onChange={(e) => setConfirm(e.target.value)}
-              />
+              {/* CONFIRM PASSWORD */}
+              <div className="relative">
+                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                <input
+                  type={showConfirmPassword ? "text" : "password"}
+                  placeholder="Confirm password"
+                  className="w-full h-12 pl-12 pr-12 rounded-xl border outline-none focus:ring-2 focus:ring-primary"
+                  value={confirm}
+                  onChange={(e) => setConfirm(e.target.value)}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground"
+                >
+                  {showConfirmPassword ? <EyeOff /> : <Eye />}
+                </button>
+              </div>
 
               <Button
                 className="w-full h-12 rounded-xl"

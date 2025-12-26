@@ -10,6 +10,7 @@ import { Calendar, User, Clock, Package } from "lucide-react";
 import { useGetBookingById } from "@/hooks/useGetBookings";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatBooking } from "@/lib/formatBooking";
+import { format } from "date-fns";
 
 type Props = {
   bookingId?: string | number | null;
@@ -102,8 +103,9 @@ export default function ViewBooking({ bookingId, onClose, onViewSpot }: Props) {
                   <div className="flex flex-wrap items-center gap-3 text-sm text-neutral-700">
                     <div className="flex items-center gap-2">
                       <Calendar className="w-4 h-4 text-primary" />
-                      <span className="text-sm">
-                        {b.checkIn ?? "—"} → {b.checkOut ?? "—"}
+                      <span className="text-neutral-700 text-xs">
+                        {format(new Date(b.checkIn), "MMM dd yyyy") ?? "—"} →{" "}
+                        {format(new Date(b.checkOut), "MMM dd yyyy") ?? "—"}
                       </span>
                     </div>
                     <div className="flex items-center gap-2">
