@@ -11,7 +11,7 @@ export default function Seo({
   title,
   description,
   canonical,
-  image = "/logo-itour.png",
+  image = "https://itourgab-v1.site/logo-itour.png",
 }: SeoProps) {
   return (
     <Helmet>
