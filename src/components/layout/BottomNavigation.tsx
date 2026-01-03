@@ -2,11 +2,15 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { Home, MapPin, Calendar, Heart, User, BookOpenCheck } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { useKeyboardOpen } from '@/hooks/useKeyboardOpen';
 
 const BottomNavigation: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
+  const isKeyboardOpen = useKeyboardOpen();
 
+  if (isKeyboardOpen) return null;
+  
   const navItems = [
     { id: "home", label: "Home", icon: Home, path: "/" },
 
