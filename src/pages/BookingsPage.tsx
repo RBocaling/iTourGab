@@ -25,6 +25,7 @@ import { createServiceRatingApi } from "@/api/serviceRatingApi";
 import { useToast } from "@/hooks/use-toast";
 import { updateStatus } from "@/api/bookingApi";
 import ServiceChatModal from "@/components/chat/ServiceChatModal";
+import BookingReceiptModal from "@/components/bookings/BookingReceiptModal";
 
 const statusConfig = {
   PENDING: {
@@ -83,6 +84,8 @@ export default function BookingsPage() {
   const [openChat, setOpenChat] = useState(false);
   const [chatService, setChatService] = useState<any | null>(null);
   const [chatSpot, setChatSpot] = useState<any | null>(null);
+
+  const [openReceipt, setOpenReceipt] = useState<any | null>(null);
 
   const navigate = useNavigate();
 
@@ -404,6 +407,16 @@ export default function BookingsPage() {
                               className="w-full sm:w-auto border-red-200 text-red-600 hover:bg-red-400"
                             >
                               Cancel Booking
+                            </Button>
+                          )}
+                          {statusKey === "CONFIRMED" && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="w-full sm:w-auto"
+                              onClick={() => setOpenReceipt(b)}
+                            >
+                              View Receipt
                             </Button>
                           )}
 
@@ -780,6 +793,12 @@ export default function BookingsPage() {
             </motion.div>
           </motion.div>
         )}
+
+        <BookingReceiptModal
+          open={Boolean(openReceipt)}
+          booking={openReceipt}
+          onClose={() => setOpenReceipt(null)}
+        />
 
         {showReasonModal && (
           <motion.div
