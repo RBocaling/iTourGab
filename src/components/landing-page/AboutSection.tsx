@@ -28,7 +28,7 @@ const AboutSection = () => {
     <section id="about" className="py-20 md:py-32 relative overflow-hidden">
       {/* Background decoration */}
       <div className="absolute top-0 right-0 w-1/2 h-full gradient-sky-subtle opacity-50" />
-      
+
       <div className="container mx-auto px-4 relative z-10">
         <div className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
           {/* Content */}
@@ -41,16 +41,17 @@ const AboutSection = () => {
               <span className="block text-gradient">Adventure</span>
             </h2>
             <p className="text-muted-foreground text-lg leading-relaxed mb-8">
-              Nestled in the foothills of the Sierra Madre mountain range, Gabaldon is a first-class 
-              municipality in Nueva Ecija known for its rich biodiversity, stunning landscapes, and 
-              vibrant cultural heritage. From cascading waterfalls to terraced rice fields, every 
+              Nestled in the foothills of the Sierra Madre mountain range,
+              Gabaldon is a first-class municipality in Nueva Ecija known for
+              its rich biodiversity, stunning landscapes, and vibrant cultural
+              heritage. From cascading waterfalls to terraced rice fields, every
               corner tells a story of nature's magnificence.
             </p>
-            
+
             {/* Features Grid */}
             <div className="grid sm:grid-cols-2 gap-6">
               {features.map((feature, index) => (
-                <div 
+                <div
                   key={feature.title}
                   className="flex items-start gap-4 p-4 rounded-2xl hover:bg-muted/50 transition-colors"
                 >
@@ -58,8 +59,12 @@ const AboutSection = () => {
                     <feature.icon className="w-6 h-6 text-primary-foreground" />
                   </div>
                   <div>
-                    <h3 className="font-semibold text-foreground mb-1">{feature.title}</h3>
-                    <p className="text-sm text-muted-foreground">{feature.description}</p>
+                    <h3 className="font-semibold text-foreground mb-1">
+                      {feature.title}
+                    </h3>
+                    <p className="text-sm text-muted-foreground">
+                      {feature.description}
+                    </p>
                   </div>
                 </div>
               ))}
@@ -71,42 +76,44 @@ const AboutSection = () => {
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-4">
                 <div className="rounded-3xl overflow-hidden shadow-sky-lg h-48">
-                  <img 
-                    src="https://images.unsplash.com/photo-1504893524553-b855bce32c67?w=400" 
-                    alt="Scenic river view" 
+                  <img
+                    src="https://res.cloudinary.com/dcnberczq/image/upload/v1766512929/Screenshot_2025-11-13_110933_e6beiy.png"
+                    alt="Scenic river view"
                     className="w-full h-full object-cover"
                   />
                 </div>
                 <div className="rounded-3xl overflow-hidden shadow-sky-lg h-64">
-                  <img 
-                    src="https://images.unsplash.com/photo-1469474968028-56623f02e42e?w=400" 
-                    alt="Mountain landscape" 
+                  <img
+                    src="https://res.cloudinary.com/dcnberczq/image/upload/v1766512519/Screenshot_2025-11-13_111444_gfbqhi.png"
+                    alt="Mountain landscape"
                     className="w-full h-full object-cover"
                   />
                 </div>
               </div>
               <div className="space-y-4 pt-8">
                 <div className="rounded-3xl overflow-hidden shadow-sky-lg h-64">
-                  <img 
-                    src="https://images.unsplash.com/photo-1501854140801-50d01698950b?w=400" 
-                    alt="Green hills" 
+                  <img
+                    src="https://res.cloudinary.com/dcnberczq/image/upload/v1766512740/Screenshot_2025-11-13_112659_kuhriy.png"
+                    alt="Green hills"
                     className="w-full h-full object-cover"
                   />
                 </div>
                 <div className="rounded-3xl overflow-hidden shadow-sky-lg h-48">
-                  <img 
-                    src="https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?w=400" 
-                    alt="Foggy mountains" 
+                  <img
+                    src="https://res.cloudinary.com/dcnberczq/image/upload/v1766513832/Screenshot_2025-11-14_111854_vl37zk.png"
+                    alt="Foggy mountains"
                     className="w-full h-full object-cover"
                   />
                 </div>
               </div>
             </div>
-            
+
             {/* Floating stat card */}
             <div className="absolute -bottom-6 -left-6 glass-strong rounded-2xl p-6 shadow-sky-lg">
               <p className="text-3xl font-bold text-gradient">Since 1949</p>
-              <p className="text-sm text-muted-foreground">Welcoming Travelers</p>
+              <p className="text-sm text-muted-foreground">
+                Welcoming Travelers
+              </p>
             </div>
           </div>
         </div>
