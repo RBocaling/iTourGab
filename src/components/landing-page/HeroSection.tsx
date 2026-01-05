@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Play, MapPin, Users, Camera } from "lucide-react";
-import heroImage from "@/assets/hero-landscape.jpg";
+import heroImage from "/hero-bg.jpg";
 import { useNavigate } from "react-router-dom";
 import useGetPlacePublic from "@/hooks/usePublicPlace";
 import Loader from "../loader/Loader";

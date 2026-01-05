@@ -99,7 +99,7 @@ const MainApp: React.FC = () => {
         isAuthenticated &&
         pathname !== "/chat-support" &&
         pathname !== "/booking" && (
-          <button className="fixed bottom-24 right-0">
+          <button className="fixed bottom-24 md:bottom-0 right-0">
             <div className="relative flex items-center justify-center">
               <div className="absolute h-24 w-24 rounded-full bg-primary opacity-30 animate-ping" />
               <img
