@@ -21,6 +21,8 @@ import {
 import { useAuthStore } from "@/store/authStore";
 import { useGoogleLogin } from "@react-oauth/google";
 import ForgotPasswordModal from "../forgot-password/ForgotPassword";
+import { Helmet } from "react-helmet-async";
+
 
 export default function Login() {
   const [formData, setFormData] = useState({ email_address: "", password: "" });
@@ -104,6 +106,21 @@ export default function Login() {
 
   return (
     <div className="min-h-screen  bg-background grid grid-cols-1 md:grid-cols-2 gap-9">
+      <Helmet>
+        <title>
+          iTourGab – Explore Tourist Spots in Gabaldon | Get Started
+        </title>
+
+        <meta
+          name="description"
+          content="Get started with iTourGab. Sign in to explore tourist spots in Gabaldon, Nueva Ecija, save destinations, and plan your travel experience."
+        />
+
+        <meta name="robots" content="index, follow" />
+
+        <link rel="canonical" href="https://itourgab-v1.site/" />
+      </Helmet>
+
       <div className="w-full  flex items-center justify-center p-8">
         <motion.div
           initial={{ opacity: 0, x: -50 }}
@@ -354,6 +371,12 @@ export default function Login() {
               Register
             </Link>
           </motion.div>
+          <div className="mt-6 rounded-2xl p-3 border border-primary/50 bg-primary/10 text-xs text-muted-foreground text-center max-w-sm mx-auto leading-relaxed">
+            <strong>About iTourGab: </strong>
+            iTourGab is a tourism and travel platform designed to help visitors
+            explore tourist spots, natural attractions, and destinations in
+            Gabaldon, Nueva Ecija, Philippines.
+          </div>
         </motion.div>
       </div>
 

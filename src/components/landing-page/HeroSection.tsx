@@ -42,7 +42,7 @@ const HeroSection = () => {
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 mb-6 animate-slide-up">
             <MapPin className="w-4 h-4 text-primary" />
             <span className="text-sm font-medium text-primary">
-              Nueva Ecija, Philippines
+              Gabaldon, Nueva Ecija · Philippines
             </span>
           </div>
 
@@ -51,8 +51,10 @@ const HeroSection = () => {
             className="text-4xl md:text-5xl lg:text-6xl font-bold text-foreground leading-tight mb-6 animate-slide-up"
             style={{ animationDelay: "100ms" }}
           >
-            Discover the Hidden
-            <span className="block text-gradient">Paradise of Gabaldon</span>
+            Tourist Spots in Gabaldon
+            <span className="block text-gradient">
+              Nueva Ecija, Philippines
+            </span>
           </h1>
 
           {/* Description */}
@@ -60,9 +62,10 @@ const HeroSection = () => {
             className="text-lg md:text-xl text-muted-foreground leading-relaxed mb-8 max-w-lg animate-slide-up"
             style={{ animationDelay: "200ms" }}
           >
-            Explore breathtaking waterfalls, lush rice terraces, and untouched
-            natural wonders. Your adventure in the heart of the Sierra Madre
-            awaits.
+            Discover waterfalls, mountain views, rice terraces, resorts, and
+            natural attractions in Gabaldon, Nueva Ecija. Explore hidden
+            destinations and experience eco-tourism in the heart of the Sierra
+            Madre.
           </p>
 
           {/* CTA Buttons */}
@@ -71,12 +74,13 @@ const HeroSection = () => {
             style={{ animationDelay: "300ms" }}
           >
             <Button variant="gradient" size="xl">
-              Explore Destinations
+              Explore Tourist Spots
               <ArrowRight className="w-5 h-5" />
             </Button>
+
             <Button variant="glass" onClick={() => navigate("/")} size="xl">
               <Play className="w-5 h-5" />
-              Get's Started
+              Get Started – Explore the App
             </Button>
           </div>
 
