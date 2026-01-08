@@ -110,15 +110,11 @@ export default function Login() {
   return (
     <div className="min-h-screen  bg-background grid grid-cols-1 md:grid-cols-2 gap-9">
       <Helmet>
-        <title>Sign In | iTourGab</title>
-
+        <title>Login – iTourGab | Start Exploring Gabaldon</title>
         <meta
           name="description"
-          content="Sign in to iTourGab to access the app, save destinations, and plan your travel experience."
+          content="Sign in to iTourGab and explore tourist spots, save destinations, and plan your Gabaldon adventure."
         />
-
-        <meta name="robots" content="noindex, nofollow" />
-
         <link rel="canonical" href="https://itourgab-v1.site/app/login" />
       </Helmet>
 
