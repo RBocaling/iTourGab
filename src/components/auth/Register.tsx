@@ -649,7 +649,7 @@ export default function Register() {
             transition={{ delay: 0.7 }}
             className="text-center"
           >
-            <Link to="/login" className="text-muted-foreground text-primary">
+            <Link to="/app/login" className="text-muted-foreground text-primary">
               Login
             </Link>
           </motion.div>

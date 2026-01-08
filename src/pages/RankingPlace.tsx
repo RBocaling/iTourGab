@@ -117,7 +117,7 @@ export default function TouristSpotRanking() {
                       </p>
                     </div>
 
-                    <div className="text-right shrink-0">
+                    <div className="text-right shrink-0 hidden md:block">
                       <div className="flex items-center gap-1 justify-end">
                         <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" />
                         <span className="text-sm font-semibold">
@@ -148,6 +148,17 @@ export default function TouristSpotRanking() {
                     >
                       Book
                     </Button>
+                    <div className=" shrink-0  md:hidden">
+                      <div className="flex items-center gap-1 justify-end">
+                        <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" />
+                        <span className="text-sm font-semibold">
+                          {p.rating.toFixed(1)}
+                        </span>
+                      </div>
+                      <Badge variant="secondary" className="mt-1 text-[10px]">
+                        {p.reviewsCount} reviews
+                      </Badge>
+                    </div>
                   </div>
                 </div>
               </Card>
