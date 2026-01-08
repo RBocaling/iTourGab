@@ -121,7 +121,7 @@ export default function Login() {
 
         <meta name="robots" content="index, follow" />
 
-        <link rel="canonical" href="https://itourgab-v1.site/" />
+        <link rel="canonical" href="https://itourgab-v1.site/app/login" />
       </Helmet>
 
       <div className="w-full  flex items-center justify-center p-8">
