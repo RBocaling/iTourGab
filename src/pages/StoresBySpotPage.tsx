@@ -1,4 +1,4 @@
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Store } from "lucide-react";
 import { useStoresBySpot } from "@/hooks/useStores";
