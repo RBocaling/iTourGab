@@ -15,7 +15,7 @@ const Index = () => {
       <Seo
         title="Discover Tourist Spots in Gabaldon, Nueva Ecija | iTourGab"
         description="Explore waterfalls, natural attractions, resorts, and tourist destinations in Gabaldon, Nueva Ecija, Philippines. Discover hidden gems and travel experiences with iTourGab."
-        canonical="https://itourgab-v1.site/welcome-to-i-tour-gab"
+        canonical="https://itourgab-v1.site/"
       />
 
       <Navbar />
