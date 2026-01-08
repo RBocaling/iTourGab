@@ -192,30 +192,30 @@ const ProfilePage: React.FC = () => {
       icon: Heart,
       label: "My Favorites",
       description: "Saved destinations",
-      action: () => navigate("/favorites"),
+      action: () => navigate("/app/favorites"),
       color: "text-red-500",
     },
     {
       icon: Calendar,
       label: "My Itineraries",
       description: "Planned trips",
-      action: () => navigate("/itinerary"),
+      action: () => navigate("/app/itinerary"),
       color: "text-blue-500",
     },
     {
       icon: Award,
       label: "My Bookings",
       description: "Reservation history",
-      action: () => {},
+      action: () => navigate("/app/bookings"),
       color: "text-green-500",
     },
-    {
-      icon: Camera,
-      label: "Photo Gallery",
-      description: "My travel photos",
-      action: () => {},
-      color: "text-purple-500",
-    },
+    // {
+    //   icon: Camera,
+    //   label: "Photo Gallery",
+    //   description: "My travel photos",
+    //   action: () => {},
+    //   color: "text-purple-500",
+    // },
   ];
 
   const settingsItems = [

@@ -3,6 +3,7 @@ import { useSupportMessages, useSendSupportMessage } from "@/hooks/useSupport";
 import { Button } from "@/components/ui/button";
 import { Send, ShieldCheck } from "lucide-react";
 import { useAuth2 } from "@/hooks/useAuth";
+import BackButton from "../ui/BackButton";
 
 export default function ClientSupportChat({ ticketId }: { ticketId: number }) {
   const { user } = useAuth2();
@@ -18,8 +19,11 @@ export default function ClientSupportChat({ ticketId }: { ticketId: number }) {
   return (
     <div className="flex flex-col h-full bg-neutral-100 md:h-screen">
       <div className="sticky top-20 z-10 backdrop-blur-md bg-white/80 border-b px-4 py-3 flex items-center gap-3">
-        <div className="w-9 h-9 rounded-full bg-primary text-white flex items-center justify-center">
-          <ShieldCheck className="w-5 h-5" />
+        <div className="flex items-center gap-4">
+          <BackButton/>
+          <div className="w-9 h-9 rounded-full bg-primary text-white flex items-center justify-center">
+            <ShieldCheck className="w-5 h-5" />
+          </div>
         </div>
         <div className="leading-tight">
           <p className="text-sm font-semibold">Admin Support</p>

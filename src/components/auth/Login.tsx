@@ -362,7 +362,7 @@ export default function Login() {
           >
             Do you have an account?
             <Link
-              to="/register"
+              to="/app/register"
               className="text-muted-foreground text-primary ml-2"
             >
               Register

@@ -255,7 +255,7 @@ const SpotDetailsPage: React.FC = () => {
       <div className="min-h-screen bg-background pt-20 md:pt-24 pb-20 md:pb-8 flex items-center justify-center">
         <div className="text-center">
           <h2 className="text-2xl font-bold mb-4">Spot not found</h2>
-          <Button onClick={() => navigate("")}>Go back to home</Button>
+          <Button onClick={() => navigate(-1)}></Button>
         </div>
       </div>
     );

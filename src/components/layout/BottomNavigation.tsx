@@ -12,13 +12,13 @@ const BottomNavigation: React.FC = () => {
   if (isKeyboardOpen) return null;
   
   const navItems = [
-    { id: "home", label: "Home", icon: Home, path: "/" },
+    { id: "home", label: "Home", icon: Home, path: "/app" },
 
     {
       id: "bookings",
       label: "Bookings",
       icon: BookOpenCheck,
-      path: "/bookings",
+      path: "/app/bookings",
     },
 
     {
@@ -26,10 +26,10 @@ const BottomNavigation: React.FC = () => {
       label: "Map",
       box: "/map-box.png",
       img: "/locate.webp",
-      path: "/map",
+      path: "/app/map",
     },
-    { id: "favorites", label: "Saved", icon: Heart, path: "/favorites" },
-    { id: "profile", label: "Profile", icon: User, path: "/profile" },
+    { id: "favorites", label: "Saved", icon: Heart, path: "/app/favorites" },
+    { id: "profile", label: "Profile", icon: User, path: "/app/profile" },
   ];
 
   const handleNavigation = (path: string) => {

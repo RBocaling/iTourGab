@@ -353,13 +353,6 @@ useEffect(() => {
   };
 
 
-  const bookingFlow = useMemo(() => {
-    if (!selectedService) return "PLACE_ONLY";
-    if (selectedService.type === "FOOD") return "FOOD";
-    return "ROOM";
-  }, [selectedService]);
-
-
   
   const steps = useMemo(() => {
     return [
@@ -427,8 +420,6 @@ const getPrevStep = () => {
    ? services?.filter((s: any) => s.type === serviceTypeFilter)
    : services;
 
-
-console.log("{place?.entranceFee ", place?.entranceFee);
 
   return (
     <div className="min-h-screen bg-background pt-3 md:pt-24 pb-24 md:pb-8">

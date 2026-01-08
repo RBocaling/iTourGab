@@ -391,7 +391,7 @@ export default function BookingsPage() {
                             size="sm"
                             onClick={() =>
                               navigate(
-                                `/spot/${b.place?.id ?? b.tourist_spot?.id}`
+                                `/app/spot/${b.place?.id ?? b.tourist_spot?.id}`
                               )
                             }
                             className="w-full sm:w-auto flex items-center justify-center gap-2"
