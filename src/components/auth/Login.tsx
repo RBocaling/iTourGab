@@ -110,16 +110,14 @@ export default function Login() {
   return (
     <div className="min-h-screen  bg-background grid grid-cols-1 md:grid-cols-2 gap-9">
       <Helmet>
-        <title>
-          iTourGab – Explore Tourist Spots in Gabaldon | Get Started
-        </title>
+        <title>Sign In | iTourGab</title>
 
         <meta
           name="description"
-          content="Get started with iTourGab. Sign in to explore tourist spots in Gabaldon, Nueva Ecija, save destinations, and plan your travel experience."
+          content="Sign in to iTourGab to access the app, save destinations, and plan your travel experience."
         />
 
-        <meta name="robots" content="index, follow" />
+        <meta name="robots" content="noindex, nofollow" />
 
         <link rel="canonical" href="https://itourgab-v1.site/app/login" />
       </Helmet>
