@@ -13,8 +13,8 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-background">
       <Seo
-        title="Discover Tourist Spots in Gabaldon, Nueva Ecija | iTourGab"
-        description="Explore waterfalls, rivers, resorts, and must-visit tourist destinations in Gabaldon, Nueva Ecija, Philippines with iTourGab."
+        title="iTourgab"
+        description="Discover Tourist Spots in Gabaldon, Nueva Ecija, Explore waterfalls, rivers, resorts, and must-visit tourist destinations in Gabaldon, Nueva Ecija, Philippines with iTourGab."
         canonical="https://itourgab-v1.site/"
       />
 
