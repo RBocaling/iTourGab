@@ -16,8 +16,8 @@ export default function ClientSupportChat({ ticketId }: { ticketId: number }) {
   }, [messages, sendMutation.isPending]);
 
   return (
-    <div className="flex flex-col h-full bg-neutral-100">
-      <div className="sticky top-0 z-10 backdrop-blur-md bg-white/80 border-b px-4 py-3 flex items-center gap-3">
+    <div className="flex flex-col h-full bg-neutral-100 md:h-screen">
+      <div className="sticky top-20 z-10 backdrop-blur-md bg-white/80 border-b px-4 py-3 flex items-center gap-3">
         <div className="w-9 h-9 rounded-full bg-primary text-white flex items-center justify-center">
           <ShieldCheck className="w-5 h-5" />
         </div>
@@ -77,7 +77,7 @@ export default function ClientSupportChat({ ticketId }: { ticketId: number }) {
           rows={1}
           value={text}
           onChange={(e) => setText(e.target.value)}
-          placeholder="iMessage to Admin Support"
+          placeholder="Message to Admin Support"
           className="flex-1 resize-none rounded-full border px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
           onKeyDown={(e) => {
             if (e.key === "Enter" && !e.shiftKey) {

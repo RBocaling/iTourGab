@@ -96,15 +96,15 @@ const MainApp: React.FC = () => {
           <BottomNavigation />
         </main>
       )}
-      {pathname !== "/ai-support" &&
+      {pathname !== "/app/ai-support" &&
         isAuthenticated &&
-        pathname !== "/chat-support" &&
-        pathname !== "/booking" && (
+        pathname !== "/app/chat-support" &&
+        pathname !== "/app/booking" && (
           <button className="fixed bottom-24 md:bottom-0 right-0">
             <div className="relative flex items-center justify-center">
               <div className="absolute h-24 w-24 rounded-full bg-primary opacity-30 animate-ping" />
               <img
-                onClick={() => navigate("/ai-support")}
+                onClick={() => navigate("/app/ai-support")}
                 src="/ai-model.png"
                 className=" w-16 relative z-20"
                 alt=""
