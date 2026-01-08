@@ -7,12 +7,12 @@
   </url>
 
   <url>
-    <loc>https://itourgab-v1.site/welcome-to-i-tour-gab</loc>
+    <loc>https://itourgab-v1.site/app</loc>
     <priority>0.9</priority>
   </url>
 
   <url>
-    <loc>https://itourgab-v1.site/welcome-to-i-tour-gab#destinations</loc>
+    <loc>https://itourgab-v1.site/app/login</loc>
     <priority>0.9</priority>
   </url>
 
