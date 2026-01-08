@@ -233,7 +233,7 @@ export default function Register() {
   const handleSuccessOk = () => {
     setSuccessModalOpen(false);
     setSuccessModalMessage(null);
-    navigate("/login");
+    navigate("/app/login");
   };
 
   const handleErrorOk = () => {

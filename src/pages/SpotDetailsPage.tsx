@@ -273,7 +273,7 @@ const SpotDetailsPage: React.FC = () => {
             <h1 className="text-2xl md:text-3xl font-bold">{spot.name}</h1>
             <div className="flex items-center gap-2 mt-1">
               <button
-                onClick={() => navigate(`/ratings/${spot.placeId}`)}
+                onClick={() => navigate(`/app/ratings/${spot.placeId}`)}
                 className="flex items-center gap-1 hover:bg-muted/50 rounded-lg px-2 py-1 transition-colors"
               >
                 <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
@@ -642,7 +642,7 @@ const SpotDetailsPage: React.FC = () => {
                                   className="h-8 px-3 text-xs bg-gradient-primary"
                                   onClick={() =>
                                     navigate(
-                                      `/booking?spot=${spot.placeId}&service=${service.id}`
+                                      `/app/booking?spot=${spot.placeId}&service=${service.id}`
                                     )
                                   }
                                 >
@@ -680,7 +680,7 @@ const SpotDetailsPage: React.FC = () => {
                   <Button
                     variant="outline"
                     className="w-full border border-primary/40 h-12"
-                    onClick={() => navigate(`/map?focus=${spot.id}`)}
+                    onClick={() => navigate(`/app/map?focus=${spot.id}`)}
                   >
                     <Navigation className="w-4 h-4 mr-2" />
                     View on Map
@@ -689,7 +689,9 @@ const SpotDetailsPage: React.FC = () => {
                     <Button
                       variant="outline"
                       className="border h-12 border-primary/40"
-                      onClick={() => navigate(`/tourist-spot/${spotId}/stores`)}
+                      onClick={() =>
+                        navigate(`/app/tourist-spot/${spotId}/stores`)
+                      }
                     >
                       Available Stores
                     </Button>
@@ -704,7 +706,9 @@ const SpotDetailsPage: React.FC = () => {
                   <Button
                     variant="outline"
                     className="w-full border h-12 border-primary/40"
-                    onClick={() => navigate(`/booking?spot=${spot.placeId}`)}
+                    onClick={() =>
+                      navigate(`/app/booking?spot=${spot.placeId}`)
+                    }
                   >
                     Book Services
                   </Button>
@@ -1013,7 +1017,7 @@ const SpotDetailsPage: React.FC = () => {
                       onClick={() => {
                         setShowRangeModal(false);
                         navigate(
-                          `/map?focus=${spotId}&from=${encodeURIComponent(
+                          `/app/map?focus=${spotId}&from=${encodeURIComponent(
                             fromLocation
                           )}`
                         );

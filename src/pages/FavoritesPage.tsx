@@ -341,7 +341,7 @@ export default function FavoritesPage() {
                         <Button
                           size="sm"
                           className="rounded-full px-4"
-                          onClick={() => navigate(`/spot/${f.placeId}`)}
+                          onClick={() => navigate(`/app/spot/${f.placeId}`)}
                         >
                           View Spot
                         </Button>

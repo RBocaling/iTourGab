@@ -59,7 +59,7 @@ const filteredSpots = !typeFilter
 
   const handleViewDetails = () => {
     if (selectedSpotId) {
-      navigate(`/spot/${selectedSpotId}`);
+      navigate(`/app/spot/${selectedSpotId}`);
     }
   };
 
@@ -180,7 +180,7 @@ const filteredSpots = !typeFilter
                       size="sm"
                       className="px-3 h-9"
                       onClick={() =>
-                        navigate(`/booking?spot=${selectedSpotId}`)
+                        navigate(`/app/booking?spot=${selectedSpotId}`)
                       }
                     >
                       📅

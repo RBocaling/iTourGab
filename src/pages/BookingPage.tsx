@@ -250,7 +250,7 @@ useEffect(() => {
           "Your booking request was submitted. Tell us about your experience.",
       });
       if (!selectedService) {
-        navigate("/bookings")
+        navigate("/app/bookings");
       } setShowConfirmModal(false);
       setShowRatingModal(selectedService ? true:false);
       setRatingValue(0);
@@ -1153,7 +1153,7 @@ console.log("{place?.entranceFee ", place?.entranceFee);
                     whileTap={{ scale: 0.97 }}
                     animate={{ y: [0, -4, 0] }}
                     transition={{ repeat: Infinity, duration: 2 }}
-                    onClick={() => navigate("/emergency-safe-hotlines")}
+                    onClick={() => navigate("/app/emergency-safe-hotlines")}
                     className="w-full px-2 flex items-center justify-center gap-2 rounded-2xl bg-red-500 text-white text-xs font-semibold py-3 shadow-lg shadow-red-300/40"
                   >
                     <AlertTriangle className="w-4 h-4" />
@@ -1369,7 +1369,7 @@ console.log("{place?.entranceFee ", place?.entranceFee);
                   <Button
                     variant="ghost"
                     className="rounded-xl"
-                    onClick={() => navigate("/bookings")}
+                    onClick={() => navigate("/app/bookings")}
                   >
                     Skip
                   </Button>
@@ -1539,7 +1539,7 @@ console.log("{place?.entranceFee ", place?.entranceFee);
                 onClick={() => {
                   setShowRateSuccessModal(false);
                   setShowRatingModal(false);
-                  navigate("/bookings");
+                  navigate("/app/bookings");
                 }}
               >
                 OK

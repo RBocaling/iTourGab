@@ -7,7 +7,6 @@ import BackButton from "@/components/ui/BackButton";
 
 export default function StoresBySpotPage() {
   const { spotId } = useParams<{ spotId: string }>();
-  const navigate = useNavigate();
   const { data, isLoading } = useStoresBySpot(spotId);
 
   if (isLoading) return <Loader />;

@@ -166,7 +166,7 @@ const ProfilePage: React.FC = () => {
 
   const handleLogout = () => {
     logout();
-    navigate("/");
+    navigate("/app");
   };
 
   const stats = [

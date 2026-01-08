@@ -9,10 +9,7 @@ const Index = () => {
       <div className="text-center text-white">
         <h1 className="mb-4 text-4xl font-bold">iTourGab</h1>
         <p className="text-xl mb-6">Discover Gabaldon's Natural Wonders</p>
-        <Button 
-          onClick={() => navigate('/')}
-          className="btn-hero"
-        >
+        <Button onClick={() => navigate("/app")} className="btn-hero">
           Enter App
         </Button>
       </div>

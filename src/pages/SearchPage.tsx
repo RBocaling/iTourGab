@@ -42,7 +42,7 @@ const SearchPage: React.FC = ({ touristSpots }: { touristSpots:Place[] }) => {
   });
 
   const handleSpotSelect = (spotId: string) => {
-    navigate(`/spot/${spotId}`);
+    navigate(`/app/spot/${spotId}`);
   };
 
   return (

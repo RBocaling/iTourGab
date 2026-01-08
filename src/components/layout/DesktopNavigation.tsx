@@ -31,16 +31,26 @@ const {
     } = useNotifications();
 
   const navItems = [
-    { id: "home", label: "Home", icon: Home, path: "/" },
-    { id: "map", label: "Explore Map", icon: MapPin, path: "/map" },
+    { id: "home", label: "Home", icon: Home, path: "/app/" },
+    { id: "map", label: "Explore Map", icon: MapPin, path: "/app/map" },
     {
       id: "touristspotranking",
       label: "Top Spots",
       icon: Medal,
-      path: "/ranking-spot",
+      path: "/app/ranking-spot",
     },
-    { id: "bookings", label: "My Bookings", icon: Calendar, path: "/bookings" },
-    { id: "favorites", label: "Favorites", icon: Heart, path: "/favorites" },
+    {
+      id: "bookings",
+      label: "My Bookings",
+      icon: Calendar,
+      path: "/app/bookings",
+    },
+    {
+      id: "favorites",
+      label: "Favorites",
+      icon: Heart,
+      path: "/app/favorites",
+    },
   ];
 
   const handleNavigation = (path: string) => {
@@ -189,7 +199,7 @@ const {
             <div className="h-6 w-px bg-border" />
 
             <button
-              onClick={() => navigate("/profile")}
+              onClick={() => navigate("/app/profile")}
               className="flex items-center space-x-3 p-2 rounded-xl hover:bg-muted/50 transition-colors"
             >
               <Avatar className="w-8 h-8">
@@ -206,13 +216,13 @@ const {
               </div>
             </button>
 
-            <Button
+            {/* <Button
               variant="ghost"
               size="icon"
-              onClick={() => navigate("/settings")}
+              onClick={() => navigate("/app/settings")}
             >
               <Settings className="w-5 h-5" />
-            </Button>
+            </Button> */}
 
             <Button
               variant="ghost"

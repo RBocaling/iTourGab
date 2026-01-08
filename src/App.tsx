@@ -22,8 +22,8 @@ const App = () => {
         <Sonner />
         <BrowserRouter>
           <Routes>
-            <Route path="/welcome-to-i-tour-gab" element={<LandingPage />} />
-            <Route path="/*" element={<MainApp />} />
+            <Route path="/" element={<LandingPage />} />
+            <Route path="/app/*" element={<MainApp />} />
             {/* <Route path="*" element={<NotFound />} /> */}
           </Routes>
         </BrowserRouter>

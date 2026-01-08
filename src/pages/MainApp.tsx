@@ -43,9 +43,7 @@ const MainApp: React.FC = () => {
 
   if (loading) {
     return <Loader />;
-  }
-  console.log("pathname", pathname);
-  
+  }  
   
   return (
     <div className="min-h-screen md:bg-background ">
@@ -54,7 +52,7 @@ const MainApp: React.FC = () => {
           <Routes>
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
-            <Route path="*" element={<Navigate to="/login" replace />} />
+            <Route path="/*" element={<Navigate to="/app/login" replace />} />
           </Routes>
         </main>
       ) : (
@@ -86,7 +84,10 @@ const MainApp: React.FC = () => {
             <Route path="/favorites" element={<FavoritesPage />} />
             <Route path="/profile" element={<ProfilePage />} />
             <Route path="/search" element={<SearchPage />} />
-            <Route path="/gabaldon-public-socials" element={<PublicChats />} />
+            <Route
+              path="/gabaldon-public-socials"
+              element={<PublicChats />}
+            />
             <Route path="/ratings/:spotId" element={<RatingsPage />} />
             <Route path="/chat-support" element={<SupportChat />} />
             <Route path="*" element={<Navigate to="/" replace />} />
