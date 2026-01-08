@@ -27,9 +27,7 @@ const SpotDetailsPage: React.FC = () => {
       <div className="min-h-screen bg-background pt-20 md:pt-24 pb-20 md:pb-8 flex items-center justify-center">
         <div className="text-center">
           <h2 className="text-2xl font-bold mb-4">Spot not found</h2>
-          <Button onClick={() => navigate('/')}>
-            Go back to home
-          </Button>
+          <Button onClick={() => navigate("/app")}>Go back to home</Button>
         </div>
       </div>
     );
@@ -64,7 +62,7 @@ const SpotDetailsPage: React.FC = () => {
             <h1 className="text-lg md:text-3xl font-bold">{spot.name}</h1>
             <div className="flex items-center gap-2 mt-1">
               <button
-                onClick={() => navigate(`/ratings/${spot.id}`)}
+                onClick={() => navigate(`/app/ratings/${spot.id}`)}
                 className="flex items-center gap-1 hover:bg-muted/50 rounded-lg px-2 py-1 transition-colors"
               >
                 <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
@@ -332,7 +330,7 @@ const SpotDetailsPage: React.FC = () => {
                               className="h-10 px-9 text-xs bg-gradient-primary"
                               onClick={() =>
                                 navigate(
-                                  `/booking/${spot.id}?service=${service.id}`
+                                  `/app/booking/${spot.id}?service=${service.id}`
                                 )
                               }
                             >
@@ -360,7 +358,7 @@ const SpotDetailsPage: React.FC = () => {
                     {nearbySpots.map((nearbySpot) => (
                       <div
                         key={nearbySpot.id}
-                        onClick={() => navigate(`/spot/${nearbySpot.id}`)}
+                        onClick={() => navigate(`/app/spot/${nearbySpot.id}`)}
                         className="flex gap-3 p-3 rounded-lg border cursor-pointer hover:shadow-md transition-shadow"
                       >
                         <img
@@ -406,7 +404,7 @@ const SpotDetailsPage: React.FC = () => {
                   <Button
                     variant="outline"
                     className="w-full border border-primary/40 h-12"
-                    onClick={() => navigate(`/map?focus=${spot.id}`)}
+                    onClick={() => navigate(`/app/map?focus=${spot.id}`)}
                   >
                     <Navigation className="w-4 h-4 mr-2" />
                     View on Map

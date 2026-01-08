@@ -12,7 +12,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import heroLandscape from "/login-bg.jpg";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   login as loginApi,
@@ -25,6 +25,7 @@ import { Helmet } from "react-helmet-async";
 
 
 export default function Login() {
+  const navigate = useNavigate()
   const [formData, setFormData] = useState({ email_address: "", password: "" });
   const [showPassword, setShowPassword] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -43,6 +44,7 @@ export default function Login() {
       const refresh = data?.refreshToken ?? data?.tokens?.refreshToken;
       setAuth(access, refresh);
       await qc.invalidateQueries({ queryKey: ["user"] });
+      navigate("/app");
     },
     onError: (err: any) => {
       const msg =
@@ -63,6 +65,7 @@ export default function Login() {
       const refresh = data?.refreshToken ?? data?.tokens?.refreshToken;
       setAuth(access, refresh);
       await qc.invalidateQueries({ queryKey: ["user"] });
+      navigate("/app");
     },
     onError: (err: any) => {
       const msg =

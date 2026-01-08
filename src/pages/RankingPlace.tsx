@@ -25,7 +25,7 @@ export default function TouristSpotRanking() {
     if (window.history.length > 1) {
       navigate(-1);
     } else {
-      navigate("/");
+      navigate("/app");
     }
   };
 
@@ -135,7 +135,7 @@ export default function TouristSpotRanking() {
                     <Button
                       size="sm"
                       className="h-8 text-xs rounded-lg"
-                      onClick={() => navigate(`/ratings/${p.placeId}`)}
+                      onClick={() => navigate(`/app/ratings/${p.placeId}`)}
                     >
                       View Ratings
                     </Button>
@@ -144,7 +144,7 @@ export default function TouristSpotRanking() {
                       size="sm"
                       variant="outline"
                       className="h-8 text-xs rounded-lg"
-                      onClick={() => navigate(`/booking?spot=${p.placeId}`)}
+                      onClick={() => navigate(`/app/booking?spot=${p.placeId}`)}
                     >
                       Book
                     </Button>

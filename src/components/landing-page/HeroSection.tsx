@@ -78,7 +78,7 @@ const HeroSection = () => {
               <ArrowRight className="w-5 h-5" />
             </Button>
 
-            <Button variant="glass" onClick={() => navigate("/")} size="xl">
+            <Button variant="glass" onClick={() => navigate("/app/")} size="xl">
               <Play className="w-5 h-5" />
               Get Started – Explore the App
             </Button>

@@ -200,7 +200,7 @@ export default function BookingsPage() {
 
           <div className="w-full md:w-auto">
             <Button
-              onClick={() => navigate("/booking")}
+              onClick={() => navigate("/app/booking")}
               className="bg-gradient-primary text-white w-full md:w-auto flex items-center justify-center"
             >
               <Plus className="w-5 h-5 mr-2" />
@@ -220,7 +220,7 @@ export default function BookingsPage() {
                 Start planning your adventure
               </p>
               <Button
-                onClick={() => navigate("/")}
+                onClick={() => navigate("/app")}
                 className="bg-gradient-primary text-white"
               >
                 Explore Destinations
@@ -463,7 +463,7 @@ export default function BookingsPage() {
       <BookingViewModal
         bookingId={selectedBookingId}
         onClose={() => setSelectedBookingId(null)}
-        onViewSpot={(id) => navigate(`/spot/${id}`)}
+        onViewSpot={(id) => navigate(`/app/spot/${id}`)}
       />
       <ServiceChatModal
         open={openChat}

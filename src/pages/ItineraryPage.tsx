@@ -232,7 +232,7 @@ export default function ItineraryIOS() {
   };
 
   const handleViewDetails = (item: ItineraryItem) => {
-    navigate(`/spot/${item?.tourist_spot?.id}`);
+    navigate(`/app/spot/${item?.tourist_spot?.id}`);
   };
 
   if (isLoading) {

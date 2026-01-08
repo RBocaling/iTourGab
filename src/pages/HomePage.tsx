@@ -63,19 +63,19 @@ const filteredSpots = touristSpots?.filter((spot: any) => {
   };
 
   const handleSpotClick = (spotId: string) => {
-    navigate(`/spot/${spotId}`);
+    navigate(`/app/spot/${spotId}`);
   };
 
   const handleSearchSubmit = () => {
     if (searchQuery.trim()) {
-      navigate(`/map?search=${encodeURIComponent(searchQuery)}`);
+      navigate(`/app/map?search=${encodeURIComponent(searchQuery)}`);
     }
   };
 
   const handleSuggestionClick = (spot: typeof touristSpots[0]) => {
     setSearchQuery('');
     setShowSuggestions(false);
-    navigate(`/spot/${spot.placeId}`);
+    navigate(`/app/spot/${spot.placeId}`);
   };
 
   
@@ -177,25 +177,25 @@ const filteredSpots = touristSpots?.filter((spot: any) => {
             {
               icon: Telescope,
               label: "Top Tourist spot",
-              action: () => navigate("/ranking-spot"),
+              action: () => navigate("/app/ranking-spot"),
               color: "from-primary to-secondary",
             },
             {
               icon: Calendar,
               label: "My Iteneraries",
-              action: () => navigate("/itinerary"),
+              action: () => navigate("/app/itinerary"),
               color: "from-accent to-accent-light",
             },
             {
               icon: Nfc,
               label: "Emergency Hotlines",
-              action: () => navigate("/emergency-safe-hotlines"),
+              action: () => navigate("/app/emergency-safe-hotlines"),
               color: "from-purple-500 to-purple-600",
             },
             {
               icon: MessageSquareLock,
               label: "Chat Admin",
-              action: () => navigate("/chat-support"),
+              action: () => navigate("/app/chat-support"),
               color: "from-pink-500 to-pink-600",
             },
           ].map((item, index) => (
@@ -331,7 +331,7 @@ const filteredSpots = touristSpots?.filter((spot: any) => {
                       className="px-3"
                       onClick={(e) => {
                         e.stopPropagation();
-                        navigate(`/map?focus=${spot.id}`);
+                        navigate(`/app/map?focus=${spot.id}`);
                       }}
                     >
                       🗺️
