@@ -506,7 +506,7 @@ const getPrevStep = () => {
                   <div className="flex items-center gap-3 p-3 bg-white/5 rounded-lg">
                     <div className="w-20 h-14 rounded-md overflow-hidden bg-slate-50 flex items-center justify-center">
                       <img
-                        src={place.images?.[0] ?? "/placeholder-400x250.png"}
+                        src={(place.images?.[0] as any)?.url ?? "/placeholder-400x250.png"}
                         alt={place.name}
                         className="object-cover w-full h-full"
                       />
@@ -568,7 +568,7 @@ const getPrevStep = () => {
                             <div className="w-24 h-16 rounded-md overflow-hidden bg-slate-50 flex items-center justify-center">
                               <img
                                 src={
-                                  selectedService.images?.[0] ??
+                                  (selectedService.images?.[0] as any)?.url??
                                   "/placeholder-400x250.png"
                                 }
                                 alt={selectedService.name}
@@ -649,7 +649,7 @@ const getPrevStep = () => {
                                 <div className="w-24 h-16 rounded-md overflow-hidden bg-slate-50">
                                   <img
                                     src={
-                                      s.images?.[0] ??
+                                      (s.images?.[0] as any)?.url ??
                                       "/placeholder-400x250.png"
                                     }
                                     alt={s.name}
@@ -923,7 +923,7 @@ const getPrevStep = () => {
                   {place && (
                     <div className="flex gap-4 mb-6 p-4 bg-muted/50 rounded-lg">
                       <img
-                        src={place.images?.[0] ?? "/placeholder-400x250.png"}
+                        src={(place.images?.[0] as any)?.url ?? "/placeholder-400x250.png"}
                         alt={place.name}
                         className="w-16 h-16 object-cover rounded-lg"
                       />

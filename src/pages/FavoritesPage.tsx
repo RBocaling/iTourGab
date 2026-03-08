@@ -110,6 +110,8 @@ export default function FavoritesPage() {
     deleteTarget?.name ??
     "this place";
 
+  console.log("selectet", selectedPlace);
+  
   return (
     <div className="min-h-screen bg-background pt-5 md:pt-24 pb-20 md:pb-8">
       <div className="max-w-7xl mx-auto px-4 pb-20">
@@ -161,10 +163,10 @@ export default function FavoritesPage() {
                             <div className="w-20 h-12 rounded-lg overflow-hidden bg-slate-50 flex items-center justify-center border flex-shrink-0">
                               <img
                                 src={
-                                  selectedPlace.raw?.place?.images?.[0]
-                                    ?.imageUrl ??
-                                  selectedPlace.raw?.images?.[0] ??
-                                  selectedPlace.images?.[0] ??
+                                  selectedPlace.raw?.place?.images?.[0]?.url
+                                   ??
+                                  selectedPlace.raw?.images?.[0]?.url ??
+                                  selectedPlace.images?.[0]?.url ??
                                   PLACEHOLDER
                                 }
                                 alt={selectedPlace.name}
@@ -255,7 +257,7 @@ export default function FavoritesPage() {
           ) : (
             favorites.map((f) => {
               const img =
-                f.raw?.tourist_spot?.images?.[0] ?? f.placeThumb ?? PLACEHOLDER;
+                (f.raw?.tourist_spot?.images?.[0] as any)?.url ?? f.placeThumb ?? PLACEHOLDER;
               const spot = f.raw?.tourist_spot ?? f.raw?.place ?? null;
               const title = spot?.name ?? f.placeName ?? "Unknown place";
               const reviews = Array.isArray(spot?.reviews) ? spot.reviews : [];

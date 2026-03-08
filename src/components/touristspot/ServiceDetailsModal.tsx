@@ -2,6 +2,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { X, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { format } from "date-fns";
 
 type Props = {
   open: boolean;
@@ -115,13 +116,19 @@ export default function ServiceDetailsModal({
                     {service.images.map((img: string, i: number) => (
                       <div
                         key={i}
-                        className="h-32 rounded-xl overflow-hidden bg-muted"
+                        className="relative h-32 rounded-xl overflow-hidden bg-muted"
                       >
                         <img
-                          src={img}
+                          src={(img as any)?.url}
                           alt=""
                           className="w-full h-full object-cover"
                         />
+                        <p className="absolute bottom-2 right-2 text-s md:text-sm text-white font-bold flex items-center gap-1 md:gap-2">
+                          <span className="font-normal text-gray-300">
+                            Date Taken:{" "}
+                          </span>
+                          {format(new Date((img as any)?.taken_at), "yyyy-mm-dd")}
+                        </p>
                       </div>
                     ))}
                   </div>

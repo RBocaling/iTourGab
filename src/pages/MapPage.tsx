@@ -124,7 +124,7 @@ const filteredSpots = !typeFilter
 
                 <div className="relative h-32">
                   <img
-                    src={selectedSpot.images[0]}
+                    src={(selectedSpot.images[0] as any)?.url}
                     alt={selectedSpot.name}
                     className="w-full h-full object-cover"
                   />

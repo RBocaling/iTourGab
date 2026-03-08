@@ -137,7 +137,7 @@ export default function ViewBooking({ bookingId, onClose, onViewSpot }: Props) {
                           <div className="w-20 h-14 rounded-md overflow-hidden bg-slate-50 flex items-center justify-center border flex-shrink-0">
                             {s.images && s.images[0] ? (
                               <img
-                                src={s.images[0]}
+                                src={s.images[0]?.url}
                                 alt={s.name}
                                 className="object-cover w-full h-full"
                               />

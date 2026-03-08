@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { MapPin, Star, Calendar, Camera, Filter, Search, Heart, ArrowRight, Users, Clock, Navigation, Bot, Nfc, Telescope, MapPinHouse, MessageSquareLock } from 'lucide-react';
+import { MapPin, Star, Calendar, Camera, Filter, Search, Heart, ArrowRight, Users, Clock, Navigation, Bot, Nfc, Telescope, MapPinHouse, MessageSquareLock, Phone, User, Smartphone, Facebook } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
@@ -10,6 +10,7 @@ import { useGetPlaces } from '@/hooks/useGetPlace';
 import Loader from '@/components/loader/Loader';
 import { TouristSpotType } from '@/types/touristSpotType';
 import TouristSpotTypeModal from '@/components/ui/TouristSpotTypeModal';
+import HoverTooltip from '@/components/HoverTooltip';
 
 const HomePage: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -179,38 +180,44 @@ const filteredSpots = touristSpots?.filter((spot: any) => {
               label: "Top Tourist spot",
               action: () => navigate("/app/ranking-spot"),
               color: "from-primary to-secondary",
+              tooltip: "View the most popular tourist spots in Gabaldon",
             },
             {
               icon: Calendar,
               label: "My Iteneraries",
               action: () => navigate("/app/itinerary"),
               color: "from-accent to-accent-light",
+              tooltip: "Manage and view your travel itineraries",
             },
             {
               icon: Nfc,
               label: "Emergency Hotlines",
               action: () => navigate("/app/emergency-safe-hotlines"),
               color: "from-purple-500 to-purple-600",
+              tooltip: "Access emergency and safety hotline numbers",
             },
             {
               icon: MessageSquareLock,
               label: "Chat Admin",
               action: () => navigate("/app/chat-support"),
               color: "from-pink-500 to-pink-600",
+              tooltip: "Chat with the tourism admin for assistance",
             },
           ].map((item, index) => (
-            <Card
-              key={index}
-              className="glass-card p-4 text-center cursor-pointer hover:shadow-xl transition-all duration-300 group transform hover:scale-105"
-              onClick={item.action}
-            >
-              <div
-                className={`w-12 h-12 bg-gradient-to-br ${item.color} rounded-full flex items-center justify-center mx-auto mb-2 group-hover:scale-110 transition-transform shadow-lg`}
+            <HoverTooltip key={index} message={item.tooltip}>
+              <Card
+                className="glass-card w-full p-4 text-center cursor-pointer hover:shadow-xl transition-all duration-300 group transform hover:scale-105"
+                onClick={item.action}
               >
-                <item.icon className="w-6 h-6 text-white" />
-              </div>
-              <p className="font-medium text-sm">{item.label}</p>
-            </Card>
+                <div
+                  className={`w-12 h-12 bg-gradient-to-br ${item.color} rounded-full flex items-center justify-center mx-auto mb-2 group-hover:scale-110 transition-transform shadow-lg`}
+                >
+                  <item.icon className="w-6 h-6 text-white" />
+                </div>
+
+                <p className="font-medium text-sm">{item.label}</p>
+              </Card>
+            </HoverTooltip>
           ))}
         </motion.div>
 
@@ -255,7 +262,7 @@ const filteredSpots = touristSpots?.filter((spot: any) => {
               >
                 <div className="relative h-48 overflow-hidden">
                   <img
-                    src={spot.images[0]}
+                    src={(spot.images[0] as any)?.url}
                     alt={spot.name}
                     className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
                   />
@@ -277,6 +284,13 @@ const filteredSpots = touristSpots?.filter((spot: any) => {
                       {spot.category}
                     </Badge>
                   </div>
+
+                  <p className="absolute bottom-2 right-2 text-s md:text-sm text-white font-bold flex items-center gap-1 md:gap-2">
+                    <span className="font-normal text-gray-300">
+                      Date Taken:{" "}
+                    </span>
+                    {(spot.images[0] as any)?.taken_at}
+                  </p>
                 </div>
 
                 <div className="p-4">
@@ -312,6 +326,46 @@ const filteredSpots = touristSpots?.filter((spot: any) => {
                     </div>
                   )}
 
+                  {/* Contact Info */}
+                  <div className="grid grid-cols-2 gap-x-4 gap-y-1 mt-3 text-xs text-muted-foreground">
+                    {/* Authority */}
+                    <div className="flex items-center gap-1 truncate">
+                      <Phone className="w-3 h-3 text-indigo-500" />
+                      <span className="truncate">
+                        {spot.authority_contact_number || "N/A"}
+                      </span>
+                    </div>
+
+                    {/* Contact Person */}
+                    <div className="flex items-center gap-1 truncate">
+                      <User className="w-3 h-3 text-green-500" />
+                      <span className="truncate">
+                        {spot.contact_person_name || "N/A"}
+                      </span>
+                    </div>
+
+                    {/* Contact Number */}
+                    <div className="flex items-center gap-1 truncate">
+                      <Smartphone className="w-3 h-3 text-orange-500" />
+                      <span className="truncate">
+                        {spot.contact_person_number || "N/A"}
+                      </span>
+                    </div>
+
+                    {/* Facebook */}
+                    {spot.facebook_page && (
+                      <a
+                        href={spot.facebook_page}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-1 text-blue-600 hover:underline truncate"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <Facebook className="w-3 h-3" />
+                        <span>Facebook</span>
+                      </a>
+                    )}
+                  </div>
                   {/* Quick Actions */}
                   <div className="flex gap-2 mt-3">
                     <Button

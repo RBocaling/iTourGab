@@ -129,7 +129,7 @@ const SearchPage: React.FC = ({ touristSpots }: { touristSpots:Place[] }) => {
               >
                 <div className="flex gap-4">
                   <img
-                    src={spot.images[0]}
+                    src={(spot.images[0] as any)?.url}
                     alt={spot.name}
                     className="w-20 h-20 object-cover rounded-xl"
                   />
