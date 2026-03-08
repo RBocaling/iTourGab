@@ -23,6 +23,9 @@ import {
   Utensils,
   ArrowRight,
   ChevronDown,
+  Smartphone,
+  User,
+  Facebook,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -86,6 +89,8 @@ const SpotDetailsPage: React.FC = () => {
 
   const [openServiceChat, setOpenServiceChat] = useState(false);
 
+  console.log("spotspot", spot);
+  
   const [itineraryForm, setItineraryForm] = useState({
     name: "",
     description: "",
@@ -318,7 +323,7 @@ const SpotDetailsPage: React.FC = () => {
           className="relative h-64 md:h-96 rounded-2xl overflow-hidden mb-6 group"
         >
           <img
-            src={spot.images[currentImageIndex]}
+            src={(spot.images[currentImageIndex] as any)?.url}
             alt={spot.name}
             className="w-full h-full object-cover"
           />
@@ -365,6 +370,10 @@ const SpotDetailsPage: React.FC = () => {
               {currentImageIndex + 1}/{spot.images.length}
             </div>
           </div>
+          <p className="absolute bottom-5 right-5 text-sm md:text-lg text-white font-bold flex items-center gap-1 md:gap-5">
+            <span className="font-normal text-gray-300">Date Taken: </span>
+            {(spot.images[currentImageIndex] as any)?.taken_at}
+          </p>
         </motion.div>
 
         <div className="grid lg:grid-cols-3 gap-6">
@@ -458,6 +467,74 @@ const SpotDetailsPage: React.FC = () => {
                 </div>
               </Card>
             </motion.div>
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3 }}
+            >
+              <Card className="p-6">
+                <p className="text-lg font-bold mb-4">Contact Information</p>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+                  {/* Authority Contact */}
+                  <div className="flex items-center gap-2 text-neutral-600">
+                    <Phone className="w-4 h-4 text-indigo-500" />
+                    <span className="font-medium">Authority:</span>
+                    {spot.authority_contact_number ? (
+                      <a
+                        href={`tel:${spot.authority_contact_number}`}
+                        className="hover:underline"
+                      >
+                        {spot.authority_contact_number}
+                      </a>
+                    ) : (
+                      <span>N/A</span>
+                    )}
+                  </div>
+
+                  {/* Contact Person */}
+                  <div className="flex items-center gap-2 text-neutral-600">
+                    <User className="w-4 h-4 text-green-500" />
+                    <span className="font-medium">Contact:</span>
+                    <span>{spot.contact_person_name || "N/A"}</span>
+                  </div>
+
+                  {/* Contact Number */}
+                  <div className="flex items-center gap-2 text-neutral-600">
+                    <Smartphone className="w-4 h-4 text-orange-500" />
+                    <span className="font-medium">Mobile:</span>
+                    {spot.contact_person_number ? (
+                      <a
+                        href={`tel:${spot.contact_person_number}`}
+                        className="hover:underline"
+                      >
+                        {spot.contact_person_number}
+                      </a>
+                    ) : (
+                      <span>N/A</span>
+                    )}
+                  </div>
+
+                  {/* Facebook */}
+                  <div className="flex items-center gap-2 text-neutral-600">
+                    <Facebook className="w-4 h-4 text-blue-500" />
+                    <span className="font-medium">Facebook:</span>
+                    {spot.facebook_page ? (
+                      <a
+                        href={spot.facebook_page}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-blue-600 hover:underline truncate"
+                      >
+                        Visit Page
+                      </a>
+                    ) : (
+                      <span>N/A</span>
+                    )}
+                  </div>
+                </div>
+              </Card>
+            </motion.div>
 
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -520,8 +597,8 @@ const SpotDetailsPage: React.FC = () => {
                           ? fmt(range.min)
                           : `${fmt(range.min)} — ${fmt(range.max)}`
                         : service.price || service.amount
-                        ? fmt(Number(service.price ?? service.amount))
-                        : "See availabilities";
+                          ? fmt(Number(service.price ?? service.amount))
+                          : "See availabilities";
                       console.log("service.promo", service);
 
                       return (
@@ -531,7 +608,7 @@ const SpotDetailsPage: React.FC = () => {
                         >
                           <div className="flex items-start gap-4">
                             <img
-                              src={service.images[0]}
+                              src={(service.images[0] as any)?.url}
                               alt={service.name}
                               className="w-16 h-16 rounded-lg object-cover"
                             />
@@ -642,7 +719,7 @@ const SpotDetailsPage: React.FC = () => {
                                   className="h-8 px-3 text-xs bg-gradient-primary"
                                   onClick={() =>
                                     navigate(
-                                      `/app/booking?spot=${spot.placeId}&service=${service.id}`
+                                      `/app/booking?spot=${spot.placeId}&service=${service.id}`,
                                     )
                                   }
                                 >
@@ -742,7 +819,7 @@ const SpotDetailsPage: React.FC = () => {
 
                 <div className="relative w-full h-full flex items-center justify-center">
                   <img
-                    src={spot.gallery[galleryIndex]}
+                    src={(spot.gallery[galleryIndex] as any)?.url}
                     alt={`${spot.name} - Image ${galleryIndex + 1}`}
                     className="max-w-full max-h-full object-contain rounded-lg"
                   />
@@ -752,7 +829,7 @@ const SpotDetailsPage: React.FC = () => {
                       <button
                         onClick={() =>
                           setGalleryIndex((prev) =>
-                            prev === 0 ? spot.gallery.length - 1 : prev - 1
+                            prev === 0 ? spot.gallery.length - 1 : prev - 1,
                           )
                         }
                         className="absolute left-4 top-1/2 transform -translate-y-1/2 w-12 h-12 bg-black/50 text-white rounded-full flex items-center justify-center hover:bg-black/70 transition-colors"
@@ -762,7 +839,7 @@ const SpotDetailsPage: React.FC = () => {
                       <button
                         onClick={() =>
                           setGalleryIndex((prev) =>
-                            prev === spot.gallery.length - 1 ? 0 : prev + 1
+                            prev === spot.gallery.length - 1 ? 0 : prev + 1,
                           )
                         }
                         className="absolute right-4 top-1/2 transform -translate-y-1/2 w-12 h-12 bg-black/50 text-white rounded-full flex items-center justify-center hover:bg-black/70 transition-colors"
@@ -1018,8 +1095,8 @@ const SpotDetailsPage: React.FC = () => {
                         setShowRangeModal(false);
                         navigate(
                           `/app/map?focus=${spotId}&from=${encodeURIComponent(
-                            fromLocation
-                          )}`
+                            fromLocation,
+                          )}`,
                         );
                       }}
                     >
@@ -1084,7 +1161,7 @@ const SpotDetailsPage: React.FC = () => {
                       <div className="flex items-center mt-1">
                         {Array.from({ length: 5 }).map((_, i) => {
                           const avg = parseFloat(
-                            getServiceAverageRating(selectedService)
+                            getServiceAverageRating(selectedService),
                           );
                           return (
                             <Star
@@ -1106,7 +1183,7 @@ const SpotDetailsPage: React.FC = () => {
                       {[5, 4, 3, 2, 1].map((star) => {
                         const list = selectedService.service_reviews || [];
                         const count = list.filter(
-                          (r: any) => r.rating === star
+                          (r: any) => r.rating === star,
                         ).length;
                         const total = list.length || 1;
                         const pct = (count / total) * 100;
@@ -1287,7 +1364,7 @@ const SpotDetailsPage: React.FC = () => {
                 {/* Selected Place */}
                 <div className="flex gap-3 mb-4">
                   <img
-                    src={spot.images?.[0]}
+                    src={(spot.images?.[0] as any)?.url}
                     alt={spot.name}
                     className="w-20 h-16 rounded-lg object-cover"
                   />
@@ -1361,7 +1438,7 @@ const SpotDetailsPage: React.FC = () => {
                 {/* Image Header */}
                 <div className="relative h-44 w-full">
                   <img
-                    src={spot.images?.[0]}
+                    src={(spot.images?.[0] as any)?.url}
                     alt={spot.name}
                     className="h-full w-full object-cover"
                   />
@@ -1402,7 +1479,7 @@ const SpotDetailsPage: React.FC = () => {
                         onClick={async () => {
                           try {
                             await navigator.clipboard.writeText(
-                              window.location.href
+                              window.location.href,
                             );
                             setShareModalOpen(false);
                             setSuccessAlert({
@@ -1440,7 +1517,7 @@ const SpotDetailsPage: React.FC = () => {
                       onClick={async () => {
                         try {
                           await navigator.clipboard.writeText(
-                            window.location.href
+                            window.location.href,
                           );
                           setShareModalOpen(false);
                           setSuccessAlert({
@@ -1489,7 +1566,7 @@ const SpotDetailsPage: React.FC = () => {
                 {/* Selected Place */}
                 <div className="flex gap-3 mb-4">
                   <img
-                    src={spot.images?.[0]}
+                    src={(spot.images?.[0] as any)?.url}
                     alt={spot.name}
                     className="w-20 h-16 rounded-lg object-cover"
                   />

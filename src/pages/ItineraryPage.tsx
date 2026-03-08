@@ -488,7 +488,7 @@ export default function ItineraryIOS() {
             {data?.map((item: any) => {
               const spotName = item.tourist_spot?.name ?? "No spot selected";
               const img =
-                item.tourist_spot?.images?.[0] ??
+                item.tourist_spot?.images?.[0] ?.url??
                 "https://images.pexels.com/photos/2404370/pexels-photo-2404370.jpeg?auto=compress&cs=tinysrgb&w=800";
 
               const date = new Date(item.start_date);

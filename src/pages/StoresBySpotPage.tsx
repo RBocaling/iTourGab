@@ -54,7 +54,7 @@ export default function StoresBySpotPage() {
               {/* Image */}
               <div className="relative h-52 w-full bg-slate-100">
                 <img
-                  src={store.images?.[0] ?? "/placeholder-400x250.png"}
+                  src={store.images?.[0]?.url ?? "/placeholder-400x250.png"}
                   alt={store.name}
                   className="w-full h-full object-cover"
                   loading="lazy"

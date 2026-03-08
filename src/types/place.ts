@@ -48,6 +48,12 @@ export type Place = {
   duration?: string;
   entrance?: string;
   accessibility?: string;
+
+  authority_contact_number?: string;
+  contact_person_name?: string;
+  contact_person_number?: string;
+  facebook_page?: string;
+
   nearby?: string[];
   rating?: number;
   reviews?: Review[];

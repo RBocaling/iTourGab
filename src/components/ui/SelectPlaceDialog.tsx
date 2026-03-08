@@ -79,8 +79,8 @@ export default function SelectPlaceDialog({
             ) : (
               filtered.map((p: any) => {
                 const img =
-                  p.raw?.images?.[0] ??
-                  p.images?.[0] ??
+                  p.raw?.images?.[0]?.url ??
+                  p.images?.[0]?.url ??
                   "/placeholder-400x250.png";
                 return (
                   <button

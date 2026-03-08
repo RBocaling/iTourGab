@@ -33,7 +33,7 @@ export default function TouristSpotRanking() {
     return (places ?? [])
       .map((p: any) => {
         const image =
-          p.images?.[0]?.image ?? p.images?.[0] ?? "/placeholder-400x250.png";
+          p.images?.[0]?.image ?? p.images?.[0]?.url ?? "/placeholder-400x250.png";
         const rating = typeof p.rating === "number" ? p.rating : 0;
         const reviewsCount = Array.isArray(p.reviews)
           ? p.reviews.length

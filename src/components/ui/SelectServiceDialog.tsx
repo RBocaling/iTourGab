@@ -105,7 +105,7 @@ export default function SelectServiceDialog({
                   <div className="w-16 h-12 rounded-md overflow-hidden bg-slate-50 flex items-center justify-center border flex-shrink-0">
                     {s.images?.[0] ? (
                       <img
-                        src={s.images[0]}
+                        src={(s.images[0] as any)?.url}
                         alt={s.name}
                         className="object-cover w-full h-full"
                       />

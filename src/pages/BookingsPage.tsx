@@ -235,9 +235,9 @@ export default function BookingsPage() {
                 : "PENDING";
               const StatusIcon = statusConfig[statusKey].icon;
               const img =
-                b.place?.images?.[0] ??
-                b.service?.images?.[0] ??
-                b.availability?.images?.[0] ??
+                b.place?.images?.[0]?.url ??
+                b.service?.images?.[0]?.url ??
+                b.availability?.images?.[0]?.url ??
                 "/placeholder.jpg";
 
               const contactPhone =

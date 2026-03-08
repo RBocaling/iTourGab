@@ -68,6 +68,11 @@ export const formatPlace = (p: Place) => {
     raw: p,
     type: p?.type,
     stores: p?.stores,
+
+    authority_contact_number: p?.authority_contact_number,
+    contact_person_name: p?.contact_person_name,
+    contact_person_number: p?.contact_person_number,
+    facebook_page: p?.facebook_page,
   };
 };
 

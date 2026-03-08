@@ -19,6 +19,7 @@ import { useNotifications } from "@/hooks/useNotifications";
 import { ScrollArea } from "../ui/scroll-area";
 import { cn } from "@/lib/utils";
 import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
+import HoverTooltip from "../HoverTooltip";
 
 const DesktopNavigation = () => {
   const { logout, user } = useAuth2();
@@ -30,28 +31,43 @@ const {
       isLoading: notifLoading,
     } = useNotifications();
 
-  const navItems = [
-    { id: "home", label: "Home", icon: Home, path: "/app/" },
-    { id: "map", label: "Explore Map", icon: MapPin, path: "/app/map" },
-    {
-      id: "touristspotranking",
-      label: "Top Spots",
-      icon: Medal,
-      path: "/app/ranking-spot",
-    },
-    {
-      id: "bookings",
-      label: "My Bookings",
-      icon: Calendar,
-      path: "/app/bookings",
-    },
-    {
-      id: "favorites",
-      label: "Favorites",
-      icon: Heart,
-      path: "/app/favorites",
-    },
-  ];
+const navItems = [
+  {
+    id: "home",
+    label: "Home",
+    icon: Home,
+    path: "/app/",
+    tooltip: "Go to the main dashboard",
+  },
+  {
+    id: "map",
+    label: "Explore Map",
+    icon: MapPin,
+    path: "/app/map",
+    tooltip: "Discover tourist spots on the map",
+  },
+  {
+    id: "touristspotranking",
+    label: "Top Spots",
+    icon: Medal,
+    path: "/app/ranking-spot",
+    tooltip: "View the most popular tourist spots",
+  },
+  {
+    id: "bookings",
+    label: "My Bookings",
+    icon: Calendar,
+    path: "/app/bookings",
+    tooltip: "View and manage your bookings",
+  },
+  {
+    id: "favorites",
+    label: "Favorites",
+    icon: Heart,
+    path: "/app/favorites",
+    tooltip: "See your saved favorite places",
+  },
+];
 
   const handleNavigation = (path: string) => {
     navigate(path);
@@ -84,28 +100,32 @@ const {
           <nav className="flex items-center space-x-1">
             {navItems.map((item) => {
               const isActive = location.pathname === item.path;
+
               return (
-                <button
-                  key={item.id}
-                  onClick={() => handleNavigation(item.path)}
-                  className={`relative flex items-center space-x-2 px-4 py-2 rounded-xl transition-all duration-200 ${
-                    isActive
-                      ? "bg-primary/10 text-primary"
-                      : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
-                  }`}
-                >
-                  {isActive && (
-                    <motion.div
-                      layoutId="desktopActiveTab"
-                      className="absolute inset-0 bg-primary/10 rounded-xl"
-                      transition={{ type: "spring", duration: 0.6 }}
-                    />
-                  )}
-                  <item.icon className="w-5 h-5 relative z-10" />
-                  <span className="font-medium relative z-10">
-                    {item.label}
-                  </span>
-                </button>
+                <HoverTooltip key={item.id} message={item.tooltip}>
+                  <button
+                    onClick={() => handleNavigation(item.path)}
+                    className={`relative flex items-center space-x-2 px-4 py-2 rounded-xl transition-all duration-200 ${
+                      isActive
+                        ? "bg-primary/10 text-primary"
+                        : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                    }`}
+                  >
+                    {isActive && (
+                      <motion.div
+                        layoutId="desktopActiveTab"
+                        className="absolute inset-0 bg-primary/10 rounded-xl"
+                        transition={{ type: "spring", duration: 0.6 }}
+                      />
+                    )}
+
+                    <item.icon className="w-5 h-5 relative z-10" />
+
+                    <span className="font-medium relative z-10">
+                      {item.label}
+                    </span>
+                  </button>
+                </HoverTooltip>
               );
             })}
           </nav>
@@ -162,7 +182,7 @@ const {
                               "px-4 py-3 cursor-pointer transition",
                               isUnread
                                 ? "bg-primary/5 hover:bg-primary/10"
-                                : "hover:bg-muted/50"
+                                : "hover:bg-muted/50",
                             )}
                           >
                             <div className="flex gap-3">
@@ -170,7 +190,7 @@ const {
                               <span
                                 className={cn(
                                   "mt-2 w-2 h-2 rounded-full shrink-0",
-                                  isUnread ? "bg-primary" : "bg-transparent"
+                                  isUnread ? "bg-primary" : "bg-transparent",
                                 )}
                               />
 

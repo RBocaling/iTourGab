@@ -362,7 +362,7 @@ const SpotDetailsPage: React.FC = () => {
                         className="flex gap-3 p-3 rounded-lg border cursor-pointer hover:shadow-md transition-shadow"
                       >
                         <img
-                          src={nearbySpot.images[0]}
+                          src={(nearbySpot.images[0] as any)?.url}
                           alt={nearbySpot.name}
                           className="w-16 h-16 object-cover rounded-lg"
                         />
