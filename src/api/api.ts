@@ -2,8 +2,8 @@ import axios, { AxiosError, AxiosInstance, AxiosRequestConfig } from "axios";
 import { getAuthState } from "../store/authStore";
 import { refreshAccessToken } from "./authApi";
 
-// const BASE_URL = "https://api.itourgab.site/api";
-const BASE_URL = "http://localhost:9000/api";
+const BASE_URL = "https://api.itourgab.site/api";
+// const BASE_URL = "http://localhost:9000/api";
 
 let api: AxiosInstance = axios.create({
   baseURL: BASE_URL,
