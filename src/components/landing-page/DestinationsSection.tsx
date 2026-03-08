@@ -13,6 +13,8 @@ const DestinationsSection = () => {
     return <Loader/>
   }
   
+  console.log("touristSpots", touristSpots);
+  
   return (
     <section id="destinations" className="py-20 md:py-32 bg-muted/30">
       <div className="container mx-auto px-4">
@@ -34,7 +36,7 @@ const DestinationsSection = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {touristSpots?.map((spot, index) => (
             <SpotCard
-              key={spot.title}
+              key={spot.id}
               {...spot}
               delay={index * 100}
             />
