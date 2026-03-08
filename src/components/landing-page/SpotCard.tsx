@@ -1,7 +1,7 @@
 import { MapPin, Clock, Star, Info } from "lucide-react";
 
 interface SpotCardProps {
-  image: string;
+  image: any;
   title: string;
   description: string;
   rating: number;
@@ -24,11 +24,17 @@ const SpotCard = ({
     >
       {/* Image */}
       <div className="relative h-56 overflow-hidden">
-        <img
-          src={image}
-          alt={title}
-          className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-        />
+        <div className="relative w-full h-full">
+          <img
+            src={image?.url}
+            alt={title}
+            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+          />
+          <p className="absolute z-10 bottom-2 right-2 text-s md:text-sm text-white font-bold flex items-center gap-1 md:gap-2">
+            <span className="font-normal text-gray-100">Date Taken: </span>
+            {image?.taken_at}
+          </p>
+        </div>
         {/* Gradient overlay */}
         <div className="absolute inset-0 bg-gradient-to-t from-foreground/60 via-transparent to-transparent" />
 
