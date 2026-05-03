@@ -114,9 +114,9 @@ const MobileHeader = () => {
           </PopoverContent>
         </Popover>
 
-        <Link to="/app/gabaldon-public-socials">
+        {/* <Link to="/app/gabaldon-public-socials">
           <Globe size={23} className="text-gray-400" />{" "}
-        </Link>
+        </Link> */}
       </div>
     </div>
   );

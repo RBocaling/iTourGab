@@ -1,4 +1,4 @@
-import { Button } from "@/components/ui/button";
+import DownloadWebAppButton from "@/components/pwa/DownloadWebAppButton";
 import { Menu, X } from "lucide-react";
 import { useState } from "react";
 import {motion} from "framer-motion"
@@ -11,6 +11,7 @@ const Navbar = () => {
     { name: "Destinations", href: "#destinations" },
     { name: "About", href: "#about" },
     { name: "FAQ's", href: "#faq" },
+    { name: "Safety & Hotlines", href: "#emergency-hotlines" },
     { name: "Contact", href: "#contact" },
   ];
 
@@ -52,11 +53,13 @@ const Navbar = () => {
             ))}
           </div>
 
-          {/* CTA Button */}
-          <div className="hidden md:block">
-            <Button variant="gradient" size="default" className="rounded-full">
-              Download App
-            </Button>
+          {/* PWA install */}
+          <div className="hidden md:flex md:items-center md:justify-end">
+            <DownloadWebAppButton
+              variant="gradient"
+              size="default"
+              className="rounded-full"
+            />
           </div>
 
           {/* Mobile Menu Button */}
@@ -87,14 +90,12 @@ const Navbar = () => {
                   {link.name}
                 </a>
               ))}
-              <div className="px-4 pt-2">
-                <Button
+              <div className="px-4 pt-2 flex flex-col items-stretch gap-2">
+                <DownloadWebAppButton
                   variant="gradient"
                   size="lg"
                   className="w-full rounded-full"
-                >
-                  Download App
-                </Button>
+                />
               </div>
             </div>
           </div>

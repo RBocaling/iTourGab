@@ -1,53 +1,10 @@
-import React, { useState } from "react";
+import { useState } from "react";
+import { Search, AlertTriangle, HelpCircle } from "lucide-react";
+import EmergencyHotlineCards from "@/components/emergency/EmergencyHotlineCards";
 import {
-  Phone,
-  MessageCircle,
-  Search,
-  Star,
-  Copy,
-  AlertTriangle,
-  HelpCircle,
-} from "lucide-react";
-import { motion } from "framer-motion";
-
-const defaultHotlines = [
-  {
-    id: 1,
-    name: "Gabaldon Police Station",
-    phone: "0998-598-5427",
-    sms: "0998-598-5427",
-    img: "/pnp.png",
-    description: "Police assistance — immediate response.",
-    tags: ["Police", "24/7"],
-  },
-  {
-    id: 2,
-    name: "Gabaldon Fire Station",
-    phone: "0942-715-2383",
-    sms: "0942-715-2383",
-    img: "/bir.png",
-    description: "Fire emergencies & rescue.",
-    tags: ["Fire", "Rescue"],
-  },
-  {
-    id: 3,
-    name: "Gabaldon MDRRMO",
-    phone: "0907-073-4444",
-    sms: "0907-073-4444",
-    img: "/mdrrmo.png",
-    description: "Municipal Disaster Risk Reduction & Management Office.",
-    tags: ["Disaster", "MDRRMO"],
-  },
-  {
-    id: 4,
-    name: "Gabaldon RHU",
-    phone: "0977-843-2376",
-    sms: "0977-843-2376",
-    img: "/health.png",
-    description: "Rural Health Unit — medical & health support.",
-    tags: ["Health", "RHU"],
-  },
-];
+  defaultEmergencyHotlines,
+  type EmergencyHotline,
+} from "@/data/emergencyHotlines";
 
 const safetyGuidelines = [
   {
@@ -99,10 +56,15 @@ const faq = [
   },
 ];
 
-export default function EmergencyHotlines({ hotlines = defaultHotlines }) {
+type HotlinesProps = {
+  hotlines?: EmergencyHotline[];
+};
+
+export default function Hotlines({
+  hotlines = defaultEmergencyHotlines,
+}: HotlinesProps) {
   const [q, setQ] = useState("");
   const [tab, setTab] = useState<"contacts" | "safety" | "faq">("contacts");
-  const [favorites, setFavorites] = useState<number[]>([]);
 
   const filtered = hotlines.filter((h) => {
     const term = q.toLowerCase();
@@ -112,16 +74,6 @@ export default function EmergencyHotlines({ hotlines = defaultHotlines }) {
       h.description.toLowerCase().includes(term)
     );
   });
-
-  function toggleFavorite(id: number) {
-    setFavorites((s) =>
-      s.includes(id) ? s.filter((x) => x !== id) : [...s, id],
-    );
-  }
-
-  function copyToClipboard(text: string) {
-    navigator.clipboard.writeText(text);
-  }
 
   return (
     <div className="min-h-screen md:mt-20 bg-slate-50 p-4 md:p-6 flex justify-center">
@@ -154,6 +106,7 @@ export default function EmergencyHotlines({ hotlines = defaultHotlines }) {
         {/* TABS */}
         <div className="flex flex-wrap gap-2 mb-6">
           <button
+            type="button"
             onClick={() => setTab("contacts")}
             className={`px-4 py-2 rounded-full text-sm ${
               tab === "contacts" ? "bg-primary text-white" : "bg-white border"
@@ -163,6 +116,7 @@ export default function EmergencyHotlines({ hotlines = defaultHotlines }) {
           </button>
 
           <button
+            type="button"
             onClick={() => setTab("safety")}
             className={`px-4 py-2 rounded-full text-sm ${
               tab === "safety" ? "bg-primary text-white" : "bg-white border"
@@ -172,6 +126,7 @@ export default function EmergencyHotlines({ hotlines = defaultHotlines }) {
           </button>
 
           <button
+            type="button"
             onClick={() => setTab("faq")}
             className={`px-4 py-2 rounded-full text-sm ${
               tab === "faq" ? "bg-primary text-white" : "bg-white border"
@@ -182,78 +137,7 @@ export default function EmergencyHotlines({ hotlines = defaultHotlines }) {
         </div>
 
         {/* CONTACTS TAB */}
-        {tab === "contacts" && (
-          <div className="grid gap-6 grid-cols-1 md:grid-cols-2">
-            {filtered.map((h) => (
-              <motion.div
-                key={h.id}
-                initial={{ opacity: 0, y: 6 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="bg-white border rounded-2xl p-4 shadow-sm flex gap-4"
-              >
-                <img src={h.img} className="w-14 h-14 rounded-full" />
-
-                <div className="flex-1">
-                  <div className="flex justify-between">
-                    <h3 className="font-semibold">{h.name}</h3>
-
-                    <button
-                      onClick={() => toggleFavorite(h.id)}
-                      className="p-1"
-                    >
-                      <Star
-                        size={16}
-                        className={
-                          favorites.includes(h.id)
-                            ? "text-yellow-400"
-                            : "text-gray-300"
-                        }
-                      />
-                    </button>
-                  </div>
-
-                  <p className="text-sm text-slate-500">{h.description}</p>
-
-                  <div className="flex gap-2 mt-3 flex-wrap">
-                    <a
-                      href={`tel:${h.phone}`}
-                      className="flex items-center gap-2 px-3 py-2 bg-primary text-white rounded-lg text-sm"
-                    >
-                      <Phone size={14} />
-                      Call
-                    </a>
-
-                    <a
-                      href={`sms:${h.sms}`}
-                      className="flex items-center gap-2 px-3 py-2 border rounded-lg text-sm"
-                    >
-                      <MessageCircle size={14} />
-                      Message
-                    </a>
-
-                    <button
-                      onClick={() => copyToClipboard(h.phone)}
-                      className="p-2 border rounded-lg"
-                    >
-                      <Copy size={14} />
-                    </button>
-                  </div>
-
-                  <div className="mt-3 flex gap-2 flex-wrap">
-                    {h.tags.map((t) => (
-                      <span
-                        key={t}
-                        className="text-xs bg-indigo-50 text-indigo-700 px-2 py-1 rounded-full"
-                      >
-                        {t}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              </motion.div>
-            ))}
-          </div>
-        )}
+        {tab === "contacts" && <EmergencyHotlineCards hotlines={filtered} />}
 
         {/* SAFETY TAB */}
         {tab === "safety" && (

@@ -206,7 +206,7 @@ const filteredSpots = touristSpots?.filter((spot: any) => {
           ].map((item, index) => (
             <HoverTooltip key={index} message={item.tooltip}>
               <Card
-                className="glass-card w-full p-4 text-center cursor-pointer hover:shadow-xl transition-all duration-300 group transform hover:scale-105"
+                className="z-10 glass-card w-full p-4 text-center cursor-pointer hover:shadow-xl transition-all duration-300 group transform hover:scale-105"
                 onClick={item.action}
               >
                 <div

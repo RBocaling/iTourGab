@@ -7,6 +7,7 @@ import LandingPage from "./pages/LandingPage";
 import NotFound from "./pages/NotFound";
 import MainApp from "./pages/MainApp";
 import { GoogleOAuthProvider } from "@react-oauth/google";
+import { PWAInstallProvider } from "@/hooks/usePWAInstall";
 
 const queryClient = new QueryClient();
 
@@ -17,17 +18,19 @@ const App = () => {
 
   const content = (
     <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <Routes>
-            <Route path="/" element={<LandingPage />} />
-            <Route path="/app/*" element={<MainApp />} />
-            {/* <Route path="*" element={<NotFound />} /> */}
-          </Routes>
-        </BrowserRouter>
-      </TooltipProvider>
+      <PWAInstallProvider>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <Routes>
+              <Route path="/" element={<LandingPage />} />
+              <Route path="/app/*" element={<MainApp />} />
+              {/* <Route path="*" element={<NotFound />} /> */}
+            </Routes>
+          </BrowserRouter>
+        </TooltipProvider>
+      </PWAInstallProvider>
     </QueryClientProvider>
   );
 

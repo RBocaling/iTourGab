@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useParams, useNavigate } from "react-router-dom";
 import {
@@ -32,6 +32,14 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import RouteMap from "@/components/map/RouteMap";
+import {
+  fetchDirectionsRoute,
+  formatDistanceKm,
+  formatDuration,
+  formatRouteSummaryLine,
+  geocodeForward,
+  type MapboxTransportMode,
+} from "@/lib/mapboxDirections";
 import WalkModeMap from "@/components/map/WalkModelMap";
 import { useGetPlace } from "@/hooks/useGetPlace";
 import Loader from "@/components/loader/Loader";
@@ -69,8 +77,27 @@ const SpotDetailsPage: React.FC = () => {
   const [showWalkMode, setShowWalkMode] = useState(false);
   const [showRangeModal, setShowRangeModal] = useState(false);
   const [fromLocation, setFromLocation] = useState("");
-  const [routeDistance, setRouteDistance] = useState<string>("");
-  const [routeDuration, setRouteDuration] = useState<string>("");
+  const [locationMode, setLocationMode] = useState<"search" | "gps">("search");
+  const [originCoords, setOriginCoords] = useState<{
+    lat: number;
+    lng: number;
+  } | null>(null);
+  const [routeProfile, setRouteProfile] =
+    useState<MapboxTransportMode>("driving");
+  const [routeLegs, setRouteLegs] = useState<
+    Partial<
+      Record<
+        MapboxTransportMode,
+        { durationLabel: string; distanceLabel: string }
+      >
+    >
+  >({});
+  const [geocodeError, setGeocodeError] = useState<string | null>(null);
+  const [geocoding, setGeocoding] = useState(false);
+  const [directionsLegError, setDirectionsLegError] = useState<string | null>(
+    null,
+  );
+  const [mapRouteError, setMapRouteError] = useState<string | null>(null);
   const [showServiceRatingsModal, setShowServiceRatingsModal] = useState(false);
   const [selectedService, setSelectedService] = useState<any | null>(null);
   const [newRating, setNewRating] = useState(0);
@@ -177,6 +204,130 @@ const SpotDetailsPage: React.FC = () => {
   });
 
   console.log("spot", spot);
+
+  const destCoords =
+    spot?.coordinates &&
+    Number.isFinite(Number(spot.coordinates.lat)) &&
+    Number.isFinite(Number(spot.coordinates.lng))
+      ? {
+          lat: Number(spot.coordinates.lat),
+          lng: Number(spot.coordinates.lng),
+        }
+      : null;
+
+  useEffect(() => {
+    if (locationMode !== "search") return;
+    const q = fromLocation.trim();
+    if (!q) {
+      setOriginCoords(null);
+      setGeocodeError(null);
+      setGeocoding(false);
+      return;
+    }
+    const ac = new AbortController();
+    setGeocoding(true);
+    setGeocodeError(null);
+    const timer = window.setTimeout(async () => {
+      try {
+        const c = await geocodeForward(q, ac.signal);
+        if (ac.signal.aborted) return;
+        if (c) {
+          setOriginCoords(c);
+          setGeocodeError(null);
+        } else {
+          setOriginCoords(null);
+          setGeocodeError(
+            "Could not find that place. Try a different search.",
+          );
+        }
+      } catch {
+        if (!ac.signal.aborted) {
+          setOriginCoords(null);
+          setGeocodeError("Search failed. Try again.");
+        }
+      } finally {
+        if (!ac.signal.aborted) setGeocoding(false);
+      }
+    }, 450);
+    return () => {
+      window.clearTimeout(timer);
+      ac.abort();
+    };
+  }, [fromLocation, locationMode]);
+
+  useEffect(() => {
+    if (!originCoords || !destCoords) {
+      setRouteLegs({});
+      setDirectionsLegError(null);
+      return;
+    }
+    const ac = new AbortController();
+    const modes: MapboxTransportMode[] = ["driving", "walking", "cycling"];
+    setDirectionsLegError(null);
+    (async () => {
+      const next: Partial<
+        Record<
+          MapboxTransportMode,
+          { durationLabel: string; distanceLabel: string }
+        >
+      > = {};
+      let anyOk = false;
+      for (const m of modes) {
+        const r = await fetchDirectionsRoute(
+          originCoords,
+          destCoords,
+          m,
+          ac.signal,
+        );
+        if (ac.signal.aborted) return;
+        if (r.ok) {
+          anyOk = true;
+          next[m] = {
+            distanceLabel: formatDistanceKm(r.route.distanceM),
+            durationLabel: formatDuration(r.route.durationS),
+          };
+        }
+      }
+      if (ac.signal.aborted) return;
+      setRouteLegs(next);
+      if (!anyOk) {
+        setDirectionsLegError(
+          "No route found between these points. Try a different origin.",
+        );
+      } else {
+        setDirectionsLegError(null);
+      }
+    })();
+    return () => ac.abort();
+  }, [originCoords, destCoords]);
+
+  const handleUseMyLocation = () => {
+    if (!navigator.geolocation) {
+      setGeocodeError("Location is not supported in this browser.");
+      return;
+    }
+    setLocationMode("gps");
+    setGeocoding(true);
+    setGeocodeError(null);
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setOriginCoords({
+          lat: pos.coords.latitude,
+          lng: pos.coords.longitude,
+        });
+        setFromLocation("Current location");
+        setGeocoding(false);
+      },
+      () => {
+        setGeocoding(false);
+        setGeocodeError(
+          "Could not access your location. Check browser permissions.",
+        );
+        setLocationMode("search");
+      },
+      { enableHighAccuracy: true, timeout: 12_000 },
+    );
+  };
 
   const nextImage = () => {
     setCurrentImageIndex((prev) =>
@@ -945,165 +1096,249 @@ const SpotDetailsPage: React.FC = () => {
                   </button>
                 </div>
 
-                <div className="mb-6">
-                  <label className="block text-sm font-medium mb-2">
-                    From Location
-                  </label>
-                  <div className="relative">
-                    <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                    <input
-                      type="text"
-                      placeholder="Search location (e.g., Cabanatuan City)"
-                      value={fromLocation}
-                      onChange={(e) => setFromLocation(e.target.value)}
-                      className="w-full pl-10 pr-4 py-3 glass-card border border-white/10 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary bg-background"
-                    />
-                  </div>
-                  <div className="mt-3 flex flex-wrap gap-2">
-                    {[
-                      "Cabanatuan City",
-                      "Manila",
-                      "San Jose City",
-                      "Baler",
-                    ].map((location) => (
-                      <button
-                        key={location}
-                        onClick={() => setFromLocation(location)}
-                        className="px-3 py-1.5 glass-card rounded-full text-sm hover:bg-white/10 transition-all"
-                      >
-                        {location}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                {fromLocation && (
-                  <div className="space-y-4">
-                    <div className="relative h-[500px] rounded-xl overflow-hidden glass-card border border-white/10">
-                      <RouteMap
-                        fromLocation={fromLocation}
-                        toLocation={spot.name}
-                        toCoordinates={spot.coordinates}
-                        onRouteCalculated={(distance, duration) => {
-                          setRouteDistance(distance);
-                          setRouteDuration(duration);
-                        }}
-                      />
+                {!destCoords ? (
+                  <p className="text-sm text-muted-foreground">
+                    This place does not have map coordinates yet, so directions
+                    cannot be calculated.
+                  </p>
+                ) : (
+                  <>
+                    <div className="mb-4">
+                      <label className="block text-sm font-medium mb-2">
+                        Origin
+                      </label>
+                      <div className="flex flex-col sm:flex-row gap-2 mb-2">
+                        <div className="relative flex-1">
+                          <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                          <input
+                            type="text"
+                            placeholder="Search a city or address (Mapbox Geocoding)"
+                            value={fromLocation}
+                            onChange={(e) => {
+                              setLocationMode("search");
+                              setFromLocation(e.target.value);
+                            }}
+                            className="w-full pl-10 pr-4 py-3 glass-card border border-white/10 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary bg-background"
+                          />
+                        </div>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          className="shrink-0 border-primary/40"
+                          onClick={handleUseMyLocation}
+                          disabled={geocoding}
+                        >
+                          <Navigation className="w-4 h-4 mr-2" />
+                          Use my location
+                        </Button>
+                      </div>
+                      <p className="text-xs text-muted-foreground mb-2">
+                        Quick picks (search by name, not fixed coordinates)
+                      </p>
+                      <div className="flex flex-wrap gap-2">
+                        {[
+                          "Cabanatuan City",
+                          "Manila",
+                          "San Jose City",
+                          "Baler",
+                        ].map((location) => (
+                          <button
+                            key={location}
+                            type="button"
+                            onClick={() => {
+                              setLocationMode("search");
+                              setFromLocation(location);
+                            }}
+                            className="px-3 py-1.5 glass-card rounded-full text-sm hover:bg-white/10 transition-all"
+                          >
+                            {location}
+                          </button>
+                        ))}
+                      </div>
+                      {geocoding && locationMode === "search" && (
+                        <p className="text-xs text-muted-foreground mt-2">
+                          Resolving place…
+                        </p>
+                      )}
+                      {geocodeError && (
+                        <p className="text-sm text-amber-600 mt-2">
+                          {geocodeError}
+                        </p>
+                      )}
                     </div>
 
-                    {routeDistance && routeDuration && (
-                      <div className="glass-card p-6 rounded-xl bg-gradient-to-br from-primary/10 via-primary/5 to-transparent border border-primary/20">
-                        <div className="flex items-center justify-between mb-4">
-                          <h3 className="font-semibold text-lg">
-                            Route Overview
-                          </h3>
-                          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                            <MapPin className="w-4 h-4" />
-                            <span>{routeDistance} km</span>
-                          </div>
-                        </div>
+                    <div className="flex flex-wrap gap-2 mb-3">
+                      {(
+                        [
+                          ["driving", "🚗", "Driving"],
+                          ["walking", "🚶", "Walking"],
+                          ["cycling", "🚲", "Cycling"],
+                        ] as const
+                      ).map(([mode, icon, label]) => (
+                        <button
+                          key={mode}
+                          type="button"
+                          onClick={() =>
+                            setRouteProfile(mode as MapboxTransportMode)
+                          }
+                          className={`rounded-full px-3 py-1.5 text-xs font-medium border transition-colors ${
+                            routeProfile === mode
+                              ? "bg-primary text-white border-primary"
+                              : "glass-card border-white/10 hover:bg-white/10"
+                          }`}
+                        >
+                          <span className="mr-1">{icon}</span>
+                          {label}
+                        </button>
+                      ))}
+                    </div>
 
-                        <div className="grid gap-3">
-                          <div className="flex items-center justify-between p-3 rounded-lg bg-background/50 border border-border/50">
-                            <div className="flex items-center gap-3">
-                              <div className="w-10 h-10 rounded-full bg-blue-500/20 flex items-center justify-center">
-                                <span className="text-xl">🚶</span>
-                              </div>
-                              <div>
-                                <p className="font-semibold text-sm">Walking</p>
-                                <p className="text-xs text-muted-foreground">
-                                  Slowest, scenic route
-                                </p>
-                              </div>
-                            </div>
-                            <div className="text-right">
-                              <p className="font-bold text-lg">
-                                {routeDuration} min
-                              </p>
-                              <p className="text-xs text-muted-foreground">
-                                Est. time
-                              </p>
-                            </div>
-                          </div>
-
-                          <div className="flex items-center justify-between p-3 rounded-lg bg-background/50 border border-border/50">
-                            <div className="flex items-center gap-3">
-                              <div className="w-10 h-10 rounded-full bg-orange-500/20 flex items-center justify-center">
-                                <span className="text-xl">🏍️</span>
-                              </div>
-                              <div>
-                                <p className="font-semibold text-sm">
-                                  Motorcycle
-                                </p>
-                                <p className="text-xs text-muted-foreground">
-                                  Moderate, flexible
-                                </p>
-                              </div>
-                            </div>
-                            <div className="text-right">
-                              <p className="font-bold text-lg">
-                                {Math.round(parseInt(routeDuration) * 0.15)} min
-                              </p>
-                              <p className="text-xs text-muted-foreground">
-                                Est. time
-                              </p>
-                            </div>
-                          </div>
-
-                          <div className="flex items-center justify-between p-3 rounded-lg bg-background/50 border border-border/50">
-                            <div className="flex items-center gap-3">
-                              <div className="w-10 h-10 rounded-full bg-green-500/20 flex items-center justify-center">
-                                <span className="text-xl">🚗</span>
-                              </div>
-                              <div>
-                                <p className="font-semibold text-sm">Car</p>
-                                <p className="text-xs text-muted-foreground">
-                                  Fastest, comfortable
-                                </p>
-                              </div>
-                            </div>
-                            <div className="text-right">
-                              <p className="font-bold text-lg text-green-500">
-                                {Math.round(parseInt(routeDuration) * 0.12)} min
-                              </p>
-                              <p className="text-xs text-muted-foreground">
-                                Est. time
-                              </p>
-                            </div>
-                          </div>
-                        </div>
-
-                        <div className="mt-4 p-3 rounded-lg bg-primary/10 border border-primary/30">
-                          <div className="flex items-start gap-2">
-                            <Navigation className="w-4 h-4 text-primary mt-0.5" />
-                            <div className="text-sm">
-                              <p className="font-semibold text-primary">
-                                From: {fromLocation}
-                              </p>
-                              <p className="text-muted-foreground">
-                                To: {spot.name}
-                              </p>
-                            </div>
-                          </div>
-                        </div>
+                    <div className="space-y-4">
+                      <div className="relative h-[min(500px,55vh)] min-h-[280px] rounded-xl overflow-hidden glass-card border border-white/10">
+                        <RouteMap
+                          fromCoordinates={originCoords}
+                          toCoordinates={destCoords}
+                          fromLabel={fromLocation || "Origin"}
+                          toLabel={spot.name}
+                          profile={routeProfile}
+                          onRouteError={setMapRouteError}
+                        />
                       </div>
-                    )}
 
-                    <Button
-                      className="w-full bg-gradient-primary text-white"
-                      onClick={() => {
-                        setShowRangeModal(false);
-                        navigate(
-                          `/app/map?focus=${spotId}&from=${encodeURIComponent(
-                            fromLocation,
-                          )}`,
-                        );
-                      }}
-                    >
-                      View Full Route on Map
-                      <ArrowRight className="w-5 h-5 ml-2" />
-                    </Button>
-                  </div>
+                      {mapRouteError && (
+                        <p className="text-sm text-amber-600">{mapRouteError}</p>
+                      )}
+
+                      {directionsLegError &&
+                        !Object.keys(routeLegs).length && (
+                          <p className="text-sm text-amber-600">
+                            {directionsLegError}
+                          </p>
+                        )}
+
+                      {!!Object.keys(routeLegs).length && (
+                        <div className="glass-card p-6 rounded-xl bg-gradient-to-br from-primary/10 via-primary/5 to-transparent border border-primary/20">
+                          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-4">
+                            <h3 className="font-semibold text-lg">
+                              Route overview
+                            </h3>
+                            {routeLegs[routeProfile] && (
+                              <div className="text-lg font-semibold text-emerald-600">
+                                {formatRouteSummaryLine(
+                                  routeLegs[routeProfile]!.durationLabel,
+                                  routeLegs[routeProfile]!.distanceLabel,
+                                )}
+                                <span className="text-sm font-normal text-muted-foreground ml-2">
+                                  ·{" "}
+                                  {routeProfile === "driving"
+                                    ? "Driving"
+                                    : routeProfile === "walking"
+                                      ? "Walking"
+                                      : "Cycling"}
+                                </span>
+                              </div>
+                            )}
+                          </div>
+
+                          <div className="grid gap-3">
+                            {(
+                              [
+                                [
+                                  "walking",
+                                  "🚶",
+                                  "Walking",
+                                  "Slower, scenic",
+                                ],
+                                [
+                                  "cycling",
+                                  "🚲",
+                                  "Cycling",
+                                  "Bike-friendly paths",
+                                ],
+                                [
+                                  "driving",
+                                  "🚗",
+                                  "Driving",
+                                  "Fastest door-to-door",
+                                ],
+                              ] as const
+                            ).map(([mode, icon, title, sub]) => {
+                              const leg = routeLegs[mode];
+                              const active = routeProfile === mode;
+                              return (
+                                <button
+                                  key={mode}
+                                  type="button"
+                                  onClick={() =>
+                                    setRouteProfile(mode as MapboxTransportMode)
+                                  }
+                                  className={`flex w-full items-center justify-between p-3 rounded-lg border text-left transition-colors ${
+                                    active
+                                      ? "bg-primary/15 border-primary/40 ring-1 ring-primary/30"
+                                      : "bg-background/50 border-border/50 hover:bg-background/80"
+                                  }`}
+                                >
+                                  <div className="flex items-center gap-3">
+                                    <div className="w-10 h-10 rounded-full bg-sky-500/15 flex items-center justify-center text-lg">
+                                      {icon}
+                                    </div>
+                                    <div>
+                                      <p className="font-semibold text-sm">
+                                        {title}
+                                      </p>
+                                      <p className="text-xs text-muted-foreground">
+                                        {sub}
+                                      </p>
+                                    </div>
+                                  </div>
+                                  <div className="text-right">
+                                    <p
+                                      className={`font-bold text-lg ${mode === "driving" && leg ? "text-emerald-600" : ""}`}
+                                    >
+                                      {leg?.durationLabel ?? "—"}
+                                    </p>
+                                    <p className="text-xs text-muted-foreground">
+                                      {leg?.distanceLabel ?? "No route"}
+                                    </p>
+                                  </div>
+                                </button>
+                              );
+                            })}
+                          </div>
+
+                          <div className="mt-4 p-3 rounded-lg bg-primary/10 border border-primary/30">
+                            <div className="flex items-start gap-2">
+                              <Navigation className="w-4 h-4 text-primary mt-0.5 shrink-0" />
+                              <div className="text-sm">
+                                <p className="font-semibold text-primary">
+                                  From: {fromLocation || "Set an origin above"}
+                                </p>
+                                <p className="text-muted-foreground">
+                                  To: {spot.name}
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                      <Button
+                        className="w-full bg-gradient-primary text-white"
+                        disabled={!originCoords}
+                        onClick={() => {
+                          setShowRangeModal(false);
+                          navigate(
+                            `/app/map?focus=${spotId}&from=${encodeURIComponent(
+                              fromLocation || "origin",
+                            )}`,
+                          );
+                        }}
+                      >
+                        View full route on map
+                        <ArrowRight className="w-5 h-5 ml-2" />
+                      </Button>
+                    </div>
+                  </>
                 )}
               </motion.div>
             </motion.div>

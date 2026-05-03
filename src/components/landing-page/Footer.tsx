@@ -1,4 +1,4 @@
-import { Button } from "@/components/ui/button";
+import DownloadWebAppButton from "@/components/pwa/DownloadWebAppButton";
 import { MapPin, Phone, Mail, Facebook, Instagram, Twitter } from "lucide-react";
 
 const Footer = () => {
@@ -28,16 +28,14 @@ const Footer = () => {
                   Ready for an Adventure?
                 </h3>
                 <p className="text-primary-foreground/80">
-                  Download our app and start exploring Gabaldon today!
+                  Download the web app and start exploring Gabaldon today!
                 </p>
               </div>
-              <Button 
-                variant="glass" 
+              <DownloadWebAppButton
+                variant="glass"
                 size="xl"
                 className="bg-primary-foreground/20 text-black border-primary-foreground/30 hover:bg-primary-foreground/30"
-              >
-                Download Free App
-              </Button>
+              />
             </div>
           </div>
         </div>

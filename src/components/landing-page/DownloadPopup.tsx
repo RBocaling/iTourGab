@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { X, Download, Smartphone } from "lucide-react";
+import { X, Smartphone } from "lucide-react";
+import DownloadWebAppButton from "@/components/pwa/DownloadWebAppButton";
 
 interface DownloadPopupProps {
   onClose: () => void;
@@ -36,25 +37,21 @@ const DownloadPopup = ({ onClose }: DownloadPopupProps) => {
         {/* Content */}
         <div className="text-center space-y-4">
           <h2 className="text-2xl font-bold text-foreground">
-            Get the iTourGab App
+            Get iTourGab on your device
           </h2>
           <p className="text-muted-foreground leading-relaxed">
-            Explore Gabaldon's breathtaking tourist spots with our mobile app. 
-            Get offline maps, guides, and exclusive deals!
+            Install the web app for quick access from your home screen — works on
+            supported phones and tablets.
           </p>
         </div>
 
         {/* Buttons */}
         <div className="mt-8 space-y-3">
-          <Button 
-            variant="gradient" 
-            size="lg" 
+          <DownloadWebAppButton
+            variant="gradient"
+            size="lg"
             className="w-full"
-            onClick={() => window.open('#download', '_blank')}
-          >
-            <Download className="w-5 h-5" />
-            Download Now
-          </Button>
+          />
           <Button 
             variant="ghost" 
             size="lg" 
@@ -65,9 +62,8 @@ const DownloadPopup = ({ onClose }: DownloadPopupProps) => {
           </Button>
         </div>
 
-        {/* App store badges hint */}
         <p className="text-xs text-muted-foreground text-center mt-4">
-          Available on iOS & Android
+          Progressive Web App — no app store required
         </p>
       </div>
     </div>

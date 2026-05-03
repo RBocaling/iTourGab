@@ -5,6 +5,7 @@ import AboutSection from "@/components/landing-page/AboutSection";
 import Footer from "@/components/landing-page/Footer";
 import DownloadPopup, { useDownloadPopup } from "@/components/landing-page/DownloadPopup";
 import TourismFAQ from "@/components/landing-page/TouristFaq";
+import EmergencyHotlinesSection from "@/components/landing-page/EmergencyHotlinesSection";
 import Seo from "@/seo/Seo";
 
 const Index = () => {
@@ -23,6 +24,7 @@ const Index = () => {
         <HeroSection />
         <DestinationsSection />
         <AboutSection />
+        <EmergencyHotlinesSection />
         <TourismFAQ />
       </main>
       <Footer />

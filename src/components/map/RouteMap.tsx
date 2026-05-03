@@ -1,245 +1,337 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
 import { ZoomIn, ZoomOut, Layers, Navigation } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import {
+  fetchDirectionsRoute,
+  formatDistanceKm,
+  formatDuration,
+  getMapboxAccessToken,
+  type MapboxTransportMode,
+  toLngLatPair,
+} from "@/lib/mapboxDirections";
 
-mapboxgl.accessToken =
-  "pk.eyJ1IjoicmV5bmFsZG8xMjMxIiwiYSI6ImNtZnVxOXE1MzAxZWwycW9waWxpMmJ2MzMifQ.lmC2pB2Wg7-k-UPj1t--ig";
+export type RouteMapCalculatedPayload = {
+  distanceLabel: string;
+  durationLabel: string;
+  profile: MapboxTransportMode;
+};
 
 interface RouteMapProps {
-  fromLocation: string;
-  toLocation: string;
+  /** Resolved origin; when null, route is cleared and map stays centered on destination. */
+  fromCoordinates: { lat: number; lng: number } | null;
   toCoordinates: { lat: number; lng: number };
-  onRouteCalculated?: (distance: string, duration: string) => void;
+  fromLabel?: string;
+  toLabel?: string;
+  profile: MapboxTransportMode;
+  onRouteCalculated?: (payload: RouteMapCalculatedPayload) => void;
+  onRouteError?: (message: string | null) => void;
 }
 
+const EMPTY_ROUTE_COLLECTION: mapboxgl.GeoJSONFeatureCollection = {
+  type: "FeatureCollection",
+  features: [],
+};
+
 const RouteMap: React.FC<RouteMapProps> = ({
-  fromLocation,
-  toLocation,
+  fromCoordinates,
   toCoordinates,
+  fromLabel = "Start",
+  toLabel = "End",
+  profile,
   onRouteCalculated,
+  onRouteError,
 }) => {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
-  const [distance, setDistance] = useState<string>("");
-  const [duration, setDuration] = useState<string>("");
-  const [isLoading, setIsLoading] = useState(true);
+  const markersRef = useRef<mapboxgl.Marker[]>([]);
+  const [mapReady, setMapReady] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const [mapStyle, setMapStyle] = useState<"3d" | "2d">("3d");
+  const fetchIdRef = useRef(0);
+  const onCalculatedRef = useRef(onRouteCalculated);
+  const onErrorRef = useRef(onRouteError);
+  onCalculatedRef.current = onRouteCalculated;
+  onErrorRef.current = onRouteError;
 
-  // Simulated coordinates for demo (Cabanatuan area)
-  const fromCoords: [number, number] = [121.1166, 15.4839]; // Cabanatuan approximate
-  const toCoords: [number, number] = [toCoordinates.lng, toCoordinates.lat];
+  const clearMarkers = useCallback(() => {
+    markersRef.current.forEach((m) => m.remove());
+    markersRef.current = [];
+  }, []);
 
-  // Fetch walking directions from Mapbox Directions API
-  const fetchWalkingRoute = async () => {
-    try {
-      setIsLoading(true);
-      const response = await fetch(
-        `https://api.mapbox.com/directions/v5/mapbox/walking/${fromCoords[0]},${fromCoords[1]};${toCoords[0]},${toCoords[1]}?geometries=geojson&access_token=${mapboxgl.accessToken}`
-      );
-      const data = await response.json();
-
-      if (data.routes && data.routes.length > 0) {
-        const route = data.routes[0];
-
-        // Calculate distance in km
-        const distanceKm = (route.distance / 1000).toFixed(2);
-        setDistance(distanceKm);
-
-        // Calculate duration in minutes
-        const durationMin = Math.round(route.duration / 60);
-        setDuration(durationMin.toString());
-
-        // Notify parent component
-        if (onRouteCalculated) {
-          onRouteCalculated(distanceKm, durationMin.toString());
-        }
-
-        return route.geometry;
+  const setRouteData = useCallback(
+    (coordinates: [number, number][]) => {
+      if (!map.current) return;
+      const src = map.current.getSource("route") as mapboxgl.GeoJSONSource;
+      if (!src) return;
+      const line =
+        coordinates.length >= 2
+          ? coordinates
+          : coordinates.length === 1
+            ? [coordinates[0], coordinates[0]]
+            : [];
+      if (line.length < 2) {
+        src.setData(EMPTY_ROUTE_COLLECTION);
+        return;
       }
-    } catch (error) {
-      console.error("Error fetching route:", error);
-    } finally {
-      setIsLoading(false);
-    }
-    return null;
-  };
+      src.setData({
+        type: "FeatureCollection",
+        features: [
+          {
+            type: "Feature",
+            properties: {},
+            geometry: { type: "LineString", coordinates: line },
+          },
+        ],
+      });
+    },
+    [],
+  );
+
+  useEffect(() => {
+    mapboxgl.accessToken = getMapboxAccessToken();
+  }, []);
 
   useEffect(() => {
     if (!mapContainer.current) return;
 
+    const to = toLngLatPair(toCoordinates);
     const currentStyle =
       mapStyle === "3d"
         ? "mapbox://styles/mapbox/satellite-streets-v12"
         : "mapbox://styles/mapbox/streets-v12";
 
-    // Initialize map
-    map.current = new mapboxgl.Map({
+    const m = new mapboxgl.Map({
       container: mapContainer.current,
       style: currentStyle,
-      center: [
-        (fromCoords[0] + toCoords[0]) / 2,
-        (fromCoords[1] + toCoords[1]) / 2,
-      ],
+      center: to,
       zoom: 12,
       pitch: mapStyle === "3d" ? 45 : 0,
       bearing: 0,
       attributionControl: false,
     });
 
-    // Add navigation controls
-    map.current.addControl(
+    map.current = m;
+
+    m.addControl(
       new mapboxgl.NavigationControl({ visualizePitch: true }),
-      "top-right"
+      "top-right",
     );
 
-    map.current.on("load", async () => {
-      if (!map.current) return;
-
-      // Fetch real walking route
-      const routeGeometry = await fetchWalkingRoute();
-
-      // Create custom markers
-      const fromMarker = document.createElement("div");
-      fromMarker.innerHTML = `
-        <div style="
-          width: 40px;
-          height: 40px;
-          background: linear-gradient(135deg, #10b981, #059669);
-          border-radius: 50%;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          color: white;
-          font-weight: bold;
-          font-size: 18px;
-          border: 4px solid white;
-          box-shadow: 0 4px 12px rgba(16, 185, 129, 0.5);
-        ">A</div>
-      `;
-
-      new mapboxgl.Marker(fromMarker)
-        .setLngLat(fromCoords)
-        .setPopup(
-          new mapboxgl.Popup({ offset: 25, className: "custom-popup" }).setHTML(
-            `<div style="padding: 12px; font-weight: 600;">${fromLocation}</div>`
-          )
-        )
-        .addTo(map.current);
-
-      const toMarker = document.createElement("div");
-      toMarker.innerHTML = `
-        <div style="
-          width: 40px;
-          height: 40px;
-          background: linear-gradient(135deg, #ef4444, #dc2626);
-          border-radius: 50%;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          color: white;
-          font-weight: bold;
-          font-size: 18px;
-          border: 4px solid white;
-          box-shadow: 0 4px 12px rgba(239, 68, 68, 0.5);
-        ">B</div>
-      `;
-
-      new mapboxgl.Marker(toMarker)
-        .setLngLat(toCoords)
-        .setPopup(
-          new mapboxgl.Popup({ offset: 25, className: "custom-popup" }).setHTML(
-            `<div style="padding: 12px; font-weight: 600;">${toLocation}</div>`
-          )
-        )
-        .addTo(map.current);
-
-      if (routeGeometry) {
-        // Add route source
-        map.current.addSource("route", {
+    const onLoad = () => {
+      if (!m.getSource("route")) {
+        m.addSource("route", {
           type: "geojson",
-          data: {
-            type: "Feature",
-            properties: {},
-            geometry: routeGeometry,
-          },
+          data: EMPTY_ROUTE_COLLECTION,
         });
-
-        // Add route casing (outline)
-        map.current.addLayer({
+        m.addLayer({
           id: "route-casing",
           type: "line",
           source: "route",
-          layout: {
-            "line-join": "round",
-            "line-cap": "round",
-          },
+          layout: { "line-join": "round", "line-cap": "round" },
           paint: {
             "line-color": "#1e40af",
             "line-width": 8,
-            "line-opacity": 0.6,
+            "line-opacity": 0.55,
           },
         });
-
-        // Add main route line
-        map.current.addLayer({
+        m.addLayer({
           id: "route",
           type: "line",
           source: "route",
-          layout: {
-            "line-join": "round",
-            "line-cap": "round",
-          },
+          layout: { "line-join": "round", "line-cap": "round" },
           paint: {
             "line-color": "#3b82f6",
             "line-width": 5,
-            "line-opacity": 0.9,
+            "line-opacity": 0.92,
           },
         });
-
-        // Fit map to route
-        const coordinates = routeGeometry.coordinates;
-        const bounds = coordinates.reduce(
-          (bounds: mapboxgl.LngLatBounds, coord: number[]) =>
-            bounds.extend(coord as [number, number]),
-          new mapboxgl.LngLatBounds(
-            coordinates[0] as [number, number],
-            coordinates[0] as [number, number]
-          )
-        );
-
-        map.current.fitBounds(bounds, {
-          padding: { top: 100, bottom: 100, left: 50, right: 50 },
-          maxZoom: 15,
-        });
       }
-    });
+      setMapReady(true);
+    };
+
+    if (m.loaded()) onLoad();
+    else m.once("load", onLoad);
 
     return () => {
-      if (map.current) {
-        map.current.remove();
-      }
+      setMapReady(false);
+      clearMarkers();
+      m.remove();
+      map.current = null;
     };
-  }, [fromLocation, toLocation, toCoordinates, mapStyle]);
+  }, [mapStyle, toCoordinates.lat, toCoordinates.lng, clearMarkers]);
 
-  const handleZoomIn = () => {
-    map.current?.zoomIn();
-  };
+  useEffect(() => {
+    if (!mapReady || !map.current) return;
 
-  const handleZoomOut = () => {
-    map.current?.zoomOut();
-  };
+    const ac = new AbortController();
+    const signal = ac.signal;
 
-  const toggleMapStyle = () => {
-    setMapStyle((prev) => (prev === "3d" ? "2d" : "3d"));
-  };
+    const run = async () => {
+      if (!fromCoordinates) {
+        fetchIdRef.current += 1;
+        setIsLoading(false);
+        clearMarkers();
+        setRouteData([]);
+        onErrorRef.current?.(null);
+        const to = toLngLatPair(toCoordinates);
+        map.current?.flyTo({ center: to, zoom: 12, duration: 600 });
+        const toMarker = document.createElement("div");
+        toMarker.innerHTML = `
+        <div style="
+          width: 40px; height: 40px;
+          background: linear-gradient(135deg, #ef4444, #dc2626);
+          border-radius: 50%; display: flex; align-items: center; justify-content: center;
+          color: white; font-weight: bold; font-size: 18px; border: 4px solid white;
+          box-shadow: 0 4px 12px rgba(239, 68, 68, 0.5);
+        ">B</div>`;
+        const tm = new mapboxgl.Marker(toMarker)
+          .setLngLat(to)
+          .setPopup(
+            new mapboxgl.Popup({ offset: 25 }).setHTML(
+              `<div style="padding: 10px; font-weight: 600;">${toLabel}</div>`,
+            ),
+          )
+          .addTo(map.current!);
+        markersRef.current.push(tm);
+        return;
+      }
+
+      const id = ++fetchIdRef.current;
+      setIsLoading(true);
+      onErrorRef.current?.(null);
+
+      let result: Awaited<ReturnType<typeof fetchDirectionsRoute>>;
+      try {
+        result = await fetchDirectionsRoute(
+          fromCoordinates,
+          toCoordinates,
+          profile,
+          signal,
+        );
+      } catch {
+        if (id !== fetchIdRef.current) return;
+        setIsLoading(false);
+        if (!signal.aborted) {
+          onErrorRef.current?.("Could not load directions. Try again.");
+        }
+        return;
+      }
+
+      if (id !== fetchIdRef.current || !map.current) return;
+      setIsLoading(false);
+
+      if (!result.ok) {
+        setRouteData([]);
+        clearMarkers();
+        onErrorRef.current?.(result.message);
+        onCalculatedRef.current?.({
+          distanceLabel: "—",
+          durationLabel: "—",
+          profile,
+        });
+        return;
+      }
+
+      const { geometry, distanceM, durationS } = result.route;
+      const coords = geometry.coordinates as [number, number][];
+      setRouteData(coords);
+      onErrorRef.current?.(null);
+
+      const distanceLabel = formatDistanceKm(distanceM);
+      const durationLabel = formatDuration(durationS);
+      onCalculatedRef.current?.({ distanceLabel, durationLabel, profile });
+
+      clearMarkers();
+      const fromLL = toLngLatPair(fromCoordinates);
+      const toLL = toLngLatPair(toCoordinates);
+
+      const fromEl = document.createElement("div");
+      fromEl.innerHTML = `
+        <div style="
+          width: 40px; height: 40px;
+          background: linear-gradient(135deg, #10b981, #059669);
+          border-radius: 50%; display: flex; align-items: center; justify-content: center;
+          color: white; font-weight: bold; font-size: 18px; border: 4px solid white;
+          box-shadow: 0 4px 12px rgba(16, 185, 129, 0.5);
+        ">A</div>`;
+      markersRef.current.push(
+        new mapboxgl.Marker(fromEl)
+          .setLngLat(fromLL)
+          .setPopup(
+            new mapboxgl.Popup({ offset: 25 }).setHTML(
+              `<div style="padding: 10px; font-weight: 600;">${fromLabel}</div>`,
+            ),
+          )
+          .addTo(map.current),
+      );
+
+      const toEl = document.createElement("div");
+      toEl.innerHTML = `
+        <div style="
+          width: 40px; height: 40px;
+          background: linear-gradient(135deg, #ef4444, #dc2626);
+          border-radius: 50%; display: flex; align-items: center; justify-content: center;
+          color: white; font-weight: bold; font-size: 18px; border: 4px solid white;
+          box-shadow: 0 4px 12px rgba(239, 68, 68, 0.5);
+        ">B</div>`;
+      markersRef.current.push(
+        new mapboxgl.Marker(toEl)
+          .setLngLat(toLL)
+          .setPopup(
+            new mapboxgl.Popup({ offset: 25 }).setHTML(
+              `<div style="padding: 10px; font-weight: 600;">${toLabel}</div>`,
+            ),
+          )
+          .addTo(map.current),
+      );
+
+      const bounds = coords.reduce(
+        (b, coord) => b.extend(coord as [number, number]),
+        new mapboxgl.LngLatBounds(coords[0], coords[0]),
+      );
+      map.current.fitBounds(bounds, {
+        padding: { top: 90, bottom: 90, left: 50, right: 50 },
+        maxZoom: 15,
+      });
+    };
+
+    void run();
+
+    return () => {
+      ac.abort();
+    };
+  }, [
+    mapReady,
+    fromCoordinates?.lat,
+    fromCoordinates?.lng,
+    toCoordinates.lat,
+    toCoordinates.lng,
+    profile,
+    fromLabel,
+    toLabel,
+    clearMarkers,
+    setRouteData,
+  ]);
+
+  const handleZoomIn = () => map.current?.zoomIn();
+  const handleZoomOut = () => map.current?.zoomOut();
+  const toggleMapStyle = () => setMapStyle((p) => (p === "3d" ? "2d" : "3d"));
 
   const recenterMap = () => {
     if (!map.current) return;
+    if (!fromCoordinates) {
+      map.current.flyTo({
+        center: toLngLatPair(toCoordinates),
+        zoom: 12,
+        duration: 500,
+      });
+      return;
+    }
     const bounds = new mapboxgl.LngLatBounds();
-    bounds.extend(fromCoords);
-    bounds.extend(toCoords);
+    bounds.extend(toLngLatPair(fromCoordinates));
+    bounds.extend(toLngLatPair(toCoordinates));
     map.current.fitBounds(bounds, {
       padding: { top: 100, bottom: 100, left: 50, right: 50 },
       maxZoom: 15,
@@ -250,23 +342,22 @@ const RouteMap: React.FC<RouteMapProps> = ({
     <div className="relative w-full h-full bg-background">
       <div ref={mapContainer} className="w-full h-full" />
 
-      {/* Loading indicator */}
       {isLoading && (
         <div className="absolute top-4 left-1/2 -translate-x-1/2 z-10">
           <div className="bg-background/95 backdrop-blur-xl border border-border rounded-2xl shadow-lg px-6 py-3">
             <div className="flex items-center gap-3">
-              <div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+              <div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
               <span className="text-sm font-medium text-foreground">
-                Calculating route...
+                Calculating route…
               </span>
             </div>
           </div>
         </div>
       )}
 
-      {/* Control Buttons - Right Side */}
       <div className="absolute right-4 top-1/2 -translate-y-1/2 z-10 flex flex-col gap-3">
         <Button
+          type="button"
           onClick={handleZoomIn}
           size="icon"
           className="w-12 h-12 rounded-full bg-background/95 backdrop-blur-xl border border-border shadow-lg hover:shadow-xl hover:scale-110 transition-all duration-300"
@@ -274,8 +365,8 @@ const RouteMap: React.FC<RouteMapProps> = ({
         >
           <ZoomIn className="w-5 h-5 text-foreground" />
         </Button>
-
         <Button
+          type="button"
           onClick={handleZoomOut}
           size="icon"
           className="w-12 h-12 rounded-full bg-background/95 backdrop-blur-xl border border-border shadow-lg hover:shadow-xl hover:scale-110 transition-all duration-300"
@@ -283,8 +374,8 @@ const RouteMap: React.FC<RouteMapProps> = ({
         >
           <ZoomOut className="w-5 h-5 text-foreground" />
         </Button>
-
         <Button
+          type="button"
           onClick={toggleMapStyle}
           size="icon"
           className="w-12 h-12 rounded-full bg-background/95 backdrop-blur-xl border border-border shadow-lg hover:shadow-xl hover:scale-110 transition-all duration-300"
@@ -292,8 +383,8 @@ const RouteMap: React.FC<RouteMapProps> = ({
         >
           <Layers className="w-5 h-5 text-foreground" />
         </Button>
-
         <Button
+          type="button"
           onClick={recenterMap}
           size="icon"
           className="w-12 h-12 rounded-full bg-background/95 backdrop-blur-xl border border-border shadow-lg hover:shadow-xl hover:scale-110 transition-all duration-300"
@@ -303,7 +394,6 @@ const RouteMap: React.FC<RouteMapProps> = ({
         </Button>
       </div>
 
-      {/* Map Style Badge */}
       <div className="absolute bottom-4 left-4 z-10">
         <div className="bg-background/95 backdrop-blur-xl border border-border rounded-full px-4 py-2 shadow-lg">
           <span className="text-xs font-semibold text-foreground">

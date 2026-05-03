@@ -1,13 +1,40 @@
 import { useState } from "react";
-import { ChevronDown, MapPin, Info, Phone, Clock } from "lucide-react";
+import {
+  ChevronDown,
+  MapPin,
+  Info,
+  Phone,
+  Clock,
+  BookOpen,
+  ExternalLink,
+  X,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+
+const USER_MANUAL_PDF = "/user-manual.pdf";
 
 interface FAQItem {
   question: string;
   answer: string;
-  icon: "map" | "info" | "phone" | "clock";
+  icon: "map" | "info" | "phone" | "clock" | "book";
+  /** When true, shows “View User Manual” and opens the PDF dialog */
+  hasUserManual?: boolean;
 }
 
 const faqData: FAQItem[] = [
+  {
+    question: "How to use this app?",
+    answer:
+      "Learn how to use the platform with our complete user guide.",
+    icon: "book",
+    hasUserManual: true,
+  },
   {
     question: "What are the top tourist spots in Gabaldon, Nueva Ecija?",
     answer:
@@ -51,10 +78,12 @@ const iconMap = {
   info: Info,
   phone: Phone,
   clock: Clock,
+  book: BookOpen,
 };
 
 export default function TourismFAQ() {
   const [openIndex, setOpenIndex] = useState<number | null>(null);
+  const [manualOpen, setManualOpen] = useState(false);
 
   const toggleFAQ = (index: number) => {
     setOpenIndex(openIndex === index ? null : index);
@@ -119,14 +148,32 @@ export default function TourismFAQ() {
 
                 <div
                   className={`transition-all duration-300 ease-in-out ${
-                    isOpen ? "max-h-96 opacity-100" : "max-h-0 opacity-0"
+                    isOpen
+                      ? faq.hasUserManual
+                        ? "max-h-[min(28rem,85vh)] opacity-100"
+                        : "max-h-96 opacity-100"
+                      : "max-h-0 opacity-0"
                   } overflow-hidden`}
                 >
                   <div className="px-6 pb-6 pt-2">
-                    <div className="pl-14">
+                    <div className="pl-14 space-y-4">
                       <p className="text-slate-600 leading-relaxed">
                         {faq.answer}
                       </p>
+                      {faq.hasUserManual && (
+                        <Button
+                          type="button"
+                          variant="outline"
+                          className="rounded-xl border-blue-200 bg-blue-50/80 text-blue-700 hover:bg-blue-100 hover:text-blue-800"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setManualOpen(true);
+                          }}
+                        >
+                          <BookOpen className="mr-2 h-4 w-4" />
+                          View User Manual
+                        </Button>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -144,6 +191,55 @@ export default function TourismFAQ() {
           </div>
         </div>
       </div>
+
+      <Dialog open={manualOpen} onOpenChange={setManualOpen}>
+        <DialogContent
+          showCloseButton={false}
+          className="flex h-[100dvh] max-h-[100dvh] w-full max-w-none translate-x-0 translate-y-0 flex-col gap-0 overflow-hidden rounded-none border-0 p-0 left-0 top-0 sm:left-[50%] sm:top-[50%] sm:h-[85vh] sm:max-h-[85vh] sm:max-w-5xl sm:translate-x-[-50%] sm:translate-y-[-50%] sm:rounded-xl sm:border sm:shadow-lg lg:max-w-6xl"
+        >
+          <DialogHeader className="shrink-0 space-y-0 border-b border-slate-200 bg-white px-4 py-3 text-left sm:rounded-t-xl">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:pr-2">
+              <DialogTitle className="text-lg font-semibold text-slate-900">
+                User Manual
+              </DialogTitle>
+              <div className="flex flex-wrap items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="rounded-lg"
+                  asChild
+                >
+                  <a
+                    href={USER_MANUAL_PDF}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    <ExternalLink className="mr-1.5 h-4 w-4" />
+                    Open in new tab
+                  </a>
+                </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="h-9 w-9 shrink-0 rounded-lg"
+                  aria-label="Close"
+                  onClick={() => setManualOpen(false)}
+                >
+                  <X className="h-5 w-5" />
+                </Button>
+              </div>
+            </div>
+          </DialogHeader>
+          <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain bg-slate-100 p-2 sm:p-4">
+            <iframe
+              src={USER_MANUAL_PDF}
+              className="block h-[80vh] w-full rounded-lg border border-slate-200 bg-white sm:h-[calc(85vh-5.5rem)]"
+              title="User Manual"
+            />
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

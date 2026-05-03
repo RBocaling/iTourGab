@@ -1,4 +1,5 @@
 import { Button } from "@/components/ui/button";
+import DownloadWebAppButton from "@/components/pwa/DownloadWebAppButton";
 import { ArrowRight, Play, MapPin, Users, Camera } from "lucide-react";
 import heroImage from "/hero-bg.jpg";
 import { useNavigate } from "react-router-dom";
@@ -70,18 +71,22 @@ const HeroSection = () => {
 
           {/* CTA Buttons */}
           <div
-            className="flex flex-col sm:flex-row gap-4 mb-12 animate-slide-up"
+            className="flex flex-col sm:flex-row flex-wrap gap-4 mb-12 animate-slide-up"
             style={{ animationDelay: "300ms" }}
           >
-            <Button variant="gradient" size="xl">
-              Explore Tourist Spots
-              <ArrowRight className="w-5 h-5" />
-            </Button>
+            <a href="#destinations">
+              <Button variant="gradient" size="xl">
+                Explore Tourist Spots
+                <ArrowRight className="w-5 h-5" />
+              </Button>
+            </a>
 
             <Button variant="glass" onClick={() => navigate("/app/")} size="xl">
               <Play className="w-5 h-5" />
               Get Started – Explore the App
             </Button>
+
+           
           </div>
 
           {/* Stats */}
@@ -108,7 +113,7 @@ const HeroSection = () => {
                 <p className="text-2xl font-bold text-foreground">
                   {touristSpots?.reduce(
                     (acc: number, item: any) => acc + item?.totalViews,
-                    0
+                    0,
                   )}
                 </p>
                 <p className="text-sm text-muted-foreground">Total Visitors</p>
@@ -123,7 +128,7 @@ const HeroSection = () => {
                   {" "}
                   {touristSpots?.reduce(
                     (acc: number, item: any) => acc + item?.totalImages,
-                    0
+                    0,
                   )}
                   +
                 </p>

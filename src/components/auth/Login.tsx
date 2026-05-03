@@ -108,7 +108,7 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen  bg-background grid grid-cols-1 md:grid-cols-2 gap-9">
+    <div className="min-h-[100dvh] bg-background md:grid md:min-h-screen md:grid-cols-2">
       <Helmet>
         <title>Login – iTourGab | Start Exploring Gabaldon</title>
         <meta
@@ -118,34 +118,40 @@ export default function Login() {
         <link rel="canonical" href="https://itourgab-v1.site/app/login" />
       </Helmet>
 
-      <div className="w-full  flex items-center justify-center p-8">
+      <div className="flex min-h-[100dvh] md:min-h-screen w-full items-center justify-center px-4 py-10 md:px-6 md:py-8">
         <motion.div
-          initial={{ opacity: 0, x: -50 }}
+          initial={{ opacity: 0, x: -24 }}
           animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.6 }}
-          className="w-full md:max-w-md space-y-8 md:bg-white rounded-3xl md:p-5 md:shadow-2xl"
+          transition={{ duration: 0.5 }}
+          className="w-full max-w-md md:max-w-lg lg:max-w-xl space-y-6 rounded-3xl border border-border/50 bg-card p-6 shadow-xl md:p-8"
         >
-          <div className="text-center">
+          <div className="text-center space-y-2">
             <motion.div
-              initial={{ opacity: 0, y: -20 }}
+              initial={{ opacity: 0, y: -12 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
-              className="text-3xl font-bold text-gradient-primary"
+              transition={{ delay: 0.1 }}
+              className="text-gradient-primary"
             >
               <motion.div
                 animate={{ rotate: [0, 10, -10, 0] }}
                 transition={{ duration: 2, repeat: Infinity }}
-                className="bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4 w-20 h-20"
+                className="mx-auto mb-3 flex h-16 w-16 items-center justify-center rounded-full bg-primary/5 md:h-[4.5rem] md:w-[4.5rem]"
               >
-                <img src="/logo-itour.png" className="w-14" alt="logo" />
+                <img
+                  src="/logo-itour.png"
+                  className="w-11 md:w-12"
+                  alt="iTourGab"
+                />
               </motion.div>
-              iTourGab
+              <h1 className="text-xl font-bold tracking-tight md:text-2xl">
+                iTourGab
+              </h1>
             </motion.div>
             <motion.p
-              initial={{ opacity: 0, y: -20 }}
+              initial={{ opacity: 0, y: -12 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.3 }}
-              className="text-muted-foreground"
+              transition={{ delay: 0.2 }}
+              className="text-sm text-muted-foreground"
             >
               Sign in to start your adventure
             </motion.p>
@@ -172,15 +178,15 @@ export default function Login() {
           )}
 
           <motion.form
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.5 }}
+            transition={{ delay: 0.35 }}
             onSubmit={handleSubmit}
-            className="space-y-6"
+            className="space-y-5"
           >
             <div className="space-y-4">
               <div className="relative">
-                <UserIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 text-neutral-600 w-5 h-5 z-20" />
+                <UserIcon className="pointer-events-none absolute left-3 top-1/2 z-10 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
                 <Input
                   type="text"
                   placeholder="Email"
@@ -191,13 +197,13 @@ export default function Login() {
                       email_address: e.target.value,
                     }))
                   }
-                  className="pl-12 input-modern h-14 bg-white"
+                  className="input-modern h-12 bg-background pl-11 pr-3"
                   required
                 />
               </div>
 
               <div className="relative">
-                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-neutral-600 w-5 h-5 z-20" />
+                <Lock className="pointer-events-none absolute left-3 top-1/2 z-10 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
                 <Input
                   type={showPassword ? "text" : "password"}
                   placeholder="Password"
@@ -208,19 +214,19 @@ export default function Login() {
                       password: e.target.value,
                     }))
                   }
-                  className="pl-12 pr-12 input-modern h-12 bg-white"
+                  className="input-modern h-12 bg-background pl-11 pr-11"
                   required
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                  className="absolute right-1.5 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
                   aria-label="Toggle password visibility"
                 >
                   {showPassword ? (
-                    <EyeOff className="w-5 h-5" />
+                    <EyeOff className="h-5 w-5 shrink-0" />
                   ) : (
-                    <Eye className="w-5 h-5" />
+                    <Eye className="h-5 w-5 shrink-0" />
                   )}
                 </button>
               </div>
@@ -230,7 +236,7 @@ export default function Login() {
               <button
                 type="button"
                 onClick={() => setOpenForgot(true)}
-                className="text-xs text-primary hover:underline"
+                className="text-xs font-medium text-primary transition-colors hover:underline"
               >
                 Forgot password?
               </button>
@@ -239,40 +245,40 @@ export default function Login() {
             <Button
               type="submit"
               disabled={loginMutation.isPending}
-              className="w-full btn-hero h-14 rounded-2xl"
+              className="btn-hero h-12 w-full rounded-xl text-base transition-all hover:opacity-[0.96] active:scale-[0.99]"
             >
               {loginMutation.isPending ? (
                 <div className="loading-spinner" />
               ) : (
                 <>
                   Sign In
-                  <ArrowRight className="w-5 h-5 ml-2" />
+                  <ArrowRight className="ml-2 h-5 w-5" />
                 </>
               )}
             </Button>
 
-            <div className="flex items-center gap-3 justify-center">
-              <div className="h-[1px] bg-neutral-300 w-24" />
-              <div className="text-sm text-neutral-400">or</div>
-              <div className="h-[1px] bg-neutral-300 w-24" />
+            <div className="flex items-center justify-center gap-3">
+              <div className="h-px max-w-[6rem] flex-1 bg-border" />
+              <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                or
+              </span>
+              <div className="h-px max-w-[6rem] flex-1 bg-border" />
             </div>
 
-            {/* GOOGLE BUTTON */}
-            <div className="flex justify-center">
-              <button
-                type="button"
-                onClick={() => {
-                  setGoogleError(null);
-                  googleLogin();
-                }}
-                disabled={googleMutation.isPending}
-                className={`flex items-center justify-center h-14 w-full gap-3 px-4 py-3 rounded-2xl border ${
-                  googleMutation.isPending
-                    ? "opacity-60 cursor-not-allowed"
-                    : "hover:shadow"
-                }`}
-                aria-label="Sign in with Google"
-              >
+            <button
+              type="button"
+              onClick={() => {
+                setGoogleError(null);
+                googleLogin();
+              }}
+              disabled={googleMutation.isPending}
+              className={`flex h-12 w-full items-center justify-center gap-3 rounded-xl border border-input bg-background px-4 text-sm font-medium transition-all hover:border-primary/30 hover:bg-muted/50 ${
+                googleMutation.isPending
+                  ? "cursor-not-allowed opacity-60"
+                  : ""
+              }`}
+              aria-label="Sign in with Google"
+            >
                 <svg
                   width="20"
                   height="20"
@@ -304,26 +310,25 @@ export default function Login() {
                     : "Continue with Google"}
                 </span>
 
-                {googleMutation.isPending && (
-                  <svg className="animate-spin w-4 h-4" viewBox="0 0 24 24">
-                    <circle
-                      className="opacity-25"
-                      cx="12"
-                      cy="12"
-                      r="10"
-                      stroke="currentColor"
-                      strokeWidth="4"
-                      fill="none"
-                    />
-                    <path
-                      className="opacity-75"
-                      fill="currentColor"
-                      d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
-                    />
-                  </svg>
-                )}
-              </button>
-            </div>
+              {googleMutation.isPending && (
+                <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24">
+                  <circle
+                    className="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                    fill="none"
+                  />
+                  <path
+                    className="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
+                  />
+                </svg>
+              )}
+            </button>
 
             {/* GOOGLE ERROR (iOS-style small) */}
             {googleError && (
@@ -357,19 +362,19 @@ export default function Login() {
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ delay: 0.7 }}
-            className="text-center flex items-center justify-center mb-5"
+            transition={{ delay: 0.55 }}
+            className="flex flex-wrap items-center justify-center gap-x-1 text-center text-sm text-muted-foreground"
           >
-            Do you have an account?
+            <span>Don&apos;t have an account?</span>
             <Link
               to="/app/register"
-              className="text-muted-foreground text-primary ml-2"
+              className="font-semibold text-primary transition-colors hover:underline"
             >
               Register
             </Link>
           </motion.div>
-          <div className="mt-6 rounded-2xl p-3 border border-primary/50 bg-primary/10 text-xs text-muted-foreground text-center max-w-sm mx-auto leading-relaxed">
-            <strong>About iTourGab: </strong>
+          <div className="rounded-2xl border border-primary/20 bg-primary/5 p-4 text-center text-xs leading-relaxed text-muted-foreground">
+            <strong className="text-foreground">About iTourGab: </strong>
             iTourGab is a tourism and travel platform designed to help visitors
             explore tourist spots, natural attractions, and destinations in
             Gabaldon, Nueva Ecija, Philippines.
@@ -378,15 +383,29 @@ export default function Login() {
       </div>
 
       <motion.div
-        initial={{ opacity: 0, scale: 1.1 }}
+        initial={{ opacity: 0, scale: 1.02 }}
         animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 0.8 }}
-        className="hidden lg:block w-full h-screen bg-red-500 relative overflow-hidden"
+        transition={{ duration: 0.7 }}
+        className="relative hidden min-h-[220px] md:block md:min-h-screen"
       >
         <div
-          className="absolute inset-0 bg-cover bg-center "
+          className="absolute inset-0 bg-cover bg-center"
           style={{ backgroundImage: `url(${heroLandscape})` }}
         />
+        <div className="absolute inset-0 bg-gradient-to-t from-background/90 via-background/20 to-transparent md:bg-gradient-to-r md:from-background/40 md:via-transparent md:to-transparent" />
+        <div className="relative flex h-full min-h-[220px] flex-col justify-end p-8 md:min-h-screen md:justify-center md:p-10 lg:p-12">
+          <div className="max-w-md text-white drop-shadow-md md:text-foreground md:drop-shadow-none">
+            <p className="text-xs font-semibold uppercase tracking-widest text-white/90 md:text-primary">
+              Gabaldon, Nueva Ecija
+            </p>
+            <h2 className="mt-2 text-2xl font-bold leading-tight text-white md:text-3xl md:text-foreground">
+              Discover places, plan trips, and explore with confidence.
+            </h2>
+            <p className="mt-3 text-sm text-white/90 md:text-muted-foreground">
+              Your gateway to tourist spots, itineraries, and local experiences.
+            </p>
+          </div>
+        </div>
       </motion.div>
 
       <ForgotPasswordModal

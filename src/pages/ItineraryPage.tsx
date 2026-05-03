@@ -1,5 +1,5 @@
 // src/components/ItineraryIOS.tsx
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -12,12 +12,27 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, MapPin, Plus, Clock } from "lucide-react";
+import { Calendar, MapPin, Plus, Clock, Map, Navigation } from "lucide-react";
+import RouteMap from "@/components/map/RouteMap";
+import {
+  fetchDirectionsRoute,
+  formatDistanceKm,
+  formatDuration,
+  formatRouteSummaryLine,
+  type MapboxTransportMode,
+} from "@/lib/mapboxDirections";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import SelectPlaceDialog from "@/components/ui/SelectPlaceDialog";
 import { useNavigate } from "react-router-dom";
 import { useMutation } from "@tanstack/react-query";
 import { createItineraryApi, updateItineraryApi } from "@/api/iteneraryApi";
-import { ItineraryPayload } from "@/types/iteneary";
+import { ItineraryPayload, type ItineraryRaw } from "@/types/iteneary";
 import { useGetItineraries } from "@/hooks/useGeiTinerary";
 import {
   SuccessDialog,
@@ -42,8 +57,22 @@ type ItineraryItem = {
   description: string;
   start_date: string;
   end_date: string;
-  tourist_spot?: TouristSpot | null;
+  tourist_spot?: (TouristSpot & {
+    coordinates?: { lat?: number; lng?: number } | null;
+  }) | null;
 };
+
+function coordsFromItinerarySpot(row: ItineraryRaw): {
+  lat: number;
+  lng: number;
+} | null {
+  const c = row.tourist_spot?.coordinates;
+  if (!c) return null;
+  const lat = Number(c.lat);
+  const lng = Number(c.lng);
+  if (!Number.isFinite(lat) || !Number.isFinite(lng)) return null;
+  return { lat, lng };
+}
 
 export default function ItineraryIOS() {
   const navigate = useNavigate();
@@ -92,7 +121,115 @@ export default function ItineraryIOS() {
     message: "",
   });
 
+  const [routeMapOpen, setRouteMapOpen] = useState(false);
+  const [routeFromId, setRouteFromId] = useState<string>("");
+  const [routeToId, setRouteToId] = useState<string>("");
+  const [itineraryRouteProfile, setItineraryRouteProfile] =
+    useState<MapboxTransportMode>("driving");
+  const [itineraryRouteLegs, setItineraryRouteLegs] = useState<
+    Partial<
+      Record<
+        MapboxTransportMode,
+        { durationLabel: string; distanceLabel: string }
+      >
+    >
+  >({});
+  const [itineraryDirectionsError, setItineraryDirectionsError] = useState<
+    string | null
+  >(null);
+  const [itineraryMapError, setItineraryMapError] = useState<string | null>(
+    null,
+  );
+  const [itineraryRoutesLoading, setItineraryRoutesLoading] = useState(false);
+
   const { data, refetch , isLoading} = useGetItineraries();
+
+  useEffect(() => {
+    if (!routeMapOpen || !data?.length) return;
+    const ranked = data.filter((row) => coordsFromItinerarySpot(row));
+    if (ranked.length >= 2) {
+      setRouteFromId(String(ranked[0].id));
+      setRouteToId(String(ranked[1].id));
+    } else if (ranked.length === 1) {
+      setRouteFromId(String(ranked[0].id));
+      setRouteToId(String(ranked[0].id));
+    } else {
+      setRouteFromId("");
+      setRouteToId("");
+    }
+  }, [routeMapOpen, data]);
+
+  useEffect(() => {
+    if (!routeMapOpen) {
+      setItineraryRouteLegs({});
+      setItineraryDirectionsError(null);
+      setItineraryMapError(null);
+      setItineraryRoutesLoading(false);
+      return;
+    }
+    if (!data?.length) return;
+
+    const fromRow = data.find((r) => String(r.id) === routeFromId);
+    const toRow = data.find((r) => String(r.id) === routeToId);
+    const fromCoords = fromRow ? coordsFromItinerarySpot(fromRow) : null;
+    const toCoords = toRow ? coordsFromItinerarySpot(toRow) : null;
+    const same =
+      Boolean(routeFromId && routeToId) && routeFromId === routeToId;
+
+    if (!fromCoords || !toCoords || same) {
+      setItineraryRouteLegs({});
+      setItineraryDirectionsError(null);
+      setItineraryMapError(null);
+      setItineraryRoutesLoading(false);
+      return;
+    }
+
+    const ac = new AbortController();
+    const modes: MapboxTransportMode[] = ["driving", "walking", "cycling"];
+    setItineraryDirectionsError(null);
+    setItineraryRoutesLoading(true);
+
+    (async () => {
+      const next: Partial<
+        Record<
+          MapboxTransportMode,
+          { durationLabel: string; distanceLabel: string }
+        >
+      > = {};
+      let anyOk = false;
+      for (const m of modes) {
+        const r = await fetchDirectionsRoute(
+          fromCoords,
+          toCoords,
+          m,
+          ac.signal,
+        );
+        if (ac.signal.aborted) return;
+        if (r.ok) {
+          anyOk = true;
+          next[m] = {
+            distanceLabel: formatDistanceKm(r.route.distanceM),
+            durationLabel: formatDuration(r.route.durationS),
+          };
+        }
+      }
+      if (ac.signal.aborted) return;
+      setItineraryRouteLegs(next);
+      setItineraryRoutesLoading(false);
+      if (!anyOk) {
+        setItineraryDirectionsError(
+          "No route found between these points. Try different itineraries.",
+        );
+      } else {
+        setItineraryDirectionsError(null);
+      }
+    })();
+
+    return () => {
+      ac.abort();
+      setItineraryRoutesLoading(false);
+    };
+  }, [routeMapOpen, data, routeFromId, routeToId]);
 
   const createMutation = useMutation({
     mutationFn: createItineraryApi,
@@ -254,13 +391,26 @@ export default function ItineraryIOS() {
               </p>
             </div>
 
-            <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-              <DialogTrigger asChild>
-                <Button className="rounded-full px-4 shadow-sm bg-primary text-white hover:bg-primary flex items-center gap-2">
-                  <Plus className="w-4 h-4" />
-                  <span className="text-sm font-medium">New Itinerary</span>
-                </Button>
-              </DialogTrigger>
+            <div className="flex items-center gap-2 shrink-0">
+              <Button
+                type="button"
+                variant="outline"
+                className="rounded-full px-4 shadow-sm border-slate-200 bg-white text-slate-800 hover:bg-slate-50 flex items-center gap-2"
+                onClick={() => setRouteMapOpen(true)}
+              >
+                <Map className="w-4 h-4" />
+                <span className="text-sm font-medium hidden sm:inline">
+                  View Map
+                </span>
+                <span className="text-sm font-medium sm:hidden">Map</span>
+              </Button>
+              <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+                <DialogTrigger asChild>
+                  <Button className="rounded-full px-4 shadow-sm bg-primary text-white hover:bg-primary flex items-center gap-2">
+                    <Plus className="w-4 h-4" />
+                    <span className="text-sm font-medium">New Itinerary</span>
+                  </Button>
+                </DialogTrigger>
               <DialogContent className="max-w-lg border border-slate-200 bg-white rounded-3xl p-0 overflow-hidden">
                 <DialogHeader className="px-5 pt-4 pb-2">
                   <DialogTitle className="text-base font-semibold">
@@ -379,6 +529,338 @@ export default function ItineraryIOS() {
                 </form>
               </DialogContent>
             </Dialog>
+            </div>
+          </div>
+
+            <Dialog open={routeMapOpen} onOpenChange={setRouteMapOpen}>
+              <DialogContent className="max-w-5xl w-[96vw] max-h-[92vh] overflow-y-auto rounded-3xl border border-slate-200 bg-white p-0 gap-0">
+                <DialogHeader className="px-5 pt-4 pb-2 border-b border-slate-100">
+                  <DialogTitle className="text-base font-semibold">
+                    Route between itineraries
+                  </DialogTitle>
+                  <DialogDescription className="text-xs text-slate-500">
+                    Choose two plans that are linked to tourist spots with
+                    coordinates. The route updates when you change From, To, or
+                    travel mode.
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="px-5 py-4 space-y-4">
+                  {(() => {
+                    const routable = (data ?? []).filter((row) =>
+                      coordsFromItinerarySpot(row),
+                    );
+                    if (routable.length === 0) {
+                      return (
+                        <p className="text-sm text-slate-600">
+                          None of your itineraries have a linked spot with map
+                          coordinates. Create or edit an itinerary and pick a
+                          place from the catalog so routing can use live{" "}
+                          <code className="text-xs bg-slate-100 px-1 rounded">
+                            lat
+                          </code>{" "}
+                          /{" "}
+                          <code className="text-xs bg-slate-100 px-1 rounded">
+                            lng
+                          </code>{" "}
+                          from the API.
+                        </p>
+                      );
+                    }
+                    const fromRow = data?.find(
+                      (r) => String(r.id) === routeFromId,
+                    );
+                    const toRow = data?.find((r) => String(r.id) === routeToId);
+                    const fromCoords = fromRow
+                      ? coordsFromItinerarySpot(fromRow)
+                      : null;
+                    const toCoords = toRow
+                      ? coordsFromItinerarySpot(toRow)
+                      : null;
+                    const same = routeFromId && routeToId && routeFromId === routeToId;
+
+                    return (
+                      <>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                          <div className="space-y-1.5">
+                            <label className="text-xs text-slate-600">
+                              From itinerary
+                            </label>
+                            <Select
+                              value={routeFromId || undefined}
+                              onValueChange={setRouteFromId}
+                            >
+                              <SelectTrigger className="rounded-2xl h-10 text-sm">
+                                <SelectValue placeholder="Select start" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {(data ?? []).map((row) => {
+                                  const ok = coordsFromItinerarySpot(row);
+                                  return (
+                                    <SelectItem
+                                      key={row.id}
+                                      value={String(row.id)}
+                                      disabled={!ok}
+                                    >
+                                      {row.name} —{" "}
+                                      {row.tourist_spot?.name ?? "No spot"}
+                                      {!ok ? " (no coordinates)" : ""}
+                                    </SelectItem>
+                                  );
+                                })}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          <div className="space-y-1.5">
+                            <label className="text-xs text-slate-600">
+                              To itinerary
+                            </label>
+                            <Select
+                              value={routeToId || undefined}
+                              onValueChange={setRouteToId}
+                            >
+                              <SelectTrigger className="rounded-2xl h-10 text-sm">
+                                <SelectValue placeholder="Select end" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {(data ?? []).map((row) => {
+                                  const ok = coordsFromItinerarySpot(row);
+                                  return (
+                                    <SelectItem
+                                      key={row.id}
+                                      value={String(row.id)}
+                                      disabled={!ok}
+                                    >
+                                      {row.name} —{" "}
+                                      {row.tourist_spot?.name ?? "No spot"}
+                                      {!ok ? " (no coordinates)" : ""}
+                                    </SelectItem>
+                                  );
+                                })}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        </div>
+
+                        <div className="flex flex-wrap gap-2">
+                          {(
+                            [
+                              ["driving", "🚗", "Driving"],
+                              ["walking", "🚶", "Walking"],
+                              ["cycling", "🚲", "Cycling"],
+                            ] as const
+                          ).map(([mode, icon, label]) => (
+                            <button
+                              key={mode}
+                              type="button"
+                              onClick={() =>
+                                setItineraryRouteProfile(
+                                  mode as MapboxTransportMode,
+                                )
+                              }
+                              className={`rounded-full px-3 py-1.5 text-xs font-medium border transition-colors ${
+                                itineraryRouteProfile === mode
+                                  ? "bg-primary text-white border-primary"
+                                  : "border border-slate-200 bg-white text-slate-800 hover:bg-slate-50"
+                              }`}
+                            >
+                              <span className="mr-1">{icon}</span>
+                              {label}
+                            </button>
+                          ))}
+                        </div>
+
+                        {same && (
+                          <p className="text-sm text-amber-700">
+                            Choose two different itineraries to see a route
+                            between two places.
+                          </p>
+                        )}
+
+                        <div className="h-[min(420px,50vh)] min-h-[260px] rounded-xl overflow-hidden border border-slate-200 bg-slate-50 shadow-sm">
+                          {fromCoords &&
+                          toCoords &&
+                          !same ? (
+                            <RouteMap
+                              fromCoordinates={fromCoords}
+                              toCoordinates={toCoords}
+                              fromLabel={
+                                fromRow?.tourist_spot?.name ??
+                                fromRow?.name ??
+                                "From"
+                              }
+                              toLabel={
+                                toRow?.tourist_spot?.name ??
+                                toRow?.name ??
+                                "To"
+                              }
+                              profile={itineraryRouteProfile}
+                              onRouteError={setItineraryMapError}
+                            />
+                          ) : (
+                            <div className="h-full flex items-center justify-center text-sm text-slate-500 px-6 text-center">
+                              {same
+                                ? "Select two different itineraries with coordinates."
+                                : "Select From and To itineraries that include coordinates."}
+                            </div>
+                          )}
+                        </div>
+
+                        {itineraryRoutesLoading &&
+                          fromCoords &&
+                          toCoords &&
+                          !same && (
+                            <p className="text-xs text-slate-500 text-center">
+                              Calculating routes for all travel modes…
+                            </p>
+                          )}
+
+                        {itineraryMapError && fromCoords && toCoords && !same && (
+                          <p className="text-sm text-amber-700">
+                            {itineraryMapError}
+                          </p>
+                        )}
+
+                        {itineraryDirectionsError &&
+                          !Object.keys(itineraryRouteLegs).length &&
+                          fromCoords &&
+                          toCoords &&
+                          !same &&
+                          !itineraryRoutesLoading && (
+                            <p className="text-sm text-amber-700">
+                              {itineraryDirectionsError}
+                            </p>
+                          )}
+
+                        {!!Object.keys(itineraryRouteLegs).length &&
+                          fromCoords &&
+                          toCoords &&
+                          !same && (
+                            <div className="rounded-xl border border-primary/20 bg-gradient-to-br from-primary/10 via-primary/5 to-transparent p-6 shadow-sm">
+                              <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                                <h3 className="text-lg font-semibold text-slate-900">
+                                  Route overview
+                                </h3>
+                                {itineraryRouteLegs[itineraryRouteProfile] && (
+                                  <div className="text-lg font-semibold text-emerald-600">
+                                    {formatRouteSummaryLine(
+                                      itineraryRouteLegs[
+                                        itineraryRouteProfile
+                                      ]!.durationLabel,
+                                      itineraryRouteLegs[
+                                        itineraryRouteProfile
+                                      ]!.distanceLabel,
+                                    )}
+                                    <span className="ml-2 text-sm font-normal text-slate-500">
+                                      ·{" "}
+                                      {itineraryRouteProfile === "driving"
+                                        ? "Driving"
+                                        : itineraryRouteProfile === "walking"
+                                          ? "Walking"
+                                          : "Cycling"}
+                                    </span>
+                                  </div>
+                                )}
+                              </div>
+
+                              <div className="grid gap-3">
+                                {(
+                                  [
+                                    [
+                                      "walking",
+                                      "🚶",
+                                      "Walking",
+                                      "Slower, scenic",
+                                    ],
+                                    [
+                                      "cycling",
+                                      "🚲",
+                                      "Cycling",
+                                      "Bike-friendly paths",
+                                    ],
+                                    [
+                                      "driving",
+                                      "🚗",
+                                      "Driving",
+                                      "Fastest door-to-door",
+                                    ],
+                                  ] as const
+                                ).map(([mode, icon, title, sub]) => {
+                                  const leg = itineraryRouteLegs[mode];
+                                  const active = itineraryRouteProfile === mode;
+                                  return (
+                                    <button
+                                      key={mode}
+                                      type="button"
+                                      onClick={() =>
+                                        setItineraryRouteProfile(
+                                          mode as MapboxTransportMode,
+                                        )
+                                      }
+                                      className={`flex w-full items-center justify-between rounded-lg border p-3 text-left transition-colors ${
+                                        active
+                                          ? "border-primary/40 bg-primary/15 ring-1 ring-primary/30"
+                                          : "border-slate-200/80 bg-white/70 hover:bg-white"
+                                      }`}
+                                    >
+                                      <div className="flex items-center gap-3">
+                                        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-sky-500/15 text-lg">
+                                          {icon}
+                                        </div>
+                                        <div>
+                                          <p className="text-sm font-semibold text-slate-900">
+                                            {title}
+                                          </p>
+                                          <p className="text-xs text-slate-500">
+                                            {sub}
+                                          </p>
+                                        </div>
+                                      </div>
+                                      <div className="text-right">
+                                        <p
+                                          className={`text-lg font-bold ${
+                                            mode === "driving" && leg
+                                              ? "text-emerald-600"
+                                              : "text-slate-900"
+                                          }`}
+                                        >
+                                          {leg?.durationLabel ?? "—"}
+                                        </p>
+                                        <p className="text-xs text-slate-500">
+                                          {leg?.distanceLabel ?? "No route"}
+                                        </p>
+                                      </div>
+                                    </button>
+                                  );
+                                })}
+                              </div>
+
+                              <div className="mt-4 rounded-lg border border-primary/30 bg-primary/10 p-3">
+                                <div className="flex items-start gap-2">
+                                  <Navigation className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+                                  <div className="text-sm">
+                                    <p className="font-semibold text-primary">
+                                      From:{" "}
+                                      {fromRow?.tourist_spot?.name ??
+                                        fromRow?.name ??
+                                        "—"}
+                                    </p>
+                                    <p className="text-slate-600">
+                                      To:{" "}
+                                      {toRow?.tourist_spot?.name ??
+                                        toRow?.name ??
+                                        "—"}
+                                    </p>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          )}
+                      </>
+                    );
+                  })()}
+                </div>
+              </DialogContent>
+            </Dialog>
 
             <Dialog
               open={isUpdateModalOpen}
@@ -474,7 +956,6 @@ export default function ItineraryIOS() {
                 </form>
               </DialogContent>
             </Dialog>
-          </div>
 
           <div className="flex items-center justify-between text-xs text-slate-500">
             <span>Upcoming Itineraries</span>

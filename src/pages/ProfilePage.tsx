@@ -54,9 +54,6 @@ import ContactNumberInput from "@/components/ui/ContactNumberInput";
 const ProfilePage: React.FC = () => {
   const { user, logout, refetch } = useAuth2();
   const navigate = useNavigate();
-  const [notifications, setNotifications] = useState(
-    user?.preferences?.notifications ?? true
-  );
 
   const { data: itinerary, isLoading: isIteneraryLoading } =
     useGetItineraries();
@@ -222,28 +219,20 @@ const ProfilePage: React.FC = () => {
     {
       icon: Bell,
       label: "Notifications",
-      description: "Push notifications",
-      action: () => setNotifications((v) => !v),
-      hasToggle: true,
-      toggleValue: notifications,
+      description: "View alerts and updates",
+      action: () => navigate("/app/notifications"),
     },
     {
       icon: Shield,
       label: "Privacy & Security",
       description: "Account security",
-      action: () => {},
+      action: () => navigate("/app/settings/security"),
     },
     {
       icon: HelpCircle,
       label: "Help & Support",
       description: "Get assistance",
-      action: () => {},
-    },
-    {
-      icon: Settings,
-      label: "App Settings",
-      description: "Preferences",
-      action: () => {},
+      action: () => navigate("/app/ai-support"),
     },
   ];
 
@@ -507,8 +496,16 @@ const ProfilePage: React.FC = () => {
               {settingsItems.map((item, index) => (
                 <div key={index}>
                   <div
+                    role="button"
+                    tabIndex={0}
                     className="flex items-center gap-4 p-3 rounded-lg hover:bg-muted/50 cursor-pointer group"
                     onClick={item.action}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        item.action();
+                      }
+                    }}
                   >
                     <div className="w-10 h-10 rounded-full flex items-center justify-center bg-muted group-hover:scale-110 transition-transform">
                       <item.icon className="w-5 h-5 text-primary" />
@@ -519,6 +516,7 @@ const ProfilePage: React.FC = () => {
                         {item.description}
                       </p>
                     </div>
+                    <ChevronRight className="w-5 h-5 text-muted-foreground group-hover:translate-x-1 transition-transform shrink-0" />
                   </div>
                   {index < settingsItems.length - 1 && (
                     <Separator className="my-1" />

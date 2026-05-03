@@ -5,6 +5,7 @@ import mountainImage from "@/assets/mountain-trail.jpg";
 import hotSpringImage from "@/assets/hot-spring.jpg";
 import useGetPlacePublic from "@/hooks/usePublicPlace";
 import Loader from "../loader/Loader";
+import { Link } from "react-router-dom";
 
 
 const DestinationsSection = () => {
@@ -34,7 +35,7 @@ const DestinationsSection = () => {
 
         {/* Spots Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {touristSpots?.map((spot, index) => (
+          {(touristSpots?.slice(0, 4))?.map((spot, index) => (
             <SpotCard
               key={spot.id}
               {...spot}
@@ -45,12 +46,12 @@ const DestinationsSection = () => {
 
         {/* View All Button */}
         <div className="text-center mt-12">
-          <button className="inline-flex items-center gap-2 text-primary font-semibold hover:gap-4 transition-all duration-300">
+          <Link to="/app" className="inline-flex items-center gap-2 text-primary font-semibold hover:gap-4 transition-all duration-300">
             View All Destinations
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
             </svg>
-          </button>
+          </Link>
         </div>
       </div>
     </section>

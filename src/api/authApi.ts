@@ -85,6 +85,17 @@ export const resetPasswordApi = async (payload: {
   email: string;
   newPassword: string;
 }) => {
-  const { data } = await api.post("/auth/forgot-password/reset", payload);
-  return data;
+  try {
+    const { data } = await api.post("/auth/forgot-password/reset", {
+      email: payload.email,
+      newPassword: payload.newPassword,
+    });
+    return data;
+  } catch (err: any) {
+    const msg =
+      err?.response?.data?.message ??
+      err?.message ??
+      "Password reset failed";
+    throw new Error(typeof msg === "string" ? msg : "Password reset failed");
+  }
 };

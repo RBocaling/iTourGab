@@ -26,6 +26,9 @@ import useTermsStore from "@/store/termsStore";
 import Loader from "@/components/loader/Loader";
 import SupportChat from "./SupportChat";
 import StoresBySpotPage from "./StoresBySpotPage";
+import NotificationsPage from "./NotificationsPage";
+import SecuritySettingsPage from "./SecuritySettingsPage";
+import DownloadWebAppButton from "@/components/pwa/DownloadWebAppButton";
 
 const MainApp: React.FC = () => {
   const navigate = useNavigate();
@@ -60,12 +63,12 @@ const MainApp: React.FC = () => {
           <DesktopNavigation />
           <MobileHeader />
 
-          <TermsModal
+          {/* <TermsModal
             open={isOpen}
             onClose={close}
             onAccept={accept}
             title="iTourGab — Terms & Conditions"
-          />
+          /> */}
 
           <Routes>
             <Route path="/" element={<HomePage />} />
@@ -83,6 +86,11 @@ const MainApp: React.FC = () => {
             <Route path="/itinerary" element={<ItineraryPage />} />
             <Route path="/favorites" element={<FavoritesPage />} />
             <Route path="/profile" element={<ProfilePage />} />
+            <Route path="/notifications" element={<NotificationsPage />} />
+            <Route
+              path="/settings/security"
+              element={<SecuritySettingsPage />}
+            />
             <Route path="/search" element={<SearchPage />} />
             <Route
               path="/gabaldon-public-socials"
@@ -96,6 +104,16 @@ const MainApp: React.FC = () => {
           <BottomNavigation />
         </main>
       )}
+      {isAuthenticated && (
+        <div className="fixed bottom-24 left-2 z-30 md:bottom-28 md:left-4 max-w-[min(100vw-1rem,14rem)]">
+          <DownloadWebAppButton
+            variant="default"
+            size="sm"
+            className="shadow-md w-full md:w-auto"
+          />
+        </div>
+      )}
+
       {pathname !== "/app/ai-support" &&
         isAuthenticated &&
         pathname !== "/app/chat-support" &&
