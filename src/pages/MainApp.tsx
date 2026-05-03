@@ -29,6 +29,7 @@ import StoresBySpotPage from "./StoresBySpotPage";
 import NotificationsPage from "./NotificationsPage";
 import SecuritySettingsPage from "./SecuritySettingsPage";
 import DownloadWebAppButton from "@/components/pwa/DownloadWebAppButton";
+import { getMapboxAccessToken } from "@/lib/mapboxDirections";
 
 const MainApp: React.FC = () => {
   const navigate = useNavigate();
@@ -47,6 +48,8 @@ const MainApp: React.FC = () => {
   if (loading) {
     return <Loader />;
   }  
+
+  console.log("getMapboxAccessToken", getMapboxAccessToken());
   
   return (
     <div className="min-h-screen md:bg-background ">
@@ -104,7 +107,7 @@ const MainApp: React.FC = () => {
           <BottomNavigation />
         </main>
       )}
-      {isAuthenticated && (
+      {/* {isAuthenticated && (
         <div className="fixed bottom-24 left-2 z-30 md:bottom-28 md:left-4 max-w-[min(100vw-1rem,14rem)]">
           <DownloadWebAppButton
             variant="default"
@@ -112,7 +115,7 @@ const MainApp: React.FC = () => {
             className="shadow-md w-full md:w-auto"
           />
         </div>
-      )}
+      )} */}
 
       {pathname !== "/app/ai-support" &&
         isAuthenticated &&
