@@ -10,7 +10,7 @@ const HoverTooltip: React.FC<HoverTooltipProps> = ({ message, children }) => {
 
   return (
     <div
-      className="relative inline-flex z-[999999] w-full"
+      className="relative inline-flex z-[999998] w-full"
       onMouseEnter={() => setVisible(true)}
       onMouseLeave={() => setVisible(false)}
     >

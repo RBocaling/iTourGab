@@ -71,7 +71,7 @@ export default function TermsModal({
         onPointerDownOutside={(e) => e.preventDefault()}
         onInteractOutside={(e) => e.preventDefault()}
         onEscapeKeyDown={(e) => e.preventDefault()}
-        className="max-h-[min(90dvh,900px)] w-[calc(100vw-1.5rem)] max-w-lg gap-0 overflow-hidden rounded-3xl p-0 sm:w-full"
+        className="max-h-[min(90dvh,900px)] w-[calc(100vw-1.5rem)] max-w-lg gap-0 overflow-hidden rounded-3xl p-0 sm:w-full z-[999999]"
       >
         <div className="flex max-h-[min(90dvh,900px)] flex-col overflow-hidden">
           <DialogHeader className="shrink-0 space-y-0 border-b border-slate-100 px-5 pb-3 pt-4 text-left dark:border-slate-800">
@@ -103,9 +103,9 @@ export default function TermsModal({
                 iTourGab is an informational and booking portal for tourist
                 spots in Gabaldon, Nueva Ecija. By using this service you agree
                 to follow local rules, respect private and public property, and
-                follow any guidance given by local authorities or site
-                stewards. These terms describe permitted use, content
-                guidelines, privacy basics, and liability limitations.
+                follow any guidance given by local authorities or site stewards.
+                These terms describe permitted use, content guidelines, privacy
+                basics, and liability limitations.
               </p>
 
               <h5 className="mt-4 font-medium text-slate-800 dark:text-slate-100">
@@ -139,9 +139,9 @@ export default function TermsModal({
               </h5>
               <p className="mt-2 text-sm leading-relaxed text-slate-600 dark:text-slate-300">
                 We collect only necessary data for bookings and communications.
-                Personal information is processed according to applicable privacy
-                laws. For detailed privacy policy, view the Privacy Policy
-                document.
+                Personal information is processed according to applicable
+                privacy laws. For detailed privacy policy, view the Privacy
+                Policy document.
               </p>
 
               <h5 className="mt-4 font-medium text-slate-800 dark:text-slate-100">

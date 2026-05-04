@@ -131,7 +131,7 @@ const navItems = [
           </nav>
 
           {/* User Section */}
-          <div className="flex items-center space-x-3">
+          <div className="flex items-center space-x-3 ">
             <Popover>
               <PopoverTrigger asChild>
                 <Button variant="ghost" size="icon" className="relative">
@@ -147,7 +147,7 @@ const navItems = [
               <PopoverContent
                 align="end"
                 sideOffset={12}
-                className="w-[360px] max-h-[520px] rounded-3xl p-0 shadow-xl border bg-white overflow-hidden"
+                className="w-[360px] max-h-[520px] rounded-3xl p-0 shadow-xl border bg-white overflow-hidden relative z-[999999]"
               >
                 {/* Header */}
                 <div className="px-4 py-3 border-b flex items-center justify-between shrink-0">
