@@ -11,11 +11,9 @@ import { Link } from "react-router-dom";
 const DestinationsSection = () => {
   const { data: touristSpots, isLoading } = useGetPlacePublic();
   if (isLoading) {
-    return <Loader/>
+    return <Loader />;
   }
-  
-  console.log("touristSpots", touristSpots);
-  
+
   return (
     <section id="destinations" className="py-20 md:py-32 bg-muted/30">
       <div className="container mx-auto px-4">

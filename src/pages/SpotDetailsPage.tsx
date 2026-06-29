@@ -52,6 +52,7 @@ import { createFavoriteApi } from "@/api/favoriteApi";
 import { ErrorDialog, SuccessDialog } from "@/components/alert/FeedbackModals";
 import { createItineraryApi } from "@/api/iteneraryApi";
 import ServiceChatModal from "@/components/chat/ServiceChatModal";
+import SuspendedSpotNotice from "@/components/suspension/SuspendedSpotNotice";
 import BackButton from "@/components/ui/BackButton";
 
 const isPromoValidToday = (promo: any) => {
@@ -416,6 +417,17 @@ const SpotDetailsPage: React.FC = () => {
       </div>
     );
   }
+
+  if (spot.is_suspended) {
+    return (
+      <SuspendedSpotNotice
+        name={spot.name}
+        reason={spot.suspended_reason}
+        onBack={() => navigate(-1)}
+      />
+    );
+  }
+
   return (
     <div className="min-h-screen bg-background pt-5 md:pt-24 pb-28 md:pb-8">
       <div className="max-w-5xl mx-auto px-4">

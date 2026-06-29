@@ -73,6 +73,8 @@ export const formatPlace = (p: Place) => {
     contact_person_name: p?.contact_person_name,
     contact_person_number: p?.contact_person_number,
     facebook_page: p?.facebook_page,
+    is_suspended: Boolean(p.is_suspended),
+    suspended_reason: p.suspended_reason ?? null,
   };
 };
 

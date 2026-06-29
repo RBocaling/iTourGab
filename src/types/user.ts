@@ -10,6 +10,8 @@ export type UserRaw = {
   role?: string;
   gender?: string;
   is_deleted?: boolean;
+  is_suspended?: boolean;
+  suspended_reason?: string | null;
   created_at?: string;
   updated_at?: string;
 };

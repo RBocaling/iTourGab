@@ -1,5 +1,5 @@
 // src/pages/MainApp.tsx
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { Routes, Route, Navigate, useNavigate, useLocation } from "react-router-dom";
 import DesktopNavigation from "@/components/layout/DesktopNavigation";
 import BottomNavigation from "@/components/layout/BottomNavigation";
@@ -29,13 +29,14 @@ import StoresBySpotPage from "./StoresBySpotPage";
 import NotificationsPage from "./NotificationsPage";
 import SecuritySettingsPage from "./SecuritySettingsPage";
 import DownloadWebAppButton from "@/components/pwa/DownloadWebAppButton";
-import { getMapboxAccessToken } from "@/lib/mapboxDirections";
+import SuspendedAccountModal from "@/components/suspension/SuspendedAccountModal";
 
 const MainApp: React.FC = () => {
   const navigate = useNavigate();
   const {pathname} = useLocation();
-  const { isAuthenticated, loading } = useAuth2();
+  const { isAuthenticated, loading, user } = useAuth2();
   const { isOpen, accepted, open, close, accept } = useTermsStore();
+  const [suspendedOpen, setSuspendedOpen] = useState(false);
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -45,12 +46,18 @@ const MainApp: React.FC = () => {
     if (!accepted) open();
   }, [isAuthenticated, accepted, open, close]);
 
+  useEffect(() => {
+    if (user?.is_suspended && user?.role === "CLIENT") {
+      setSuspendedOpen(true);
+    } else {
+      setSuspendedOpen(false);
+    }
+  }, [user]);
+
   if (loading) {
     return <Loader />;
-  }  
+  }
 
-  console.log("getMapboxAccessToken", getMapboxAccessToken());
-  
   return (
     <div className="min-h-screen md:bg-background ">
       {!isAuthenticated ? (
@@ -133,6 +140,11 @@ const MainApp: React.FC = () => {
             </div>
           </button>
         )}
+      <SuspendedAccountModal
+        open={suspendedOpen}
+        setOpen={setSuspendedOpen}
+        reason={user?.suspended_reason}
+      />
     </div>
   );
 };

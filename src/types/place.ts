@@ -48,6 +48,8 @@ export type Place = {
   duration?: string;
   entrance?: string;
   accessibility?: string;
+  is_suspended?: boolean;
+  suspended_reason?: string | null;
 
   authority_contact_number?: string;
   contact_person_name?: string;

@@ -7,8 +7,6 @@ export default function ClientSupportChatPage() {
   const { user } = useAuth2();
   const { data: session, isLoading } = useClientSupportSession();
 
-console.log("session", session);
-
   return (
     <div className="h-[78vh]">
       <ClientSupportChat ticketId={session?.id} />
